@@ -733,8 +733,8 @@ const EmployeeScheduleTable: React.FC = () => {
 
       {/* Message shown when table is hidden */}
       {isScheduleTableHidden && (
-        <div className="bg-yellow-100 border rounded-lg p-4 mb-6 text-center">
-          <p className="text-lg" data-en="Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again" data-es="La Tabla de Horario de Empleados está oculta. Presiona 'Mostrar Tabla Horario Empleados' para hacerla visible de nuevo">
+        <div className="bg-[#ffd700] border border-gray-300 rounded-lg p-4 mb-6 text-center">
+          <p className="text-lg font-bold text-black" data-en="Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again" data-es="La Tabla de Horario de Empleados está oculta. Presiona 'Mostrar Tabla Horario Empleados' para hacerla visible de nuevo">
             Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again
           </p>
         </div>
