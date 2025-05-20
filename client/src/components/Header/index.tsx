@@ -55,11 +55,11 @@ const SecondaryButton: React.FC<SecondaryButtonProps> = ({
   if (variant === 'white') {
     variantClasses = "bg-white text-gray-800 hover:bg-gray-50";
   } else if (variant === 'transparent') {
-    variantClasses = "bg-transparent text-[#19b08d] hover:bg-[#19b08d] hover:bg-opacity-10 border border-[#19b08d]";
+    variantClasses = "bg-transparent text-blue-500 hover:bg-blue-500 hover:bg-opacity-10 border border-blue-500";
   } else if (variant === 'gradient') {
     variantClasses = "bg-gradient-to-r from-[#19b08d] to-[#117cee] text-white hover:opacity-90";
   } else {
-    variantClasses = "bg-[#19b08d] text-white hover:bg-opacity-90";
+    variantClasses = "bg-blue-500 text-white hover:bg-blue-600";
   }
 
   return (
@@ -244,7 +244,7 @@ const EditListModal: React.FC<EditListModalProps> = ({
                   </button>
                   <button
                     onClick={() => onSave(newName)}
-                    className="px-4 py-2 bg-[#19b08d] text-white rounded hover:bg-opacity-90 font-['Viata']"
+                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors font-['Viata']"
                   >
                     Save Changes
                   </button>
@@ -326,7 +326,7 @@ const SecondaryNavigation: React.FC = () => {
       <SecondaryButton
         onClick={() => setIsModalOpen(true)}
         icon={<Plus className="h-4 w-4" />}
-        variant="gradient"
+        variant="default"
       >
         Add New List
       </SecondaryButton>
@@ -390,7 +390,7 @@ const SecondaryNavigation: React.FC = () => {
                 </button>
                 <button
                   onClick={handleCreateList}
-                  className="px-4 py-2 bg-[#19b08d] text-white rounded hover:bg-opacity-90 font-['Viata']"
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors font-['Viata']"
                 >
                   Create List
                 </button>
