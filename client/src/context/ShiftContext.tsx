@@ -1,13 +1,9 @@
 import React, { createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
 import { useEmployeeLists } from './EmployeeListsContext';
+import { ShiftOvertime, Shift } from '../types/common';
 
-export interface ShiftOvertime {
-  date: string;
-  quantity: number;
-  isActive: boolean;
-}
-
-export interface ShiftRow {
+// Interfaz de compatibilidad para transición gradual
+export interface ShiftRow extends Partial<Shift> {
   id?: string;
   startTime: string;
   endTime: string;
@@ -16,6 +12,9 @@ export interface ShiftRow {
   isOvertimeActive?: boolean;
   overtimeEntries?: ShiftOvertime[];
 }
+
+// Re-exportar el tipo para mantener compatibilidad con código existente
+export { ShiftOvertime };
 
 interface ShiftContextType {
   shifts: ShiftRow[];
