@@ -6,7 +6,8 @@ import { useShiftContext, ShiftRow } from '../../context/ShiftContext';
 import { usePersonnelData } from '../../context/PersonnelDataContext';
 import { useSelectedEmployees } from '../../context/SelectedEmployeesContext';
 import OvertimeModal from '../OvertimeModal';
-import { Employee as EmployeeType, Shift as ShiftType, ShiftOvertime, RulesState } from '../../types/common';
+import { Employee as EmployeeType, Shift as ShiftType, RulesState } from '../../types/common';
+import { ShiftOvertime } from '../../context/ShiftContext';
 import { convertTo12Hour, formatDate as formatDateUtil, formatDateHTML as formatDateHtmlUtil } from '../../lib/utils';
 
 // --- Definición de Tipos de Datos Internos ---
