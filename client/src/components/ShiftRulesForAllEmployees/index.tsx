@@ -30,7 +30,7 @@ const ShiftRules: React.FC = () => {
   return (
     <div className="w-[800px] bg-white rounded-lg shadow-lg p-6 mt-8 font-['Viata']">
       <div className="bg-gradient-to-r from-[#19b08d] to-[#117cee] p-4 rounded-t-lg mb-6">
-        <h2 className="text-2xl font-bold text-white">Shift Rules For All Employees</h2>
+        <h2 className="text-2xl font-bold text-white text-center">Shift Rules For All Employees</h2>
       </div>
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4 border-b border-gray-200 pb-4">

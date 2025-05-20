@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
+import React, { createContext, useState, useContext, ReactNode } from 'react';
 import { useEmployeeLists } from './EmployeeListsContext';
 
 export interface RulesState {
@@ -30,47 +30,30 @@ const formatDate = (date: Date) => {
   return date.toISOString().split('T')[0];
 };
 
-// Definir reglas predeterminadas fuera del componente para evitar recreaciones
-const defaultRules: RulesState = {
-  startDate: formatDate(today),
-  endDate: formatDate(nextMonth),
-  maxConsecutiveShifts: '5',
-  minDaysOffAfterMax: '2',
-  minWeekendsOffPerMonth: '2',
-  minRestHoursBetweenShifts: '12',
-  writtenRule1: '',
-  writtenRule2: '',
-  minHoursPerWeek: '40',
-  minHoursPerTwoWeeks: '80'
-};
-
 export const RulesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { getCurrentList, updateList } = useEmployeeLists();
-  
-  // Uso de useMemo para evitar recálculos innecesarios del objeto rules
-  const rules = useMemo(() => {
-    const currentList = getCurrentList();
-    return currentList?.rules || defaultRules;
-  }, [getCurrentList]);
+  const currentList = getCurrentList();
+  const rules = currentList?.rules || {
+    startDate: formatDate(today),
+    endDate: formatDate(nextMonth),
+    maxConsecutiveShifts: '5',
+    minDaysOffAfterMax: '2',
+    minWeekendsOffPerMonth: '2',
+    minRestHoursBetweenShifts: '12',
+    writtenRule1: '',
+    writtenRule2: '',
+    minHoursPerWeek: '40',
+    minHoursPerTwoWeeks: '80'
+  };
 
-  // Uso de useCallback para evitar recreación de la función en cada render
-  const updateRules = useCallback((newRules: Partial<RulesState>) => {
-    const currentList = getCurrentList();
+  const updateRules = (newRules: Partial<RulesState>) => {
     if (currentList) {
-      updateList(currentList.id, { 
-        rules: { ...rules, ...newRules } 
-      });
+      updateList(currentList.id, { rules: { ...rules, ...newRules } });
     }
-  }, [getCurrentList, updateList, rules]);
-
-  // Memoizar el valor del contexto para prevenir renderizados innecesarios
-  const contextValue = useMemo(() => ({
-    rules,
-    updateRules
-  }), [rules, updateRules]);
+  };
 
   return (
-    <RulesContext.Provider value={contextValue}>
+    <RulesContext.Provider value={{ rules, updateRules }}>
       {children}
     </RulesContext.Provider>
   );

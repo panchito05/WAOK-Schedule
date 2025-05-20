@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
+import React, { createContext, useState, useContext, ReactNode } from 'react';
 import { useEmployeeLists } from './EmployeeListsContext';
 
 export interface ShiftData {
@@ -18,29 +18,17 @@ const PersonnelDataContext = createContext<PersonnelDataContextType | undefined>
 
 export const PersonnelDataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { getCurrentList, updateList } = useEmployeeLists();
-  
-  // Uso de useMemo para evitar recálculos innecesarios del array shiftData
-  const shiftData = useMemo(() => {
-    const currentList = getCurrentList();
-    return currentList?.shiftData || [];
-  }, [getCurrentList]);
+  const currentList = getCurrentList();
+  const shiftData = currentList?.shiftData || [];
 
-  // Uso de useCallback para evitar recreación de la función en cada render
-  const setShiftData = useCallback((newShiftData: ShiftData[]) => {
-    const currentList = getCurrentList();
+  const setShiftData = (newShiftData: ShiftData[]) => {
     if (currentList) {
       updateList(currentList.id, { shiftData: newShiftData });
     }
-  }, [getCurrentList, updateList]);
-
-  // Memoizar el valor del contexto para prevenir renderizados innecesarios
-  const contextValue = useMemo(() => ({
-    shiftData,
-    setShiftData
-  }), [shiftData, setShiftData]);
+  };
 
   return (
-    <PersonnelDataContext.Provider value={contextValue}>
+    <PersonnelDataContext.Provider value={{ shiftData, setShiftData }}>
       {children}
     </PersonnelDataContext.Provider>
   );

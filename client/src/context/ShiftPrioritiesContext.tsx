@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
+import React, { createContext, useState, useContext, ReactNode } from 'react';
 import { useEmployeeLists } from './EmployeeListsContext';
 
 export interface ShiftPriorities {
@@ -15,23 +15,16 @@ const ShiftPrioritiesContext = createContext<ShiftPrioritiesContextType | undefi
 
 export const ShiftPrioritiesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { getCurrentList, updateList } = useEmployeeLists();
-  
-  // Uso de useMemo para evitar recálculos innecesarios del objeto priorities
-  const priorities = useMemo(() => {
-    const currentList = getCurrentList();
-    return currentList?.priorities || {};
-  }, [getCurrentList]);
+  const currentList = getCurrentList();
+  const priorities = currentList?.priorities || {};
 
-  // Uso de useCallback para evitar recreación de la función en cada render
-  const setPriorities = useCallback((newPriorities: ShiftPriorities) => {
-    const currentList = getCurrentList();
+  const setPriorities = (newPriorities: ShiftPriorities) => {
     if (currentList) {
       updateList(currentList.id, { priorities: newPriorities });
     }
-  }, [getCurrentList, updateList]);
+  };
 
-  // Uso de useCallback para memoizar esta función
-  const getFormattedPriorities = useCallback((day: string): string => {
+  const getFormattedPriorities = (day: string): string => {
     if (!priorities[day]) return '';
 
     const activePriorities = Object.entries(priorities[day])
@@ -40,17 +33,10 @@ export const ShiftPrioritiesProvider: React.FC<{ children: ReactNode }> = ({ chi
       .join(', ');
 
     return activePriorities || 'None';
-  }, [priorities]);
-
-  // Memoizar el valor del contexto para prevenir renderizados innecesarios
-  const contextValue = useMemo(() => ({
-    priorities,
-    setPriorities,
-    getFormattedPriorities
-  }), [priorities, setPriorities, getFormattedPriorities]);
+  };
 
   return (
-    <ShiftPrioritiesContext.Provider value={contextValue}>
+    <ShiftPrioritiesContext.Provider value={{ priorities, setPriorities, getFormattedPriorities }}>
       {children}
     </ShiftPrioritiesContext.Provider>
   );

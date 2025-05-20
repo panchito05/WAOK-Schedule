@@ -142,7 +142,7 @@ const ShiftConfiguration: React.FC = () => {
         <h2 className="text-2xl font-bold text-white text-center">Shift Configuration</h2>
       </div>
 
-      <div className="flex justify-center gap-12 mb-6">
+      <div className="flex justify-center gap-16 mb-3">
         <button 
           onClick={() => setIsModalOpen(true)}
           className="bg-gradient-to-r from-[#19b08d] to-[#117cee] text-white px-6 py-2 rounded hover:opacity-90 transition-colors font-semibold"
@@ -161,11 +161,11 @@ const ShiftConfiguration: React.FC = () => {
         <table className="w-full">
           <thead className="bg-gradient-to-r from-[#19b08d] to-[#117cee] text-white">
             <tr>
-              <th className="px-4 py-3 text-left">Start Time</th>
+              <th className="px-7 py-3 text-left">Start Time</th>
               <th className="px-4 py-3 text-left">End Time</th>
               <th className="px-4 py-3 text-left">Duration</th>
-              <th className="px-4 py-3 text-left">Lunch Break<br/>Deduction (min)</th>
-              <th className="px-4 py-3 text-left">Actions</th>
+              <th className="px-9 py-3 text-left">Lunch Break</th>
+              <th className="px-12 py-3 text-left">Actions</th>
             </tr>
           </thead>
           <tbody>
