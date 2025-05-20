@@ -358,6 +358,14 @@ function countScheduledEmployees(shift: Shift, date: Date, allEmployees: Employe
     const dateString = date.toISOString().split('T')[0]; // UTC date string
     const dayOfWeek = daysOfWeek[date.getUTCDay()]; // UTC day
 
+    // Obtenemos el formato de hora del turno actual en diferentes formatos
+    const shiftTimeFormat1 = shift.startTime && shift.endTime ? 
+                            `${shift.startTime} - ${shift.endTime}` : ''; // Formato completo "7:00 AM - 3:00 PM"
+    const shiftTimeFormat2 = shift.start && shift.end ? 
+                            `${convertTo12Hour(shift.start)} - ${convertTo12Hour(shift.end)}` : ''; // Formato desde start/end
+    const shiftTimeShort = shiftTimeFormat1 ? shiftTimeFormat1.substring(0, 10) : 
+                          (shiftTimeFormat2 ? shiftTimeFormat2.substring(0, 10) : ''); // Formato corto "7:00 AM - 3"
+
     allEmployees.forEach(employee => {
         const isOnLeave = employee.leave?.some(l => {
             const leaveStart = new Date(l.startDate + 'T00:00:00Z');
@@ -369,12 +377,44 @@ function countScheduledEmployees(shift: Shift, date: Date, allEmployees: Employe
         if (!isOnLeave) {
             const manualShift = employee.manualShifts?.[dateString];
             const fixedShift = employee.fixedShifts?.[dayOfWeek]?.[0];
-
-            // Check if the employee has this shift assigned
-            if (manualShift === shift.id) {
+            
+            // Verificamos todas las posibles coincidencias
+            
+            // 1. Coincidencia por ID exacto
+            if (manualShift === shift.id || (!manualShift && fixedShift === shift.id)) {
                 count++;
-            } else if (!manualShift && fixedShift === shift.id) {
+                return;
+            }
+            
+            // 2. Coincidencia por formato de hora (completo o parcial)
+            if (manualShift && 
+                (manualShift === shiftTimeFormat1 || 
+                 manualShift === shiftTimeFormat2 || 
+                 manualShift.startsWith(shiftTimeShort))) {
                 count++;
+                return;
+            }
+            
+            // 3. Turno fijo con coincidencia por formato de hora
+            if (!manualShift && fixedShift && 
+                (fixedShift === shiftTimeFormat1 || 
+                 fixedShift === shiftTimeFormat2 || 
+                 fixedShift.startsWith(shiftTimeShort))) {
+                count++;
+                return;
+            }
+            
+            // 4. Coincidencia por índice para shift_N
+            if (shift.id && shift.id.startsWith('shift_')) {
+                const shiftIndex = parseInt(shift.id.replace('shift_', ''), 10);
+                
+                if ((manualShift && manualShift.startsWith('shift_') && 
+                     parseInt(manualShift.replace('shift_', ''), 10) === shiftIndex) ||
+                    (!manualShift && fixedShift && fixedShift.startsWith('shift_') && 
+                     parseInt(fixedShift.replace('shift_', ''), 10) === shiftIndex)) {
+                    count++;
+                    return;
+                }
             }
         }
     });
