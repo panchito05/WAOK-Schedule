@@ -161,6 +161,13 @@ const AddEmployees: React.FC = () => {
   const { getCurrentList, updateList } = useEmployeeLists();
   const { rules } = useRules();
 
+  // Estado para controlar la visibilidad de la tabla de empleados
+  const [isEmployeesTableHidden, setIsEmployeesTableHidden] = useState(() => {
+    // Recuperar el estado guardado de localStorage o usar false (visible) como valor predeterminado
+    const savedState = localStorage.getItem('employeesTableHidden');
+    return savedState ? JSON.parse(savedState) : false;
+  });
+
   // Eliminar llamada a getCurrentList de aquí - es parte del problema
   // Definimos un estado local para rastrear el empleado list cargado
   const [employeeStateLoaded, setEmployeeStateLoaded] = useState(false);
@@ -410,18 +417,33 @@ const AddEmployees: React.FC = () => {
 
   return (
     <div className="w-full bg-white rounded-lg shadow-lg p-6 mt-8 font-['Viata']">
-      <div className="bg-gradient-to-r from-[#19b08d] to-[#117cee] p-4 rounded-t-lg mb-6">
-        <h2 className="text-2xl font-bold text-white text-center">Add Employees</h2>
-      </div>
-      
-      <div className="flex justify-between items-center mb-6">
-        <div></div> {/* Espacio vacío para mantener el justify-between */}
-        <button className="text-gray-600 hover:text-gray-800">
-          Hide Employees Table
+      <div className="bg-gradient-to-r from-[#19b08d] to-[#117cee] p-4 rounded-t-lg mb-6 flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-white">Add Employees</h2>
+        <button
+          id="toggle-employees-table"
+          className={`px-4 py-2 rounded transition-colors ${isEmployeesTableHidden ? 'bg-[#ffd700] text-black' : 'bg-white text-[#19b08d] hover:bg-gray-100'}`}
+          onClick={() => {
+            const newState = !isEmployeesTableHidden;
+            setIsEmployeesTableHidden(newState);
+            localStorage.setItem('employeesTableHidden', JSON.stringify(newState));
+          }}
+          data-en-show="Show Employees Table" data-en-hide="Hide Employees Table"
+          data-es-show="Mostrar Tabla de Empleados" data-es-hide="Ocultar Tabla de Empleados"
+        >
+          {isEmployeesTableHidden ? 'Show Employees Table' : 'Hide Employees Table'}
         </button>
       </div>
 
-      <div className="space-y-4 mb-8">
+      {isEmployeesTableHidden && (
+        <div className="bg-[#ffd700] border border-gray-300 text-black text-center py-4 px-2 rounded mb-4">
+          <span className="table-hidden-message font-bold">
+            Employees Table is hidden. Press 'Show Employees Table' button to make it visible again
+          </span>
+        </div>
+      )}
+
+      {!isEmployeesTableHidden && (
+        <div className="space-y-4 mb-8">
         {formError && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex items-center gap-2">
             <AlertCircle className="h-5 w-5" />
