@@ -528,7 +528,7 @@ const EmployeeScheduleTable: React.FC = () => {
                     {/* Static Headers */}
                     <th className="px-2 py-1 text-left border border-gray-300 w-[150px]" data-en="Employees" data-es="Empleados">Employees</th> {/* Added width guess */}
                     <th className="px-2 py-1 text-left border border-gray-300 w-[150px]" data-en="Shift: Preferences or Locked" data-es="Turno: Preferencias o Bloqueado">Shift: Preferences or Locked</th> {/* Added width guess */}
-                    <th className="px-2 py-1 text-left border border-gray-300 w-[150px]" data-en="Total Shifts / Hours" data-es="Total Turnos / Horas">Total Shifts / Hours</th> {/* Added width guess */}
+                    <th className="px-2 py-1 text-left border border-gray-300 w-[220px]" data-en="Total Shifts / Hours" data-es="Total Turnos / Horas">Total Shifts / Hours</th> {/* Increased width for more space */}
 
                     {/* Dynamic Date Headers */}
                     {dateRange.map((date) => {
@@ -586,7 +586,7 @@ const EmployeeScheduleTable: React.FC = () => {
                   </td>
 
                   {/* Total Hours / Weekends Cell */}
-                  <td className="px-2 py-1 border border-gray-300 w-[150px]">
+                  <td className="px-2 py-1 border border-gray-300 w-[220px]">
                       {/* Using dangerouslySetInnerHTML for colored hours */}
                       <div dangerouslySetInnerHTML={{ __html: formatBiweeklyHours(hoursData, minBiweeklyHours) }}></div>
                       <div style={{
