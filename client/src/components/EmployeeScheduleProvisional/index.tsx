@@ -6,8 +6,8 @@ import { useShiftContext, ShiftRow } from '../../context/ShiftContext';
 import { usePersonnelData } from '../../context/PersonnelDataContext';
 import { useSelectedEmployees } from '../../context/SelectedEmployeesContext';
 import OvertimeModal from '../OvertimeModal';
-import { Employee as EmployeeType, Shift as ShiftType, ShiftOvertime } from '../../types/common';
-import { convertTo12Hour, formatDateHTML as formatDateHtmlUtil } from '../../lib/utils';
+import { Employee as EmployeeType, Shift as ShiftType, ShiftOvertime, RulesState } from '../../types/common';
+import { convertTo12Hour, formatDate as formatDateUtil, formatDateHTML as formatDateHtmlUtil } from '../../lib/utils';
 
 // --- Definición de Tipos de Datos Internos ---
 
@@ -47,20 +47,22 @@ interface Employee {
   autoDaysOff?: string[]; // Array of YYYY-MM-DD strings
   lockedShifts?: { [date: string]: string }; // { YYYY-MM-DD: shiftId }
   columnComments?: string; // Comment for the summary column
+  shiftComments?: { [key: string]: string }; // Comments for shifts
+  blockedShifts?: { [shiftId: string]: string[] }; // Para compatibilidad con otras partes
 }
 
-// Estructura de Reglas Generales
-interface Rules {
+// Estructura de Reglas Generales compatible con RulesState
+interface Rules extends Partial<RulesState> {
   startDate: string; // YYYY-MM-DD
   endDate: string;   // YYYY-MM-DD
   maxConsecutiveShiftsForAllEmployees: string; // Stored as string from select
   daysOffAfterMaxConsecutiveShift: string; // Stored as string from select
-  weekendsOffPerMonth: string; // Stored as string from select
+  weekendsOffPerMonth: string; // Stored as string from select (alias de minWeekendsOffPerMonth)
   minRestHoursBetweenShifts: string; // Stored as string from select
   writtenRule1: string;
   writtenRule2: string;
-  minHoursWeek: string; // Stored as string from input
-  minHoursBiweekly: string; // Stored as string from input
+  minHoursWeek: string; // Stored as string from input (alias de minHoursPerWeek)
+  minHoursBiweekly: string; // Stored as string from input (alias de minHoursPerTwoWeeks)
 }
 
 
