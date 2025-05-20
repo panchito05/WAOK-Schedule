@@ -1,5 +1,11 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
 import { useEmployeeLists } from './EmployeeListsContext';
+
+export interface ShiftOvertime {
+  date: string;
+  quantity: number;
+  isActive: boolean;
+}
 
 export interface ShiftRow {
   id?: string;
@@ -8,11 +14,7 @@ export interface ShiftRow {
   duration: string;
   lunchBreakDeduction: number;
   isOvertimeActive?: boolean;
-  overtimeEntries?: {
-    date: string;
-    quantity: number;
-    isActive: boolean;
-  }[];
+  overtimeEntries?: ShiftOvertime[];
 }
 
 interface ShiftContextType {
@@ -30,24 +32,35 @@ const ShiftContext = createContext<ShiftContextType | undefined>(undefined);
 
 export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { getCurrentList, updateList } = useEmployeeLists();
-  const currentList = getCurrentList();
-  const shifts = currentList?.shifts || [];
-  const isGlobalOvertimeActive = shifts.every(shift => shift.isOvertimeActive);
+  
+  // Uso de useMemo para evitar recálculos innecesarios del array shifts y la propiedad isGlobalOvertimeActive
+  const { shifts, isGlobalOvertimeActive } = useMemo(() => {
+    const currentList = getCurrentList();
+    const shiftsArray = currentList?.shifts || [];
+    const globalOvertimeStatus = shiftsArray.every(shift => shift.isOvertimeActive);
+    return { 
+      shifts: shiftsArray, 
+      isGlobalOvertimeActive: globalOvertimeStatus 
+    };
+  }, [getCurrentList]);
 
-  const addShift = (shift: ShiftRow) => {
+  // Uso de useCallback para todas las funciones que modifican el estado
+  const addShift = useCallback((shift: ShiftRow) => {
+    const currentList = getCurrentList();
     if (currentList) {
       // Ensure the shift has an ID
       const newShift = {
         ...shift,
-        id: `shift_${shifts.length + 1}`
+        id: `shift_${currentList.shifts.length + 1}`
       };
-      updateList(currentList.id, { shifts: [...shifts, newShift] });
+      updateList(currentList.id, { shifts: [...currentList.shifts, newShift] });
     }
-  };
+  }, [getCurrentList, updateList]);
 
-  const updateShift = (index: number, shift: ShiftRow) => {
+  const updateShift = useCallback((index: number, shift: ShiftRow) => {
+    const currentList = getCurrentList();
     if (currentList) {
-      const newShifts = [...shifts];
+      const newShifts = [...currentList.shifts];
       // Preserve the existing ID when updating
       newShifts[index] = {
         ...shift,
@@ -55,38 +68,44 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       };
       updateList(currentList.id, { shifts: newShifts });
     }
-  };
+  }, [getCurrentList, updateList]);
 
-  const deleteShift = (index: number) => {
+  const deleteShift = useCallback((index: number) => {
+    const currentList = getCurrentList();
     if (currentList) {
-      updateList(currentList.id, { shifts: shifts.filter((_, i) => i !== index) });
+      updateList(currentList.id, { 
+        shifts: currentList.shifts.filter((_, i) => i !== index) 
+      });
     }
-  };
+  }, [getCurrentList, updateList]);
 
-  const toggleGlobalOvertime = (active: boolean) => {
+  const toggleGlobalOvertime = useCallback((active: boolean) => {
+    const currentList = getCurrentList();
     if (currentList) {
-      const newShifts = shifts.map(shift => ({
+      const newShifts = currentList.shifts.map(shift => ({
         ...shift,
         isOvertimeActive: !isGlobalOvertimeActive
       }));
       updateList(currentList.id, { shifts: newShifts });
     }
-  };
+  }, [getCurrentList, updateList, isGlobalOvertimeActive]);
 
-  const toggleShiftOvertime = (index: number, active: boolean) => {
+  const toggleShiftOvertime = useCallback((index: number, active: boolean) => {
+    const currentList = getCurrentList();
     if (currentList) {
-      const newShifts = [...shifts];
+      const newShifts = [...currentList.shifts];
       newShifts[index] = {
         ...newShifts[index],
         isOvertimeActive: active
       };
       updateList(currentList.id, { shifts: newShifts });
     }
-  };
+  }, [getCurrentList, updateList]);
 
-  const setShiftOvertimeForDate = (shiftIndex: number, date: string, quantity: number, isActive: boolean) => {
+  const setShiftOvertimeForDate = useCallback((shiftIndex: number, date: string, quantity: number, isActive: boolean) => {
+    const currentList = getCurrentList();
     if (currentList) {
-      const newShifts = [...shifts];
+      const newShifts = [...currentList.shifts];
       const shift = newShifts[shiftIndex];
 
       if (!shift.overtimeEntries) {
@@ -103,18 +122,31 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       updateList(currentList.id, { shifts: newShifts });
     }
-  };
+  }, [getCurrentList, updateList]);
+  
+  // Memoizar el valor del contexto para prevenir renderizados innecesarios
+  const contextValue = useMemo(() => ({ 
+    shifts, 
+    isGlobalOvertimeActive,
+    addShift, 
+    updateShift, 
+    deleteShift,
+    toggleGlobalOvertime,
+    toggleShiftOvertime,
+    setShiftOvertimeForDate
+  }), [
+    shifts, 
+    isGlobalOvertimeActive,
+    addShift, 
+    updateShift, 
+    deleteShift,
+    toggleGlobalOvertime,
+    toggleShiftOvertime,
+    setShiftOvertimeForDate
+  ]);
+
   return (
-    <ShiftContext.Provider value={{ 
-      shifts, 
-      isGlobalOvertimeActive,
-      addShift, 
-      updateShift, 
-      deleteShift,
-      toggleGlobalOvertime,
-      toggleShiftOvertime,
-      setShiftOvertimeForDate
-    }}>
+    <ShiftContext.Provider value={contextValue}>
       {children}
     </ShiftContext.Provider>
   );

@@ -1,5 +1,5 @@
 // src/components/AddEmployees/index.tsx - CODIGO CON LA SOLUCION aplicando la copia profunda
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Calendar } from 'lucide-react';
 import DatePickerModal from '../DatePickerModal';
 import { useShiftContext } from '../../context/ShiftContext';
@@ -156,17 +156,21 @@ interface NewEmployeeForm {
 }
 
 const AddEmployees: React.FC = () => {
-  const { shifts } = useShiftContext(); // Assuming shifts is available from ShiftContext
-  const { getCurrentList, updateList } = useEmployeeLists(); // Hook del contexto
-  const { rules } = useRules(); // Assuming rules is available from RulesContext
+  const { shifts } = useShiftContext(); 
+  const { getCurrentList, updateList } = useEmployeeLists();
+  const { rules } = useRules();
 
-  // Obtener la lista de empleados del contexto - Esto se re-evalúa en cada render
-  const currentEmployeeList = getCurrentList();
-  // 'employees' reflejará el estado del contexto después de que se actualice y el componente re-renderice
-  const employees = currentEmployeeList?.employees || [];
+  // Uso de useMemo para evitar recálculos innecesarios y romper el ciclo de renders
+  const { currentEmployeeList, employees } = useMemo(() => {
+    const list = getCurrentList();
+    return {
+      currentEmployeeList: list,
+      employees: list?.employees || []
+    };
+  }, [getCurrentList]);
 
   const [formError, setFormError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // Podría ser true inicialmente
+  const [isLoading, setIsLoading] = useState(true);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [leaveModalState, setLeaveModalState] = useState<{ isOpen: boolean; employeeIndex: number | null }>({
     isOpen: false,
@@ -190,14 +194,15 @@ const AddEmployees: React.FC = () => {
     employeeIndex: null
   });
 
-  // Este efecto ahora solo maneja el estado de carga inicial
+  // useEffect con dependencias correctas y usando una función de estado funcional
   useEffect(() => {
-    if (currentEmployeeList) {
-      setIsLoading(false);
-    } else {
-       // Optional: handle cases where list might be loading async or not found
-       // setIsLoading(true);
-    }
+    // Usar una función de estado para evitar dependencias en el estado actual
+    setIsLoading(prevLoading => {
+      if (currentEmployeeList) {
+        return false;
+      }
+      return prevLoading;
+    });
   }, [currentEmployeeList]);
 
 
