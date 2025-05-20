@@ -1,4 +1,7 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+
+// Clave para localStorage
+const SELECTED_EMPLOYEES_STORAGE_KEY = 'selectedEmployeeIds';
 
 // Contexto para manejar los empleados seleccionados
 interface SelectedEmployeesContextType {
@@ -10,8 +13,29 @@ interface SelectedEmployeesContextType {
 
 const SelectedEmployeesContext = createContext<SelectedEmployeesContextType | undefined>(undefined);
 
+// Función auxiliar para cargar los IDs seleccionados desde localStorage
+const loadSelectedEmployeeIds = (): string[] => {
+  try {
+    const savedIds = localStorage.getItem(SELECTED_EMPLOYEES_STORAGE_KEY);
+    return savedIds ? JSON.parse(savedIds) : [];
+  } catch (error) {
+    console.error('Error al cargar empleados seleccionados de localStorage:', error);
+    return [];
+  }
+};
+
 export const SelectedEmployeesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
+  // Inicializar con los valores guardados en localStorage
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>(loadSelectedEmployeeIds());
+  
+  // Guardar en localStorage cada vez que cambia la selección
+  useEffect(() => {
+    try {
+      localStorage.setItem(SELECTED_EMPLOYEES_STORAGE_KEY, JSON.stringify(selectedEmployeeIds));
+    } catch (error) {
+      console.error('Error al guardar empleados seleccionados en localStorage:', error);
+    }
+  }, [selectedEmployeeIds]);
 
   // Función para manejar la selección individual
   const toggleEmployeeSelection = (employeeId: string) => {
