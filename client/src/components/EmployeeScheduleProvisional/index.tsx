@@ -735,7 +735,7 @@ const EmployeeScheduleTable: React.FC = () => {
                                 className={`px-2 py-1 text-center border border-gray-300 w-[120px] ${isSunday ? 'bg-gray-100' : ''}`} // Added Sunday class
                             >
                                 {/* Using dangerouslySetInnerHTML to render formatted date HTML */}
-                                <div dangerouslySetInnerHTML={{ __html: formatDate(date) }}></div>
+                                <div dangerouslySetInnerHTML={{ __html: formatDateHtmlUtil(date) }}></div>
                                 <button 
                                     className="mt-2 w-full bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
                                     onClick={() => showEmployeesForDate(date)}
