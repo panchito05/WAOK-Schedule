@@ -236,6 +236,9 @@ const AddEmployees: React.FC = () => {
       setFormError('An employee with this ID already exists');
       return;
     }
+    
+    // Seleccionar automáticamente el nuevo empleado
+    setSelectedEmployeeIds(prev => [...prev, newEmployee.id]);
 
     // Create the new employee object with explicit defaults for optional fields
     const employeeToAdd: Employee = {
