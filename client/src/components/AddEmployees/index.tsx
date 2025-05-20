@@ -398,10 +398,13 @@ const AddEmployees: React.FC = () => {
 
 
   return (
-    <div className="w-full bg-white rounded-lg shadow-lg p-6 mt-8">
-      {/* ... (rest of the JSX for the add employee form) */}
-       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Add Employees to "{currentEmployeeList.name}"</h2>
+    <div className="w-full bg-white rounded-lg shadow-lg p-6 mt-8 font-['Viata']">
+      <div className="bg-gradient-to-r from-[#19b08d] to-[#117cee] p-4 rounded-t-lg mb-6">
+        <h2 className="text-2xl font-bold text-white text-center">Add Employees</h2>
+      </div>
+      
+      <div className="flex justify-between items-center mb-6">
+        <div></div> {/* Espacio vacío para mantener el justify-between */}
         <button className="text-gray-600 hover:text-gray-800">
           Hide Employees Table
         </button>
