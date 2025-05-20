@@ -567,7 +567,7 @@ const EmployeeScheduleTable: React.FC = () => {
                         <span className="text-sm text-gray-500">({matchPercentage}% match)
 </span> {/* Added match % */}
                     </div>
-                    <button className="mt-2 text-blue-600 hover:text-blue-800 text-sm" data-en="View in Calendar" data-es="Ver en Calendario"> {/* Added text-sm, translation */}
+                    <button className="mt-2 bg-blue-500 hover:bg-blue-600 text-white text-sm px-2 py-1 rounded" data-en="View in Calendar" data-es="Ver en Calendario"> {/* Added text-sm, translation */}
                       View in Calendar
                     </button>
                   </td>
@@ -706,7 +706,7 @@ const EmployeeScheduleTable: React.FC = () => {
                                  </select>
                                  {/* Swap Shift Button */}
                                  <button
-                                     className="change-shift-btn text-blue-600 hover:text-blue-800 text-sm"
+                                     className="change-shift-btn bg-blue-500 hover:bg-blue-600 text-white text-sm px-2 py-1 rounded"
                                      title="Swapping Shifts Between Employees"
                                  >
                                      🔄 {/* Swap icon */}
@@ -817,7 +817,7 @@ const EmployeeScheduleTable: React.FC = () => {
                                 >
                                     <div className="flex flex-col items-center">
                                         {/* Scheduled Count with Staff button */}
-                                         <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#4CAF50', padding: '2px 5px', borderRadius: '3px' }}>
+                                         <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#3B82F6', padding: '2px 5px', borderRadius: '3px' }}>
                                             <span style={{color: 'white', fontWeight: 'bold', marginRight: '4px'}}>{scheduledCount}</span>
                                             <button
                                                  className="text-white text-xs ml-1 bg-transparent border-none underline cursor-pointer"
