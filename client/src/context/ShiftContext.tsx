@@ -1,21 +1,9 @@
 import React, { createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
 import { useEmployeeLists } from './EmployeeListsContext';
+import { ShiftRow, ShiftOvertime } from '../types/common';
 
-export interface ShiftOvertime {
-  date: string;
-  quantity: number;
-  isActive: boolean;
-}
-
-export interface ShiftRow {
-  id?: string;
-  startTime: string;
-  endTime: string;
-  duration: string;
-  lunchBreakDeduction: number;
-  isOvertimeActive?: boolean;
-  overtimeEntries?: ShiftOvertime[];
-}
+// Exportamos la interfaz para que pueda ser utilizada en otras partes
+export type { ShiftRow, ShiftOvertime };
 
 interface ShiftContextType {
   shifts: ShiftRow[];

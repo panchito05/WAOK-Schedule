@@ -6,54 +6,41 @@ import { useShiftContext } from '../../context/ShiftContext';
 import { usePersonnelData } from '../../context/PersonnelDataContext';
 import { useSelectedEmployees } from '../../context/SelectedEmployeesContext';
 import OvertimeModal from '../OvertimeModal';
+import { ShiftRow, Employee as CommonEmployee, Rules as CommonRules, ShiftOvertime } from '../../types/common';
 
-// --- Definición de Tipos de Datos (Simulando la estructura del JS) ---
-
-// Estructura simplificada de un Turno (Shift)
-interface Shift {
-  id: string;
+// Estructura específica de Shift para este componente que extiende ShiftRow
+interface Shift extends ShiftRow {
   start: string; // HH:mm
   end: string;   // HH:mm
-  duration: string; // e.g., "8h 0m"
   lunchBreak: number; // minutes
   nurseCounts: { [dayOfWeek: string]: number }; // e.g., { "Monday": 5, "Tuesday": 6 }
   shiftComments?: string;
-  // Propiedades de Overtime (simuladas)
   isOvertimeActiveForShift?: boolean;
   disableOvertime?: boolean;
-  overtimeEntries?: { date: string; isActive: boolean; quantity: number }[];
+  startTime?: string;
+  endTime?: string;
 }
 
-// Estructura simplificada de un Empleado
-interface Employee {
-  id: string; // Employee ID
+// Estructura específica de Employee para este componente que extiende CommonEmployee
+interface Employee extends CommonEmployee {
   uniqueId: string; // Unique ID used internally
-  name: string;
-  hireDate?: string; // YYYY-MM-DD
   commentOrRules?: string;
   note?: string; // Confidential note
   preferences: (number | null)[]; // Array matching timeRanges order, 1 for first pref, etc.
   unavailableShifts: { [shiftIndex: number]: number[] }; // { shiftIndex: [dayIndex, ...] }
   selected: boolean;
   maxConsecutiveShiftsForThisSpecificEmployee: number;
-  leave: { id: string; startDate: string; endDate: string; leaveType: string; hoursPerDay: number }[]; // Array of leave objects
-  fixedShifts: { [dayOfWeek: string]: string[] }; // { dayOfWeek: [shiftId] or ['day-off'] }
   manualShifts: { [date: string]: string | 'day-off' }; // { YYYY-MM-DD: shiftId or 'day-off' }
   autoDaysOff?: string[]; // Array of YYYY-MM-DD strings
   lockedShifts?: { [date: string]: string }; // { YYYY-MM-DD: shiftId }
   columnComments?: string; // Comment for the summary column
 }
 
-// Estructura de Reglas Generales
-interface Rules {
-  startDate: string; // YYYY-MM-DD
-  endDate: string;   // YYYY-MM-DD
+// Estructura específica de Rules para este componente que extiende CommonRules
+interface Rules extends CommonRules {
   maxConsecutiveShiftsForAllEmployees: string; // Stored as string from select
   daysOffAfterMaxConsecutiveShift: string; // Stored as string from select
   weekendsOffPerMonth: string; // Stored as string from select
-  minRestHoursBetweenShifts: string; // Stored as string from select
-  writtenRule1: string;
-  writtenRule2: string;
   minHoursWeek: string; // Stored as string from input
   minHoursBiweekly: string; // Stored as string from input
 }
