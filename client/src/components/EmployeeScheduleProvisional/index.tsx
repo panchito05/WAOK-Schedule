@@ -1038,6 +1038,7 @@ const EmployeeScheduleTable: React.FC = () => {
                                             <button
                                                  className="text-white text-xs ml-1 bg-transparent border-none underline cursor-pointer"
                                                  title="Staff For This Shift"
+                                                 onClick={() => showStaffForShift(shift, date)}
                                             >
                                                  Staff For This Shift
                                             </button>
@@ -1048,14 +1049,7 @@ const EmployeeScheduleTable: React.FC = () => {
                                             ({idealCount}) Ideal Staff For This Shift
                                         </div>
                                         
-                                        {/* Botón "Staff for this Shift" */}
-                                        <button 
-                                            className="mt-2 w-full bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
-                                            onClick={() => showStaffForShift(shift, date)}
-                                        >
-                                            <Users className="h-4 w-4" />
-                                            <span>Staff for this Shift</span>
-                                        </button>
+
 
                                         {/* Available Overtime Display (if > 0) */}
                                          {overtimeCount > 0 && (
