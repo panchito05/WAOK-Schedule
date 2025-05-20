@@ -6,6 +6,8 @@ import { useShiftContext } from '../../context/ShiftContext';
 import { usePersonnelData } from '../../context/PersonnelDataContext';
 import { useSelectedEmployees } from '../../context/SelectedEmployeesContext';
 import OvertimeModal from '../OvertimeModal';
+import TodaysEmployeesModal from '../TodaysEmployeesModal';
+import TodaysEmployeesContent from '../TodaysEmployeesContent';
 
 // --- Definición de Tipos de Datos (Simulando la estructura del JS) ---
 

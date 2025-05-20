@@ -1,0 +1,47 @@
+Necesito implementar la funcionalidad del botón 'View Today's Employees'. Este botón aparece debajo de cada fecha en el encabezado de la tabla 'Employee Schedule provisional'.
+
+**Cuando el usuario haga clic en un botón 'View Today's Employees' para una fecha específica:**
+
+1.  **Capturar la Fecha:**
+    *   Obtén la fecha (`YYYY-MM-DD`) asociada al botón presionado. Convierte esta cadena de fecha a un objeto Date UTC (medianoche).
+
+2.  **Obtener Empleados Programados para esa Fecha:**
+    *   Itera sobre la lista de `employees` (del `currentList` que estén marcados como `selected`).
+    *   Para cada empleado, determina si está programado para trabajar en la fecha capturada. Un empleado está programado si:
+        *   No está de `leave` en esa fecha.
+        *   Tiene un `manualShift` asignado para esa `dateString` que no sea 'day-off'.
+        *   O, si no tiene un `manualShift` o este es 'day-off', tiene un `fixedShift` para ese `dayOfWeek` que no sea 'day-off'.
+    *   Almacena la lista de empleados que cumplen estas condiciones.
+
+3.  **Crear y Mostrar un Modal:**
+    *   Utiliza la función `createModal(title)` para generar una nueva ventana modal.
+    *   El **título del modal** debe ser "Employees for : \[Fecha formateada]" (usa la función `formatDate(dateObject)` para mostrar la fecha de forma legible, ej: "August 15, 2024, Thursday").
+
+4.  **Poblar el Cuerpo del Modal (`.modal-body`):**
+    *   **Si no hay empleados programados:**
+        *   Muestra un mensaje como "There are no employees scheduled for this date."
+    *   **Si hay empleados programados:**
+        *   Crea una tabla con las columnas: "Name", "Shift", "Comment".
+        *   Para cada empleado programado:
+            *   **Name:** `employee.name`.
+            *   **Shift:**
+                *   Si está de `leave`, muestra el `leave.leaveType`.
+                *   Si tiene un `manualShift` (y no es 'day-off'), muestra el horario del turno (ej: "07:00 AM - 03:00 PM") usando `convertTo12Hour()` y la información de `timeRanges`.
+                *   Si tiene un `fixedShift` (y no es 'day-off', y no hay manual), muestra el horario del turno.
+                *   Si es 'day-off' (manual o fijo), muestra "Day Off".
+            *   **Comment:** Muestra `employee.shiftComments[dateString]` si existe.
+    *   **Tabla de Información de Turnos (mostrar siempre):**
+        *   Debajo de la lista de empleados (o del mensaje de "no empleados"), añade un `<h3>` con el texto "Shift Information".
+        *   Crea otra tabla con las columnas: "Shift", "Ideal Staff per Shift", "Staff for this Shift".
+        *   Por cada `range` en `timeRanges`:
+            *   **Shift:** Horario del turno (ej: "07:00 AM - 03:00 PM").
+            *   **Ideal Staff per Shift:** `range.nurseCounts[dayOfWeekUTC]` (donde `dayOfWeekUTC` es el nombre del día de la semana para la fecha UTC).
+            *   **Staff for this Shift:** El resultado de `countScheduledEmployees(range, dateObjectUTC)`.
+
+5.  **Añadir Botones de Navegación (`.navigation-buttons` dentro del `.modal-header`):**
+    *   Un botón "Previous Day": Al hacer clic, debe cerrar el modal actual y llamar a `showEmployeesForDate(previousUTCDateObject)`.
+    *   Un botón "Next Day": Al hacer clic, debe cerrar el modal actual y llamar a `showEmployeesForDate(nextUTCDateObject)`.
+
+6.  **Manejo del Cierre del Modal:**
+    *   El botón 'X' (`.close`) debe cerrar el modal.
+    *   Hacer clic fuera del área de contenido del modal (`.modal-content`) también debe cerrar el modal.
