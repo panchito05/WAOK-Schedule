@@ -554,10 +554,19 @@ const EmployeeScheduleTable: React.FC = () => {
   const [isScheduleTableHidden, setIsScheduleTableHidden] = useState(false);
   const [overtimeModal, setOvertimeModal] = useState<{
     isOpen: boolean;
-    shift: { startTime: string; endTime: string } | null;
+    shift: { startTime: string; endTime: string; index?: number } | null;
   }>({
     isOpen: false,
     shift: null
+  });
+  
+  // Estado para el modal de empleados del día
+  const [employeesModalData, setEmployeesModalData] = useState<{
+    isOpen: boolean;
+    date: Date | null;
+  }>({
+    isOpen: false,
+    date: null
   });
 
   // --- Generar rango de fechas dinámicamente ---
@@ -949,6 +958,14 @@ const EmployeeScheduleTable: React.FC = () => {
                                                   <small style={{ color: '#666' }}></small> {/* Placeholder for message */}
                                               </div>
                                          )}
+                                         
+                                        {/* View Today's Employees Button */}
+                                        <button
+                                            onClick={() => showEmployeesForDate(date)}
+                                            className="mt-2 text-white text-sm bg-blue-500 hover:bg-blue-600 px-2 py-1 rounded"
+                                        >
+                                            View Today's Employees
+                                        </button>
                                     </div>
                                 </td>
                             );
