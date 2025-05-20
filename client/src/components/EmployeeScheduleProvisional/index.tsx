@@ -354,62 +354,36 @@ function getShiftTime(shiftId: string, shifts: Shift[]): string {
 
 
 function countScheduledEmployees(shift: Shift, date: Date, allEmployees: Employee[]): number {
+    // Enfoque directo - contar el número de empleados programados para cada turno
+    // basándonos en los valores mostrados en la tabla Employee Schedule Provisional
+    
+    const dateString = date.toISOString().split('T')[0]; // UTC date string YYYY-MM-DD
+    const dayOfWeek = daysOfWeek[date.getUTCDay()]; // Día de la semana (Monday, Tuesday, etc.)
+    
+    // Definimos los horarios de cada turno
+    const SHIFT_1_TIME = "7:00 AM - 3:00 PM";
+    const SHIFT_2_TIME = "3:00 PM - 11:00 PM";
+    const SHIFT_3_TIME = "11:00 PM - 7:00 AM";
+    
+    // Obtenemos el índice del turno actual (1, 2 o 3)
+    let currentShiftIndex = 0;
+    if (shift.id && shift.id.startsWith('shift_')) {
+        currentShiftIndex = parseInt(shift.id.replace('shift_', ''), 10);
+    } else if (shift.startTime) {
+        if (shift.startTime.includes("7:00 AM")) currentShiftIndex = 1;
+        else if (shift.startTime.includes("3:00 PM")) currentShiftIndex = 2;
+        else if (shift.startTime.includes("11:00 PM")) currentShiftIndex = 3;
+    }
+    
+    // Si no podemos determinar el índice, no podemos contar
+    if (currentShiftIndex === 0) return 0;
+    
+    // Contador de empleados para este turno
     let count = 0;
-    const dateString = date.toISOString().split('T')[0]; // UTC date string
-    const dayOfWeek = daysOfWeek[date.getUTCDay()]; // UTC day
-
-    // Obtenemos los formatos específicos del turno actual
-    const shiftOptions = [
-        shift.id, // ID exacto
-        `${shift.startTime || ''} - ${shift.endTime || ''}`, // Formato completo "7:00 AM - 3:00 PM"
-        `${convertTo12Hour(shift.start || '')} - ${convertTo12Hour(shift.end || '')}` // Formato desde start/end
-    ];
     
-    // Si es un turno específico como "7:00 AM - 3:0", construimos expresiones más flexibles para comparar
-    // porque la interfaz a veces muestra valores truncados
-    const shiftTruncated = [];
-    for (const option of shiftOptions) {
-        if (option && option.length > 9) {
-            shiftTruncated.push(option.substring(0, 9)); // "7:00 AM -"
-            shiftTruncated.push(option.substring(0, 10)); // "7:00 AM - "
-            shiftTruncated.push(option.substring(0, 11)); // "7:00 AM - 3"
-            shiftTruncated.push(option.substring(0, 12)); // "7:00 AM - 3:"
-            shiftTruncated.push(option.substring(0, 13)); // "7:00 AM - 3:0"
-        }
-    }
-    
-    // También el formato de los turnos en los selectores puede ser ligeramente diferente
-    if (shift.startTime && shift.startTime.includes(':00') && shift.endTime && shift.endTime.includes(':00')) {
-        shiftOptions.push(
-            `${shift.startTime.replace(':00', '')} - ${shift.endTime.replace(':00', '')}` // "7 AM - 3 PM"
-        );
-    }
-
-    // Posiciones de turnos (shift_1 es primer turno, 7:00 AM - 3:00 PM)
-    const shiftIndex = shift.id?.startsWith('shift_') ? 
-                      parseInt(shift.id.replace('shift_', ''), 10) : null;
-                      
-    // Crear patrones para matching por posición de turno
-    if (shiftIndex === 1) {
-        shiftOptions.push("7:00 AM - 3:0");
-        shiftOptions.push("7:00 AM - 3:00 PM");
-        shiftOptions.push("7 AM - 3 PM");
-    } 
-    else if (shiftIndex === 2) {
-        shiftOptions.push("3:00 PM - 11:00 PM");
-        shiftOptions.push("3:00 PM - 11:0");
-        shiftOptions.push("3 PM - 11 PM");
-        shiftOptions.push("3:00 AM - 11:"); // Caso especial - corrigiendo este valor que debe ser turno 2
-        shiftOptions.push("3:00 AM - 11:0"); // Caso especial - corrigiendo este valor que debe ser turno 2
-    }
-    else if (shiftIndex === 3) {
-        shiftOptions.push("11:00 PM - 7:00 AM");
-        shiftOptions.push("11:00 PM - 7:0");
-        shiftOptions.push("11 PM - 7 AM");
-    }
-    
+    // Recorremos todos los empleados
     allEmployees.forEach(employee => {
-        // Verificamos si el empleado está de permiso
+        // Verificamos si está de permiso
         const isOnLeave = employee.leave?.some(l => {
             const leaveStart = new Date(l.startDate + 'T00:00:00Z');
             const leaveEnd = new Date(l.endDate + 'T00:00:00Z');
@@ -417,51 +391,84 @@ function countScheduledEmployees(shift: Shift, date: Date, allEmployees: Employe
             return current >= leaveStart && current <= leaveEnd;
         });
         
-        if (isOnLeave) return; // No contamos empleados de permiso
+        if (isOnLeave) return; // No contar si está de permiso
         
-        // Obtener los turnos asignados (dando prioridad al manual)
+        // Obtenemos el turno asignado para esta fecha
         const manualShift = employee.manualShifts?.[dateString];
-        const fixedShift = employee.fixedShifts?.[dayOfWeek]?.[0];
         
-        // Si el turno asignado es 'day-off', no contar
-        if (manualShift === 'day-off' || (!manualShift && fixedShift === 'day-off')) return;
-        
-        // El turno efectivo es el manual si existe, sino el fijo
-        const assignedShift = manualShift || fixedShift;
-        if (!assignedShift) return; // No hay turno asignado
-        
-        // Verificar coincidencia con cualquiera de las opciones de formato
-        let matchFound = false;
-        
-        // 1. Comparar con todas las opciones de formato completo
-        for (const option of shiftOptions) {
-            if (option && assignedShift === option) {
-                matchFound = true;
-                break;
+        // Si el empleado tiene un turno manual para esta fecha
+        if (manualShift) {
+            if (manualShift === 'day-off') return; // No contar día libre
+            
+            // Como la tabla puede tener diferentes formatos para el mismo turno,
+            // determinamos a qué turno corresponde
+            let shiftNum = 0;
+            
+            // Por ID (shift_1, shift_2, etc.)
+            if (manualShift.startsWith('shift_')) {
+                shiftNum = parseInt(manualShift.replace('shift_', ''), 10);
+            }
+            // Por formato de tiempo mostrado en el UI
+            else if (manualShift.includes("7:00 AM") || manualShift.includes("7 AM") || 
+                     manualShift.startsWith("7:00 AM")) {
+                shiftNum = 1;
+            }
+            else if (manualShift.includes("3:00 PM") || manualShift.includes("3 PM") || 
+                     manualShift.startsWith("3:00 PM")) {
+                shiftNum = 2;
+            }
+            else if (manualShift.includes("3:00 AM") || // Los casos especiales
+                     manualShift === "3:00 AM - 11:" || 
+                     manualShift.startsWith("3:00 AM")) {
+                shiftNum = 2; // Este es el segundo turno (3:00 PM - 11:00 PM) con formato extraño
+            }
+            else if (manualShift.includes("11:00 PM") || manualShift.includes("11 PM") || 
+                     manualShift.startsWith("11:00 PM")) {
+                shiftNum = 3;
+            }
+            
+            // Si el turno determinado es el mismo que estamos buscando, incrementar contador
+            if (shiftNum === currentShiftIndex) {
+                count++;
             }
         }
-        
-        // 2. Si no hubo coincidencia exacta, verificar coincidencias parciales
-        if (!matchFound) {
-            for (const truncOption of shiftTruncated) {
-                if (truncOption && assignedShift.startsWith(truncOption)) {
-                    matchFound = true;
-                    break;
-                }
+        // Si no tiene turno manual, verificar turno fijo
+        else {
+            const fixedShift = employee.fixedShifts?.[dayOfWeek]?.[0];
+            if (!fixedShift || fixedShift === 'day-off') return; // No hay turno o es día libre
+            
+            // Determinamos qué turno es usando el mismo método que antes
+            let shiftNum = 0;
+            
+            if (fixedShift.startsWith('shift_')) {
+                shiftNum = parseInt(fixedShift.replace('shift_', ''), 10);
             }
-        }
-        
-        // 3. Matching especial para "3:00 AM - 11:" que debe coincidir con tercer turno
-        if (!matchFound && shiftIndex === 3 && assignedShift === "3:00 AM - 11:") {
-            matchFound = true;
-        }
-        
-        // Si encontramos una coincidencia, aumentar el contador
-        if (matchFound) {
-            count++;
+            else if (fixedShift.includes("7:00 AM") || fixedShift.includes("7 AM") || 
+                     fixedShift.startsWith("7:00 AM")) {
+                shiftNum = 1;
+            }
+            else if (fixedShift.includes("3:00 PM") || fixedShift.includes("3 PM") || 
+                     fixedShift.startsWith("3:00 PM")) {
+                shiftNum = 2;
+            }
+            else if (fixedShift.includes("3:00 AM") || // Los casos especiales
+                     fixedShift === "3:00 AM - 11:" || 
+                     fixedShift.startsWith("3:00 AM")) {
+                shiftNum = 2; // Este es el segundo turno (3:00 PM - 11:00 PM) con formato extraño
+            }
+            else if (fixedShift.includes("11:00 PM") || fixedShift.includes("11 PM") || 
+                     fixedShift.startsWith("11:00 PM")) {
+                shiftNum = 3;
+            }
+            
+            // Si el turno determinado es el mismo que estamos buscando, incrementar contador
+            if (shiftNum === currentShiftIndex) {
+                count++;
+            }
         }
     });
     
+    // Devolvemos el conteo final para este turno
     return count;
 }
 
