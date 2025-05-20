@@ -750,9 +750,9 @@ const EmployeeScheduleTable: React.FC = () => {
              {!isScheduleTableHidden && (
                  <tr>
                     {/* Static Headers */}
-                    <th className="px-4 py-3 text-left border border-gray-300 w-[200px]" data-en="Employees" data-es="Empleados">Employees</th> {/* Increased width and padding */}
-                    <th className="px-4 py-3 text-left border border-gray-300 w-[220px]" data-en="Shift: Preferences or Locked" data-es="Turno: Preferencias o Bloqueado">Shift: Preferences or Locked</th> {/* Increased width and padding */}
-                    <th className="px-4 py-3 text-left border border-gray-300 w-[280px]" data-en="Total Shifts / Hours" data-es="Total Turnos / Horas">Total Shifts / Hours</th> {/* Increased width and padding */}
+                    <th className="px-4 py-2 text-left border border-gray-300 w-[220px]" data-en="Employees" data-es="Empleados">Employees</th> {/* Increased width, reduced height */}
+                    <th className="px-4 py-2 text-left border border-gray-300 w-[250px]" data-en="Shift: Preferences or Locked" data-es="Turno: Preferencias o Bloqueado">Shift: Preferences or Locked</th> {/* Increased width, reduced height */}
+                    <th className="px-4 py-2 text-left border border-gray-300 w-[300px]" data-en="Total Shifts / Hours" data-es="Total Turnos / Horas">Total Shifts / Hours</th> {/* More width, reduced height */}
 
                     {/* Dynamic Date Headers */}
                     {dateRange.map((date) => {
@@ -761,7 +761,7 @@ const EmployeeScheduleTable: React.FC = () => {
                         return (
                             <th
                                 key={dateString}
-                                className={`px-4 py-3 text-center border border-gray-300 w-[200px] ${isSunday ? 'bg-gray-100' : ''}`} // Further increased width and padding for date columns
+                                className={`px-4 py-2 text-center border border-gray-300 w-[250px] ${isSunday ? 'bg-gray-100' : ''}`} // Increased width and reduced height for date columns
                             >
                                 {/* Using dangerouslySetInnerHTML to render formatted date HTML */}
                                 <div dangerouslySetInnerHTML={{ __html: formatDate(date) }}></div>
@@ -795,7 +795,7 @@ const EmployeeScheduleTable: React.FC = () => {
               return (
                 <tr key={employee.uniqueId} className="border-b border-gray-300 align-top hover:bg-gray-50"> {/* Added hover effect */}
                   {/* Employee Info Cell */}
-                  <td className="px-4 py-3 border border-gray-300 w-[200px]"> {/* Increased width and padding */}
+                  <td className="px-4 py-2 border border-gray-300 w-[220px]"> {/* Increased width, reduced height */}
                     <div className="flex flex-col"> {/* Use flex-col for stacking */}
                         <span>{index + 1}. {employee.name}</span> {/* Added employee number */}
                         <span className="text-sm text-gray-500">({matchPercentage}% match)
@@ -808,12 +808,12 @@ const EmployeeScheduleTable: React.FC = () => {
 
                   {/* Preferences/Blocked Cell */}
                    {/* Using dangerouslySetInnerHTML to render formatted HTML string */}
-                  <td className="px-4 py-3 border border-gray-300 w-[220px]" dangerouslySetInnerHTML={{ __html: getPreferenceAndBlockedInfo(employee, timeRanges) }}>
+                  <td className="px-4 py-2 border border-gray-300 w-[250px]" dangerouslySetInnerHTML={{ __html: getPreferenceAndBlockedInfo(employee, timeRanges) }}>
                      {/* Content rendered by getPreferenceAndBlockedInfo */}
                   </td>
 
                   {/* Total Hours / Weekends Cell */}
-                  <td className="px-4 py-3 border border-gray-300 w-[280px]">
+                  <td className="px-4 py-2 border border-gray-300 w-[300px]">
                       {/* Using dangerouslySetInnerHTML for colored hours */}
                       <div dangerouslySetInnerHTML={{ __html: formatBiweeklyHours(hoursData, minBiweeklyHours) }}></div>
                       <div style={{
@@ -856,7 +856,7 @@ const EmployeeScheduleTable: React.FC = () => {
                     return (
                       <td
                          key={dateString}
-                         className={`px-4 py-3 border border-gray-300 w-[200px] ${isSunday ? 'bg-gray-100' : ''}
+                         className={`px-4 py-2 border border-gray-300 w-[250px] ${isSunday ? 'bg-gray-100' : ''}
                            ${exceedsMax || violatesMinRest ? 'bg-yellow-300' : ''} // Highlight if rules violated (placeholder)
                          `}
                          style={{ position: 'relative' }} // Needed for absolute positioning of swap button
