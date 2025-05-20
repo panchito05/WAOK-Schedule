@@ -1,0 +1,97 @@
+¡Perfecto! Vamos a desglosar el código que calcula el "Staff for this Shift" (el personal para este turno) en esa ventana modal.
+
+La función principal que hace este cálculo se llama countScheduledEmployees(range, date).
+
+Así es como funciona por dentro:
+
+Parámetros de entrada:
+
+range: Este es un objeto que representa el turno específico para el que queremos contar empleados (por ejemplo, el objeto del turno de "7:00 AM - 3:00 PM"). Contiene el id del turno, la hora de inicio, fin, etc.
+
+date: Este es un objeto de fecha (ya ajustado a UTC medianoche) que representa el día específico que estamos consultando.
+
+Inicialización:
+
+function countScheduledEmployees(range, date) { // 'date' aquí ahora es el objeto Date UTC
+    let count = 0; // Empezamos con cero empleados para este turno en este día.
+    const dateString = date.toISOString().split('T')[0]; // Convierte la fecha a formato "YYYY-MM-DD" (UTC)
+    const dayOfWeek = daysOfWeek[date.getUTCDay()]; // Obtiene el nombre del día de la semana (ej: "Monday") (UTC)
+
+
+Se prepara un contador count.
+
+Se obtiene la fecha en formato YYYY-MM-DD (esto es importante para buscar en los turnos manuales, que se guardan con esta clave).
+
+Se obtiene el nombre del día de la semana (Lunes, Martes, etc.) para buscar en los turnos fijos.
+
+Iterar sobre todos los empleados:
+
+employees.forEach(employee => {
+    // ... lógica para cada empleado ...
+});
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+JavaScript
+IGNORE_WHEN_COPYING_END
+
+El código recorre cada uno de los empleados que tienes en tu lista.
+
+Condiciones para contar a un empleado:
+
+if (employee.selected && !isOnLeave(employee, date)) {
+    // ...
+}
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+JavaScript
+IGNORE_WHEN_COPYING_END
+
+employee.selected: Solo se consideran los empleados que están marcados como "seleccionados" (activos para la programación).
+
+!isOnLeave(employee, date): Se verifica que el empleado NO esté de permiso (vacaciones, enfermedad, etc.) en esa fecha. La función isOnLeave compara la fecha actual con los periodos de permiso guardados para el empleado.
+
+Verificar el turno asignado (dentro de la condición anterior):
+
+const manualShift = employee.manualShifts && employee.manualShifts[dateString];
+const fixedShift = employee.fixedShifts && employee.fixedShifts[dayOfWeek] && employee.fixedShifts[dayOfWeek][0];
+
+if (manualShift === range.id) {
+    count++;
+} else if (!manualShift && fixedShift === range.id) {
+    count++;
+}
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+JavaScript
+IGNORE_WHEN_COPYING_END
+
+manualShift: Se busca si el empleado tiene un turno asignado manualmente para esa dateString específica. employee.manualShifts es como un diccionario donde la clave es la fecha y el valor es el id del turno (o "day-off").
+
+fixedShift: Se busca si el empleado tiene un turno fijo asignado para ese dayOfWeek. employee.fixedShifts es como un diccionario donde la clave es el día de la semana y el valor es una lista de id de turnos (normalmente solo uno, o "day-off").
+
+Lógica de conteo (prioridad al turno manual):
+
+if (manualShift === range.id): Si el empleado tiene un turno manual para ese día, Y ese turno manual es el MISMO que el range (el turno que estamos contando, por ejemplo, el de 7 AM a 3 PM), entonces se incrementa el contador.
+
+else if (!manualShift && fixedShift === range.id): Si NO hay un turno manual asignado para ese día (o el turno manual es, por ejemplo, null o undefined), Y el empleado tiene un turno fijo para ese día de la semana, Y ese turno fijo es el MISMO que el range, entonces se incrementa el contador.
+Esto significa que un turno manual siempre tiene prioridad sobre un turno fijo.
+
+Devolver el resultado:
+
+return count;
+IGNORE_WHEN_COPYING_START
+content_copy
+download
+Use code with caution.
+JavaScript
+IGNORE_WHEN_COPYING_END
+
+Después de revisar a todos los empleados, la función devuelve el count total, que es el número de empleados que están programados para ese range (turno) específico en esa date (fecha) específica.
+
+En resumen, para calcular el "Staff for this Shift", el código revisa cada empleado activo, se asegura de que no esté de permiso, y luego verifica si su turno asignado (dando prioridad al manual sobre el fijo) coincide con el turno específico que se está evaluando en la tabla "Shift Information".
