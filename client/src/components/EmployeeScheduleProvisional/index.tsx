@@ -526,9 +526,9 @@ const EmployeeScheduleTable: React.FC = () => {
              {!isScheduleTableHidden && (
                  <tr>
                     {/* Static Headers */}
-                    <th style={{width: "150px", minWidth: "150px"}} className="px-2 py-1 text-left border border-gray-300" data-en="Employees" data-es="Empleados">Employees</th>
-                    <th style={{width: "150px", minWidth: "150px"}} className="px-2 py-1 text-left border border-gray-300" data-en="Shift: Preferences or Locked" data-es="Turno: Preferencias o Bloqueado">Shift: Preferences or Locked</th>
-                    <th style={{width: "150px", minWidth: "150px"}} className="px-2 py-1 text-left border border-gray-300" data-en="Total Shifts / Hours" data-es="Total Turnos / Horas">Total Shifts / Hours</th> {/* Todas las columnas con el mismo ancho */}
+                    <th className="px-2 py-1 text-left border border-gray-300 w-[150px]" data-en="Employees" data-es="Empleados">Employees</th> {/* Added width guess */}
+                    <th className="px-2 py-1 text-left border border-gray-300 w-[150px]" data-en="Shift: Preferences or Locked" data-es="Turno: Preferencias o Bloqueado">Shift: Preferences or Locked</th> {/* Added width guess */}
+                    <th className="px-2 py-1 text-left border border-gray-300 w-[220px]" data-en="Total Shifts / Hours" data-es="Total Turnos / Horas">Total Shifts / Hours</th> {/* Increased width for more space */}
 
                     {/* Dynamic Date Headers */}
                     {dateRange.map((date) => {
@@ -568,7 +568,7 @@ const EmployeeScheduleTable: React.FC = () => {
               return (
                 <tr key={employee.uniqueId} className="border-b border-gray-300 align-top"> {/* Added align-top */}
                   {/* Employee Info Cell */}
-                  <td style={{width: "150px", minWidth: "150px"}} className="px-2 py-1 border border-gray-300">
+                  <td className="px-2 py-1 border border-gray-300 w-[150px]"> {/* Added width */}
                     <div className="flex flex-col"> {/* Use flex-col for stacking */}
                         <span>{index + 1}. {employee.name}</span> {/* Added employee number */}
                         <span className="text-sm text-gray-500">({matchPercentage}% match)
@@ -581,12 +581,12 @@ const EmployeeScheduleTable: React.FC = () => {
 
                   {/* Preferences/Blocked Cell */}
                    {/* Using dangerouslySetInnerHTML to render formatted HTML string */}
-                  <td style={{width: "150px", minWidth: "150px"}} className="px-2 py-1 border border-gray-300" dangerouslySetInnerHTML={{ __html: getPreferenceAndBlockedInfo(employee, timeRanges) }}>
+                  <td className="px-2 py-1 border border-gray-300 w-[150px]" dangerouslySetInnerHTML={{ __html: getPreferenceAndBlockedInfo(employee, timeRanges) }}>
                      {/* Content rendered by getPreferenceAndBlockedInfo */}
                   </td>
 
                   {/* Total Hours / Weekends Cell */}
-                  <td style={{width: "210px", minWidth: "210px"}} className="px-2 py-1 border border-gray-300">
+                  <td className="px-2 py-1 border border-gray-300 w-[220px]">
                       {/* Using dangerouslySetInnerHTML for colored hours */}
                       <div dangerouslySetInnerHTML={{ __html: formatBiweeklyHours(hoursData, minBiweeklyHours) }}></div>
                       <div style={{
@@ -644,35 +644,7 @@ const EmployeeScheduleTable: React.FC = () => {
                            ) : (
                                // Render shift select if not on leave
                               <div className="flex flex-col items-center">
-                                 {/* Row con 4 botones/iconos uniformemente espaciados - MOVIDO ARRIBA */}
-                                 <div className="flex justify-between items-center w-full px-1 mb-1">
-                                     {/* Primer botón: Lock Checkbox */}
-                                     <input
-                                         type="checkbox"
-                                         className="lock-shift h-3 w-3"
-                                         checked={!!isLocked}
-                                         readOnly // Make checkbox read-only for static demo
-                                         title="Check This Box To Fix The Shift For The Chosen Day As An Employee Request, Ensuring It Can't Be Changed By Mistake Unless You Uncheck It."
-                                     />
-                                     
-                                     {/* Segundo botón: Comment Icon */}
-                                     <span className="comment-icon text-sm cursor-help" title="Any Comment Written Here Is Visible To Both The Supervisor And The Employee In The Work Schedule.">
-                                          📝
-                                     </span>
-                                     
-                                     {/* Tercer botón: Swap Shift */}
-                                     <button
-                                         className="change-shift-btn text-sm focus:outline-none"
-                                         title="Swapping Shifts Between Employees"
-                                     >
-                                         🔄
-                                     </button>
-                                     
-                                     {/* Cuarto botón: espacio reservado para un futuro botón */}
-                                     <span className="w-4"></span>
-                                 </div>
-
-                                 {/* Shift Select - MOVIDO ABAJO */}
+                                 {/* Shift Select */}
                                  <select
                                      className={`w-full border border-gray-300 rounded px-1 py-0.5 text-sm mb-1 focus:outline-none
                                         ${assignedShift === 'day-off' ? 'bg-yellow-200' : ''}
@@ -717,6 +689,33 @@ const EmployeeScheduleTable: React.FC = () => {
                                       {/* Add Leave option - Placeholder */}
                                       <option value="add-leave" disabled>Add Leave</option>
                                  </select>
+
+                                 {/* Row con 4 botones/iconos uniformemente espaciados */}
+                                 <div className="flex justify-between items-center w-full px-1 mb-1">
+                                     {/* Primer botón: Lock Checkbox */}
+                                     <input
+                                         type="checkbox"
+                                         className="lock-shift h-3 w-3"
+                                         checked={!!isLocked}
+                                         readOnly // Make checkbox read-only for static demo
+                                         title="Check This Box To Fix The Shift For The Chosen Day As An Employee Request, Ensuring It Can't Be Changed By Mistake Unless You Uncheck It."
+                                     />
+                                     
+                                     {/* Segundo botón: Comment Icon */}
+                                     <span className="comment-icon text-sm cursor-help" title="Any Comment Written Here Is Visible To Both The Supervisor And The Employee In The Work Schedule.">
+                                          📝
+                                     </span>
+                                     
+                                     {/* Tercer botón: Swap Shift */}
+                                     <button
+                                         className="change-shift-btn text-sm focus:outline-none"
+                                         title="Swapping Shifts Between Employees"
+                                     >
+                                         🔄
+                                     </button>
+                                     
+                                     {/* Cuarto botón: espacio reservado para un futuro botón */}
+                                     <span className="w-4"></span>
                                  </div>
                                  
                                  {/* Área para mostrar comentarios si existen */}
