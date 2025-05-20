@@ -484,7 +484,7 @@ const EmployeeScheduleTable: React.FC = () => {
         <div className="space-x-2">
           {/* Toggle button for the table */}
           <button
-             className={`px-4 py-2 rounded hover:bg-green-600 transition-colors ${isScheduleTableHidden ? 'bg-yellow-500 text-black' : 'bg-green-500 text-white'}`}
+             className={`px-4 py-2 rounded hover:bg-blue-600 transition-colors ${isScheduleTableHidden ? 'bg-yellow-500 text-black' : 'bg-blue-500 text-white'}`}
              onClick={() => setIsScheduleTableHidden(!isScheduleTableHidden)}
              data-en-show="Show Employee Schedule Table" data-en-hide="Hide Employee Schedule Table"
              data-es-show="Mostrar Tabla Horario Empleados" data-es-hide="Ocultar Tabla Horario Empleados"
@@ -493,10 +493,10 @@ const EmployeeScheduleTable: React.FC = () => {
           </button>
 
           {/* AI and Print buttons (text and functionality are placeholders) */}
-          <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors">
+          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
             Create Schedule with AI
           </button>
-          <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors">
+          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
             Print Schedule
           </button>
         </div>
