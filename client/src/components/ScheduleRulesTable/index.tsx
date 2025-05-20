@@ -91,14 +91,21 @@ const ScheduleRulesTable: React.FC = () => {
   const { getCurrentList } = useEmployeeLists();
   const { selectedEmployeeIds } = useSelectedEmployees();
   const [isTableHidden, setIsTableHidden] = React.useState(false);
-  const [isTableBodyHidden, setIsTableBodyHidden] = React.useState(false);
+  
+  // Guardamos el estado en localStorage para persistir después de recargar la página
+  const [isTableBodyHidden, setIsTableBodyHidden] = React.useState(() => {
+    const savedState = localStorage.getItem('scheduleRulesTableHidden');
+    return savedState ? JSON.parse(savedState) : false;
+  });
   
   // Referencias a elementos del DOM para manipulación directa
   const rulesTableRef = React.useRef<HTMLDivElement>(null);
 
   // Función para alternar la visibilidad del cuerpo de la tabla
   const toggleTableBody = () => {
-    setIsTableBodyHidden(!isTableBodyHidden);
+    const newState = !isTableBodyHidden;
+    setIsTableBodyHidden(newState);
+    localStorage.setItem('scheduleRulesTableHidden', JSON.stringify(newState));
   };
   
   // Efecto para aplicar los estilos CSS cuando cambia el estado de la tabla
@@ -157,23 +164,29 @@ const ScheduleRulesTable: React.FC = () => {
         </button>
       </div>
 
-      {/* General Rules Table */}
-      <div id="rules-display" className="overflow-hidden schedule-rules-section" ref={rulesTableRef}>
+      {isTableBodyHidden && (
+        <div className="bg-yellow-500 text-black text-center py-4 px-2 rounded mb-4">
+          <span className="table-hidden-message font-bold">
+            Schedule Rules Table is hidden. Press 'Show Schedule Rules Table' button to make it visible again
+          </span>
+        </div>
+      )}
+
+      {/* General Rules Table - Solo visible cuando el cuerpo no está oculto */}
+      <div 
+        id="rules-display" 
+        className="overflow-hidden schedule-rules-section" 
+        ref={rulesTableRef}
+        style={{ display: isTableBodyHidden ? 'none' : 'block' }}
+      >
         <table id="rules-table" className="w-full border-collapse">
-          <thead className={isTableBodyHidden ? 'table-header-hidden' : ''}>
+          <thead>
             <tr>
               <th className="border px-4 py-2 bg-gray-50 text-left">Category</th>
               <th className="border px-4 py-2 bg-gray-50 text-left">Details</th>
-              {isTableBodyHidden && (
-                <th colSpan={2} className="bg-yellow-500 text-black text-center py-2">
-                  <span className="table-hidden-message">
-                    Schedule Rules Table is hidden. Press 'Show Schedule Rules Table' button to make it visible again
-                  </span>
-                </th>
-              )}
             </tr>
           </thead>
-          <tbody style={{ display: isTableBodyHidden ? 'none' : 'table-row-group' }}>
+          <tbody>
             <tr>
               <td className="border px-4 py-2">Start Date</td>
               <td className="border px-4 py-2">
@@ -237,9 +250,9 @@ const ScheduleRulesTable: React.FC = () => {
           </tbody>
         </table>
 
-        {/* Shifts Table */}
+        {/* Shifts Table - Solo visible cuando el cuerpo no está oculto */}
         <table className="w-full border-collapse mt-4">
-          <thead className={isTableBodyHidden ? 'table-header-hidden' : ''}>
+          <thead>
             <tr>
               <th className="border px-4 py-2 bg-gray-50 text-left">Shift</th>
               <th className="border px-4 py-2 bg-gray-50 text-center">Sunday</th>
@@ -249,16 +262,9 @@ const ScheduleRulesTable: React.FC = () => {
               <th className="border px-4 py-2 bg-gray-50 text-center">Thursday</th>
               <th className="border px-4 py-2 bg-gray-50 text-center">Friday</th>
               <th className="border px-4 py-2 bg-gray-50 text-center">Saturday</th>
-              {isTableBodyHidden && (
-                <th colSpan={8} className="bg-yellow-500 text-black text-center py-2">
-                  <span className="table-hidden-message">
-                    Schedule Rules Table is hidden. Press 'Show Schedule Rules Table' button to make it visible again
-                  </span>
-                </th>
-              )}
             </tr>
           </thead>
-          <tbody style={{ display: isTableBodyHidden ? 'none' : 'table-row-group' }}>
+          <tbody>
             {shifts.map((shift, index) => (
               <tr key={index}>
                 <td className="border px-4 py-2">
@@ -276,22 +282,16 @@ const ScheduleRulesTable: React.FC = () => {
           </tbody>
         </table>
 
-        {/* Shift Priorities Table */}
-        <table className="w-full border-collapse mt-4">
-          <thead className={isTableBodyHidden ? 'table-header-hidden' : ''}>
-            <tr>
-              <th className="border px-4 py-2 bg-gray-50 text-left">Day</th>
-              <th className="border px-4 py-2 bg-gray-50 text-left">Shift Priorities</th>
-              {isTableBodyHidden && (
-                <th colSpan={2} className="bg-yellow-500 text-black text-center py-2">
-                  <span className="table-hidden-message">
-                    Schedule Rules Table is hidden. Press 'Show Schedule Rules Table' button to make it visible again
-                  </span>
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody style={{ display: isTableBodyHidden ? 'none' : 'table-row-group' }}>
+        {/* Shift Priorities Table - Solo visible cuando el cuerpo no está oculto */}
+        {!isTableBodyHidden && (
+          <table className="w-full border-collapse mt-4">
+            <thead>
+              <tr>
+                <th className="border px-4 py-2 bg-gray-50 text-left">Day</th>
+                <th className="border px-4 py-2 bg-gray-50 text-left">Shift Priorities</th>
+              </tr>
+            </thead>
+            <tbody>
             {Object.entries(priorities).map(([day, dayPriorities]) => (
               <tr key={day}>
                 <td className="border px-4 py-2">{day}</td>
@@ -301,13 +301,14 @@ const ScheduleRulesTable: React.FC = () => {
           </tbody>
         </table>
 
-        {/* Employees Table */}
-        <table className="w-full border-collapse mt-4">
-          <thead className={isTableBodyHidden ? 'table-header-hidden' : ''}>
-            <tr>
-              <th className="border px-4 py-2 bg-gray-50 text-left">#</th>
-              <th className="border px-4 py-2 bg-gray-50 text-left">Employee</th>
-              <th className="border px-4 py-2 bg-gray-50 text-left">ID</th>
+        {/* Employees Table - Solo visible cuando el cuerpo no está oculto */}
+        {!isTableBodyHidden && (
+          <table className="w-full border-collapse mt-4">
+            <thead>
+              <tr>
+                <th className="border px-4 py-2 bg-gray-50 text-left">#</th>
+                <th className="border px-4 py-2 bg-gray-50 text-left">Employee</th>
+                <th className="border px-4 py-2 bg-gray-50 text-left">ID</th>
               <th className="border px-4 py-2 bg-gray-50 text-left">Hire Date</th>
               <th className="border px-4 py-2 bg-gray-50 text-left">AI Rules</th>
               <th className="border px-4 py-2 bg-gray-50 text-left">Max Consecutive Shifts</th>
