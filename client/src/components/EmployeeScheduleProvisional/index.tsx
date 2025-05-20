@@ -706,6 +706,21 @@ const EmployeeScheduleTable: React.FC = () => {
       <div className="bg-gradient-to-r from-[#19b08d] to-[#117cee] p-4 rounded-t-lg mb-6 flex justify-between items-center">
         <h2 className="text-2xl font-bold text-white" data-en="Employee Schedule" data-es="Horario Empleados">Employee Schedule Provisional</h2> {/* Added data-en/es */}
         <div className="space-x-2">
+          {/* Toggle button for the table */}
+          <button
+             id="toggle-employee-schedule-table"
+             className={`px-4 py-2 rounded transition-colors ${isScheduleTableHidden ? 'bg-yellow-500 text-black' : 'bg-white text-[#19b08d] hover:bg-gray-100'}`}
+             onClick={() => {
+               const newState = !isScheduleTableHidden;
+               setIsScheduleTableHidden(newState);
+               localStorage.setItem('employeeScheduleTableHidden', JSON.stringify(newState));
+             }}
+             data-en-show="Show Employee Schedule Table" data-en-hide="Hide Employee Schedule Table"
+             data-es-show="Mostrar Tabla Horario Empleados" data-es-hide="Ocultar Tabla Horario Empleados"
+          >
+             {isScheduleTableHidden ? 'Show Employee Schedule Table' : 'Hide Employee Schedule Table'} {/* Default text */}
+          </button>
+
           {/* AI and Print buttons (text and functionality are placeholders) */}
           <button className="bg-white text-[#19b08d] px-4 py-2 rounded hover:bg-gray-100 transition-colors">
             Create Schedule with AI
@@ -718,27 +733,10 @@ const EmployeeScheduleTable: React.FC = () => {
 
       {/* Message shown when table is hidden */}
       {isScheduleTableHidden && (
-        <div className="bg-yellow-100 p-4 text-center">
-          <span data-en="Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again" data-es="La Tabla de Horario de Empleados está oculta. Presiona 'Mostrar Tabla Horario Empleados' para hacerla visible de nuevo">
+        <div className="bg-yellow-100 border rounded-lg p-4 mb-6 text-center">
+          <p className="text-lg" data-en="Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again" data-es="La Tabla de Horario de Empleados está oculta. Presiona 'Mostrar Tabla Horario Empleados' para hacerla visible de nuevo">
             Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again
-          </span>
-        </div>
-      )}
-      
-      {/* Show/Hide button when table is hidden */}
-      {isScheduleTableHidden && (
-        <div className="flex justify-end mb-4">
-          <button
-            id="toggle-employee-schedule-table"
-            className="px-4 py-2 rounded transition-colors bg-yellow-500 text-black"
-            onClick={() => {
-              const newState = !isScheduleTableHidden;
-              setIsScheduleTableHidden(newState);
-              localStorage.setItem('employeeScheduleTableHidden', JSON.stringify(newState));
-            }}
-          >
-            Show Employee Schedule Table
-          </button>
+          </p>
         </div>
       )}
       
@@ -747,25 +745,8 @@ const EmployeeScheduleTable: React.FC = () => {
         {/* Table */}
         <table className="w-full border-collapse employee-schedule-table">
           {/* Table Header */}
-          <thead className="bg-gray-200">
-              {/* El botón hide solo se muestra cuando la tabla es visible */}
-              {!isScheduleTableHidden && (
-                <tr>
-                  <td colSpan={4 + dateRange.length} className="px-4 py-2 border-b text-right">
-                    <button
-                      id="toggle-employee-schedule-table-hide"
-                      className="px-4 py-2 rounded transition-colors bg-white text-[#19b08d] hover:bg-gray-100"
-                      onClick={() => {
-                        const newState = !isScheduleTableHidden;
-                        setIsScheduleTableHidden(newState);
-                        localStorage.setItem('employeeScheduleTableHidden', JSON.stringify(newState));
-                      }}
-                    >
-                      Hide Employee Schedule Table
-                    </button>
-                  </td>
-                </tr>
-              )}
+          <thead className={`bg-gray-200 ${isScheduleTableHidden ? 'table-header-hidden' : ''}`}>
+              {/* Este mensaje dentro de la tabla ya no es necesario porque tenemos uno fuera */}
              {!isScheduleTableHidden && (
                  <tr>
                     {/* Static Headers */}
