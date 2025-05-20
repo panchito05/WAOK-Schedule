@@ -625,10 +625,10 @@ const AddEmployees: React.FC = () => {
                         <button
                            key={shiftId} // Use the consistent ID for the key
                           onClick={() => handleBlockClick(index, shiftInfo)}
-                          className={`w-full px-3 py-1.5 rounded text-sm transition-colors ${
+                          className={`w-full px-3 py-1.5 rounded text-sm font-semibold transition-colors ${
                             isBlocked 
-                              ? 'bg-red-500 text-white hover:bg-red-600' 
-                              : 'bg-green-500 text-white hover:bg-green-600'
+                              ? 'bg-red-500 text-white hover:opacity-90' 
+                              : 'bg-gradient-to-r from-[#19b08d] to-[#117cee] text-white hover:opacity-90'
                           }`}
                         >
                           Block Shift {shiftIndex + 1}: {shift.startTime} - {shift.endTime}
@@ -670,19 +670,19 @@ const AddEmployees: React.FC = () => {
                   <div className="space-y-2">
                     <button
                       onClick={() => setLeaveModalState({ isOpen: true, employeeIndex: index })}
-                      className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+                      className="w-full bg-gradient-to-r from-[#19b08d] to-[#117cee] text-white px-4 py-2 rounded hover:opacity-90 transition-colors font-semibold"
                     >
-                      Add: Vacation,<br />Sick Leave...
+                      Add Vacation,<br />Sick Leave...
                     </button>
                     <button 
                       onClick={() => setAssignShiftsModalState({ isOpen: true, employeeIndex: index })}
-                      className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+                      className="w-full bg-gradient-to-r from-[#19b08d] to-[#117cee] text-white px-4 py-2 rounded hover:opacity-90 transition-colors font-semibold"
                     >
                       Assign Permanent<br />Shifts
                     </button>
                     <button 
                       onClick={() => handleRemoveEmployee(employee.id)}
-                      className="w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+                      className="w-full bg-red-500 text-white px-4 py-2 rounded hover:opacity-90 transition-colors font-semibold"
                     >
                       Remove
                     </button>
