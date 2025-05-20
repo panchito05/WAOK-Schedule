@@ -417,9 +417,9 @@ function countScheduledEmployees(shift: Shift, date: Date, allEmployees: Employe
                      manualShift.startsWith("3:00 PM")) {
                 shiftNum = 2;
             }
-            else if (manualShift.includes("3:00 AM") || // Los casos especiales
-                     manualShift === "3:00 AM - 11:" || 
-                     manualShift.startsWith("3:00 AM")) {
+            else if (manualShift.includes("3:00 PM") || // Los casos especiales
+                     manualShift === "3:00 PM - 11:" || 
+                     manualShift.startsWith("3:00 PM")) {
                 shiftNum = 2; // Este es el segundo turno (3:00 PM - 11:00 PM) con formato extraño
             }
             else if (manualShift.includes("11:00 PM") || manualShift.includes("11 PM") || 
@@ -451,9 +451,9 @@ function countScheduledEmployees(shift: Shift, date: Date, allEmployees: Employe
                      fixedShift.startsWith("3:00 PM")) {
                 shiftNum = 2;
             }
-            else if (fixedShift.includes("3:00 AM") || // Los casos especiales
-                     fixedShift === "3:00 AM - 11:" || 
-                     fixedShift.startsWith("3:00 AM")) {
+            else if (fixedShift.includes("3:00 PM") || // Los casos especiales
+                     fixedShift === "3:00 PM - 11:" || 
+                     fixedShift.startsWith("3:00 PM")) {
                 shiftNum = 2; // Este es el segundo turno (3:00 PM - 11:00 PM) con formato extraño
             }
             else if (fixedShift.includes("11:00 PM") || fixedShift.includes("11 PM") || 
