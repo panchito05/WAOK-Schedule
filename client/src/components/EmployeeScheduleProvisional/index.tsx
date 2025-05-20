@@ -776,7 +776,7 @@ const EmployeeScheduleTable: React.FC = () => {
                         );
                     })}
                     {/* Summary Header */}
-                     <th className="px-2 py-1 text-left border border-gray-300 w-[200px]" data-en="Summary and/or Considerations for this Schedule" data-es="Resumen y/o Consideraciones para este Horario">Summary and/or Considerations for this Schedule</th> {/* Added width guess */}
+                     <th className="px-2 py-1 text-left border border-gray-300 w-[290px]" data-en="Summary and/or Considerations for this Schedule" data-es="Resumen y/o Consideraciones para este Horario">Summary and/or Considerations for this Schedule</th> {/* Width increased by 45% */}
                  </tr>
              )}
           </thead>
@@ -795,7 +795,7 @@ const EmployeeScheduleTable: React.FC = () => {
               return (
                 <tr key={employee.uniqueId} className="border-b border-gray-300 align-top"> {/* Added align-top */}
                   {/* Employee Info Cell */}
-                  <td className="px-2 py-1 border border-gray-300 w-[150px]"> {/* Added width */}
+                  <td className="px-2 py-1 border border-gray-300 w-[218px]"> {/* Width increased by 45% */}
                     <div className="flex flex-col"> {/* Use flex-col for stacking */}
                         <span>{index + 1}. {employee.name}</span> {/* Added employee number */}
                         <span className="text-sm text-gray-500">({matchPercentage}% match)
@@ -808,12 +808,12 @@ const EmployeeScheduleTable: React.FC = () => {
 
                   {/* Preferences/Blocked Cell */}
                    {/* Using dangerouslySetInnerHTML to render formatted HTML string */}
-                  <td className="px-2 py-1 border border-gray-300 w-[150px]" dangerouslySetInnerHTML={{ __html: getPreferenceAndBlockedInfo(employee, timeRanges) }}>
+                  <td className="px-2 py-1 border border-gray-300 w-[218px]" dangerouslySetInnerHTML={{ __html: getPreferenceAndBlockedInfo(employee, timeRanges) }}>
                      {/* Content rendered by getPreferenceAndBlockedInfo */}
                   </td>
 
                   {/* Total Hours / Weekends Cell */}
-                  <td className="px-2 py-1 border border-gray-300 w-[220px]">
+                  <td className="px-2 py-1 border border-gray-300 w-[319px]">
                       {/* Using dangerouslySetInnerHTML for colored hours */}
                       <div dangerouslySetInnerHTML={{ __html: formatBiweeklyHours(hoursData, minBiweeklyHours) }}></div>
                       <div style={{
@@ -980,7 +980,7 @@ const EmployeeScheduleTable: React.FC = () => {
                 Total Employees by Shifts
               </td>
               {dateRange.map((date) => (
-                <td key={date.toISOString().split('T')[0]} className="px-2 py-1 border border-gray-300 w-[120px]">
+                <td key={date.toISOString().split('T')[0]} className="px-2 py-1 border border-gray-300 w-[174px]">
                   {/* Content is empty in the original JS output for this row */}
                 </td>
               ))}
@@ -1033,12 +1033,12 @@ const EmployeeScheduleTable: React.FC = () => {
                          </td>
 
                          {/* Preference Count Cell */}
-                         <td className="px-2 py-1 border border-gray-300 text-center w-[150px]"> {/* Centered as in JS */}
+                         <td className="px-2 py-1 border border-gray-300 text-center w-[218px]"> {/* Width increased by 45% */}
                              Pref: {preferenceCount}
                          </td>
 
                          {/* Preference Percentage Cell */}
-                         <td className="px-2 py-1 border border-gray-300 text-center w-[150px]"> {/* Centered as in JS */}
+                         <td className="px-2 py-1 border border-gray-300 text-center w-[218px]"> {/* Width increased by 45% */}
                              {preferencePercentage}%
                          </td>
 
@@ -1055,7 +1055,7 @@ const EmployeeScheduleTable: React.FC = () => {
                             return (
                                 <td
                                     key={dateString}
-                                    className={`px-2 py-1 border border-gray-300 text-center w-[120px] ${isSunday ? 'bg-gray-100' : ''}`}
+                                    className={`px-2 py-1 border border-gray-300 text-center w-[174px] ${isSunday ? 'bg-gray-100' : ''}`}
                                 >
                                     <div className="flex flex-col items-center">
                                         {/* Scheduled Count with Staff button */}
@@ -1089,7 +1089,7 @@ const EmployeeScheduleTable: React.FC = () => {
                             );
                          })}
                          {/* Summary Comment Cell */}
-                         <td className="px-2 py-1 border border-gray-300 w-[200px]">
+                         <td className="px-2 py-1 border border-gray-300 w-[290px]">
                               {/* Use textarea matching JS output, pre-filled with shift.shiftComments */}
                              <textarea
                                 className="comment-textarea w-full h-[60px] border border-gray-300 resize-none p-1 text-sm overflow-hidden"
