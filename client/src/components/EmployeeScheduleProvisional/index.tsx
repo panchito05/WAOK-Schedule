@@ -424,7 +424,7 @@ const EmployeeScheduleTable: React.FC = () => {
   // Usar el contexto de selección de empleados
   const { selectedEmployeeIds } = useSelectedEmployees();
   
-  // Estado para modal de overtime (para editar horas extra)
+  // Este es el único estado para el modal de overtime que mantendremos
   const [overtimeModal, setOvertimeModal] = useState<{
     isOpen: boolean;
     shift: { startTime: string; endTime: string; index?: number } | null;
@@ -508,13 +508,7 @@ const EmployeeScheduleTable: React.FC = () => {
   const { rules } = useRules();
 
   const [isScheduleTableHidden, setIsScheduleTableHidden] = useState(false);
-  const [overtimeModal, setOvertimeModal] = useState<{
-    isOpen: boolean;
-    shift: { startTime: string; endTime: string; index?: number } | null;
-  }>({
-    isOpen: false,
-    shift: null
-  });
+  // Nota: overtimeModal ya está declarado arriba, así que eliminamos la duplicación
   
   // Estado para el modal de empleados del día
   const [employeesModalData, setEmployeesModalData] = useState<{
@@ -916,13 +910,12 @@ const EmployeeScheduleTable: React.FC = () => {
                                          )}
                                          
                                         {/* View Today's Employees Button */}
-                                        <ViewTodaysEmployeesButton
-                                            date={date}
-                                            employees={employees}
-                                            timeRanges={timeRanges}
-                                            countScheduledEmployees={countScheduledEmployees}
-                                            convertTo12Hour={convertTo12Hour}
-                                        />
+                                        <button
+                                            onClick={() => window.alert("Esta funcionalidad estará disponible pronto")}
+                                            className="mt-2 text-white text-sm bg-blue-500 hover:bg-blue-600 px-2 py-1 rounded"
+                                        >
+                                            View Today's Employees
+                                        </button>
                                     </div>
                                 </td>
                             );
