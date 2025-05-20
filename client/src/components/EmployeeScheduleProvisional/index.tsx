@@ -1368,19 +1368,24 @@ const EmployeeScheduleTable: React.FC = () => {
                </label>
                <select 
                  className="w-full border border-gray-300 rounded-md p-2"
-                 value={currentShiftForModal.id || ''}
                  onChange={(e) => {
-                   // Buscar el turno seleccionado y actualizar el estado
-                   const selectedShift = shifts.find(s => s.id === e.target.value);
+                   // Buscar el turno seleccionado
+                   const selectedShiftId = e.target.value;
+                   console.log("Seleccionando turno con ID:", selectedShiftId);
+                   
+                   // Encontrar el turno completo
+                   const selectedShift = shifts.find(s => s.id === selectedShiftId);
+                   console.log("Turno encontrado:", selectedShift);
+                   
                    if (selectedShift) {
-                     // Forzar la actualización completa del modal
-                     setCurrentShiftForModal(null); // Limpiar primero
-                     setTimeout(() => {
-                       setCurrentShiftForModal(selectedShift); // Luego actualizar
-                     }, 10);
+                     // Actualizar el título del modal y la información
+                     setCurrentShiftForModal(selectedShift);
+                     
+                     // También actualizamos la fecha actual (manteniendo la misma)
+                     setCurrentDateForShiftModal(currentDateForShiftModal);
                    }
                  }}
-               >
+                >
                  {shifts.map((shift) => (
                    <option key={shift.id} value={shift.id}>
                      {shift.startTime || convertTo12Hour(shift.start)} - {shift.endTime || convertTo12Hour(shift.end)}
