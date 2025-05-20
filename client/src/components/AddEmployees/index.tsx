@@ -5,6 +5,7 @@ import DatePickerModal from '../DatePickerModal';
 import { useShiftContext } from '../../context/ShiftContext';
 import { useEmployeeLists } from '../../context/EmployeeListsContext'; // Correcto
 import { useRules } from '../../context/RulesContext';
+import { useSelectedEmployees } from '../../context/SelectedEmployeesContext';
 import BlockShiftModal from '../BlockShiftModal';
 import AssignPermanentShiftsModal from '../AssignPermanentShiftsModal';
 import PreferenceManager from '../PreferenceManager';
@@ -170,7 +171,11 @@ const AddEmployees: React.FC = () => {
   
   const [formError, setFormError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
+  // Usar el contexto compartido para la selección de empleados
+  const { selectedEmployeeIds, setSelectedEmployeeIds } = useSelectedEmployees();
+  
+  // Importar funciones del contexto de selección
+  const { toggleEmployeeSelection, toggleAllEmployees } = useSelectedEmployees();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [leaveModalState, setLeaveModalState] = useState<{ isOpen: boolean; employeeIndex: number | null }>({
     isOpen: false,
@@ -380,27 +385,7 @@ const AddEmployees: React.FC = () => {
     updateEmployeeProperty(assignShiftsModalState.employeeIndex, 'fixedShifts', fixedShifts); // Standard shallow update
   };
   
-  // Función para manejar la selección de un empleado
-  const toggleEmployeeSelection = (employeeId: string) => {
-    setSelectedEmployeeIds(prev => {
-      if (prev.includes(employeeId)) {
-        return prev.filter(id => id !== employeeId);
-      } else {
-        return [...prev, employeeId];
-      }
-    });
-  };
-
-  // Función para seleccionar o deseleccionar todos los empleados
-  const toggleAllEmployees = () => {
-    if (selectedEmployeeIds.length === employees.length) {
-      // Si todos están seleccionados, deseleccionar todos
-      setSelectedEmployeeIds([]);
-    } else {
-      // Si no todos están seleccionados, seleccionar todos
-      setSelectedEmployeeIds(employees.map(emp => emp.id));
-    }
-  };
+  // Estas funciones ahora vienen del contexto de SelectedEmployees
 
 
   if (isLoading && employees.length === 0 && !currentEmployeeList) {
