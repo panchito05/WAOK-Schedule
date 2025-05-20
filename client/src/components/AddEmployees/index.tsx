@@ -259,10 +259,11 @@ const AddEmployees: React.FC = () => {
       // Crea un nuevo array con el empleado añadido
       const employeesWithNew = [...employees, employeeToAdd];
 
-      // SOLUCIÓN AQUÍ: Realiza una copia profunda del array de empleados
-      // antes de pasarlo a updateList. Esto, según el diagnóstico, podría ayudar
-      // a evitar problemas de referencia o reconciliación.
+      // Realizar una copia profunda del array de empleados
       const updatedEmployeesDeepCopy = JSON.parse(JSON.stringify(employeesWithNew));
+
+      // Actualizar también el estado local para evitar problemas de sincronización
+      setLocalEmployees(updatedEmployeesDeepCopy);
 
       // Debug - puede eliminarse en producción
       console.log("Antes de actualizar (AddEmployees):", employees.length, "empleados");
@@ -270,12 +271,9 @@ const AddEmployees: React.FC = () => {
       console.log("Array de empleados con copia profunda:", updatedEmployeesDeepCopy.length, "empleados");
 
       // Actualizar el contexto con el array copiado profundamente
-      // Esto programa un re-render del Context Provider y los consumidores
       updateList(currentEmployeeList.id, { employees: updatedEmployeesDeepCopy });
 
       // Debug - puede eliminarse en producción
-      // Nota: El 'employees.length' aquí *aún* podría ser el viejo valor en este ciclo de render
-      // ya que la actualización del contexto es asíncrona.
       console.log("Llamada a updateList con:", updatedEmployeesDeepCopy.length, "empleados");
 
       // Limpiar el formulario
