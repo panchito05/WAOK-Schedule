@@ -4,6 +4,7 @@ import { useRules } from '../../context/RulesContext';
 import { usePersonnelData } from '../../context/PersonnelDataContext';
 import { useShiftPriorities } from '../../context/ShiftPrioritiesContext';
 import { useEmployeeLists } from '../../context/EmployeeListsContext';
+import { useSelectedEmployees } from '../../context/SelectedEmployeesContext';
 import { Calendar } from 'lucide-react';
 import { ShiftRow } from '../../context/ShiftContext'; 
 
@@ -66,12 +67,16 @@ const ScheduleRulesTable: React.FC = () => {
   const { shiftData } = usePersonnelData();
   const { getFormattedPriorities, priorities } = useShiftPriorities();
   const { getCurrentList } = useEmployeeLists();
+  const { selectedEmployeeIds } = useSelectedEmployees();
   const [isTableHidden, setIsTableHidden] = React.useState(false);
 
+  // Filtramos empleados para mostrar solo los seleccionados
   const employees = useMemo(() => {
     const currentList = getCurrentList();
-    return currentList?.employees || [];
-  }, [getCurrentList]);
+    const allEmployees = currentList?.employees || [];
+    // Solo mostramos los empleados que estén seleccionados
+    return allEmployees.filter(employee => selectedEmployeeIds.includes(employee.id));
+  }, [getCurrentList, selectedEmployeeIds]);
 
   return (
     <div className={`w-full bg-white rounded-lg shadow-lg p-6 mt-8 ${isTableHidden ? 'hidden' : ''}`}>
