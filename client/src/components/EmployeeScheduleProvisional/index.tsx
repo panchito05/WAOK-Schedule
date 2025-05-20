@@ -534,7 +534,7 @@ const EmployeeScheduleTable: React.FC = () => {
                             >
                                 {/* Using dangerouslySetInnerHTML to render formatted date HTML */}
                                 <div dangerouslySetInnerHTML={{ __html: formatDate(date) }}></div>
-                                <button className="mt-2 w-full bg-green-500 text-white px-2 py-1 rounded text-sm hover:bg-green-600 transition-colors flex items-center justify-center gap-1">
+                                <button className="mt-2 w-full bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-1">
                                     <Users className="h-4 w-4" /> {/* Lucide icon */}
                                     <span data-en="View Today's Employees" data-es="Visualizar Personal de Hoy">View Today's Employees</span> {/* Added translation */}
                                 </button>
