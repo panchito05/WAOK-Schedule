@@ -161,13 +161,6 @@ const AddEmployees: React.FC = () => {
   const { getCurrentList, updateList } = useEmployeeLists();
   const { rules } = useRules();
 
-  // Estado para la funcionalidad de Hide/Show
-  const [isTableBodyHidden, setIsTableBodyHidden] = useState(() => {
-    const savedState = localStorage.getItem('employeesTableHidden');
-    return savedState ? JSON.parse(savedState) : false;
-  });
-
-  // Eliminar llamada a getCurrentList de aquí - es parte del problema
   // Definimos un estado local para rastrear el empleado list cargado
   const [employeeStateLoaded, setEmployeeStateLoaded] = useState(false);
   
