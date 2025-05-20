@@ -20,6 +20,8 @@ interface EmployeeSelection {
 const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
   const { shifts } = useShiftContext();
   const { getCurrentList, updateList } = useEmployeeLists();
+  
+  // Usar un valor inicial por defecto para evitar llamar a getCurrentList durante la inicialización
   const [columns, setColumns] = useState<Column[]>([
     { topShift: { shiftId: '', count: 0 }, bottomShift: { shiftId: '', count: 0 } },
     { topShift: { shiftId: '', count: 0 }, bottomShift: { shiftId: '', count: 0 } },
@@ -32,51 +34,30 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [modalTitle, setModalTitle] = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
+  const initialized = useRef(false);
   
-  // Get employee selection data from currentList or initialize if not exists
-  // Also load from localStorage if available
+  // Efecto para cargar los datos una sola vez cuando el componente se monta
   useEffect(() => {
+    // Si ya se inicializó, no hacemos nada
+    if (initialized.current) return;
+    
     const currentList = getCurrentList();
-    if (currentList) {
-      // Check localStorage first
-      const storedSelectionsJSON = localStorage.getItem(`employeeSelections_${currentList.id}`);
-      
-      if (storedSelectionsJSON) {
-        try {
-          const storedSelections = JSON.parse(storedSelectionsJSON);
-          
-          // Actualizar el currentList con los datos almacenados en localStorage
-          updateList(currentList.id, {
-            specialRules: {
-              employeeSelections: storedSelections
-            }
-          });
-          
-          return; // Si cargamos desde localStorage, no necesitamos inicializar
-        } catch (e) {
-          console.error('Error parsing stored employee selections:', e);
-          // Continuar con la inicialización normal si hay un error
-        }
+    if (!currentList) return;
+    
+    // Cargar datos de columnas desde localStorage
+    try {
+      const storedColumnsJSON = localStorage.getItem(`shiftColumns_${currentList.id}`);
+      if (storedColumnsJSON) {
+        const parsedColumns = JSON.parse(storedColumnsJSON);
+        setColumns(parsedColumns);
       }
-      
-      // Initialize specialRules and employeeSelections if they don't exist
-      if (!currentList.specialRules) {
-        updateList(currentList.id, {
-          specialRules: {
-            employeeSelections: {}
-          }
-        });
-      } else if (!currentList.specialRules.employeeSelections) {
-        const updatedSpecialRules = {
-          ...currentList.specialRules,
-          employeeSelections: {}
-        };
-        updateList(currentList.id, {
-          specialRules: updatedSpecialRules
-        });
-      }
+    } catch (e) {
+      console.error('Error parsing stored columns:', e);
     }
-  }, [getCurrentList, updateList]);
+    
+    // Marcar como inicializado
+    initialized.current = true;
+  }, []);
   
   // Close modal when clicking outside
   useEffect(() => {
@@ -95,6 +76,18 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
     };
   }, [isModalOpen]);
 
+  // Función para guardar el estado de las columnas en localStorage
+  const saveColumnsToLocalStorage = (newColumns: Column[]) => {
+    const currentList = getCurrentList();
+    if (currentList && newColumns.some(col => col.topShift.shiftId || col.bottomShift.shiftId)) {
+      try {
+        localStorage.setItem(`shiftColumns_${currentList.id}`, JSON.stringify(newColumns));
+      } catch (e) {
+        console.error('Error saving columns to localStorage:', e);
+      }
+    }
+  };
+
   const handleShiftChange = (columnIndex: number, position: 'top' | 'bottom', shiftId: string) => {
     setColumns(prev => {
       const newColumns = [...prev];
@@ -103,6 +96,9 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
       } else {
         newColumns[columnIndex].bottomShift.shiftId = shiftId;
       }
+      
+      // Guardar en localStorage después de actualizar
+      saveColumnsToLocalStorage(newColumns);
       return newColumns;
     });
   };
@@ -115,6 +111,9 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
       } else {
         newColumns[columnIndex].bottomShift.count = count;
       }
+      
+      // Guardar en localStorage después de actualizar
+      saveColumnsToLocalStorage(newColumns);
       return newColumns;
     });
   };
