@@ -1111,7 +1111,9 @@ const EmployeeScheduleTable: React.FC = () => {
                        </thead>
                        <tbody>
                          {shifts.map(shift => {
-                           const ideal = shift.nurseCounts[dayOfWeek] || 0;
+                           // Protegemos contra la ausencia de nurseCounts o valores específicos para el día
+                           const ideal = shift.nurseCounts && dayOfWeek in shift.nurseCounts ? 
+                                        shift.nurseCounts[dayOfWeek] : 0;
                            const scheduled = countScheduledEmployees(shift, currentModalDate, employees);
                            
                            return (
