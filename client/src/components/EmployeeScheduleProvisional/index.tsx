@@ -641,7 +641,7 @@ const EmployeeScheduleTable: React.FC = () => {
                              const isSunday = date.getUTCDay() === 0;
 
                              const scheduledCount = countScheduledEmployees(shift, date, employees);
-                             const idealCount = shift.nurseCounts[dayOfWeek] || 0;
+                             const idealCount = (shift.nurseCounts && shift.nurseCounts[dayOfWeek]) || 0;
                              const overtimeCount = shouldDisplayOvertime(shift, dateString, employees, timeRanges);
 
                             return (
