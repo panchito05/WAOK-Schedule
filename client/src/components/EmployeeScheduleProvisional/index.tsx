@@ -103,6 +103,17 @@ function formatDate(date: Date): string {
     `;
 }
 
+// Función para formatear la fecha de manera legible para el título del modal
+function formatDateForTitle(date: Date): string {
+    const options: Intl.DateTimeFormatOptions = { timeZone: 'UTC' };
+    const day = date.getUTCDate();
+    const month = date.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' });
+    const year = date.getUTCFullYear();
+    const weekday = date.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+
+    return `${month} ${day}, ${year}, ${weekday}`;
+}
+
 function calculatePreferenceMatchPercentage(employee: Employee, shifts: Shift[], startDateStr: string, endDateStr: string): string {
     if (!employee || !Array.isArray(employee.preferences)) {
         return '0.00';
@@ -423,6 +434,66 @@ const EmployeeScheduleTable: React.FC = () => {
   // Usar el contexto de selección de empleados
   const { selectedEmployeeIds } = useSelectedEmployees();
   
+  // Estados para el modal de empleados por día
+  const [employeesModalOpen, setEmployeesModalOpen] = useState(false);
+  const [currentModalDate, setCurrentModalDate] = useState<Date | null>(null);
+  const modalRef = React.useRef<HTMLDivElement>(null);
+  
+  // Función para mostrar los empleados para una fecha específica
+  const showEmployeesForDate = (date: Date) => {
+    setCurrentModalDate(date);
+    setEmployeesModalOpen(true);
+  };
+  
+  // Función para cerrar el modal
+  const closeEmployeesModal = () => {
+    setEmployeesModalOpen(false);
+    setCurrentModalDate(null);
+  };
+  
+  // Función para navegar al día anterior
+  const showPreviousDay = () => {
+    if (currentModalDate) {
+      const previousDay = new Date(currentModalDate);
+      previousDay.setUTCDate(previousDay.getUTCDate() - 1);
+      setCurrentModalDate(previousDay);
+    }
+  };
+  
+  // Función para navegar al día siguiente
+  const showNextDay = () => {
+    if (currentModalDate) {
+      const nextDay = new Date(currentModalDate);
+      nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+      setCurrentModalDate(nextDay);
+    }
+  };
+  
+  // Efecto para cerrar el modal al hacer clic fuera o presionar ESC
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        closeEmployeesModal();
+      }
+    };
+    
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeEmployeesModal();
+      }
+    };
+    
+    if (employeesModalOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscKey);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [employeesModalOpen]);
+  
   // Use memo to prevent unnecessary rerenders of employees data
   // Filtramos los empleados para mostrar solo los seleccionados
   const employees = useMemo(() => {
@@ -541,7 +612,10 @@ const EmployeeScheduleTable: React.FC = () => {
                             >
                                 {/* Using dangerouslySetInnerHTML to render formatted date HTML */}
                                 <div dangerouslySetInnerHTML={{ __html: formatDate(date) }}></div>
-                                <button className="mt-2 w-full bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-1">
+                                <button 
+                                    className="mt-2 w-full bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
+                                    onClick={() => showEmployeesForDate(date)}
+                                >
                                     <Users className="h-4 w-4" /> {/* Lucide icon */}
                                     <span data-en="View Today's Employees" data-es="Visualizar Personal de Hoy">View Today's Employees</span> {/* Added translation */}
                                 </button>
@@ -888,6 +962,177 @@ const EmployeeScheduleTable: React.FC = () => {
          onClose={() => setOvertimeModal({ isOpen: false, shift: null })}
          shift={overtimeModal.shift || { startTime: '', endTime: '' }}
        />
+
+       {/* Modal para mostrar los empleados programados para una fecha específica */}
+       {employeesModalOpen && currentModalDate && (
+         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+           <div 
+             ref={modalRef}
+             className="bg-white rounded-lg shadow-lg p-6 w-[800px] max-w-[95%] max-h-[90vh] overflow-y-auto"
+           >
+             {/* Modal Header */}
+             <div className="flex justify-between items-center mb-4 border-b pb-4">
+               <div className="flex-1">
+                 <h2 className="text-xl font-bold">
+                   Employees for: {formatDateForTitle(currentModalDate)}
+                 </h2>
+               </div>
+               <div className="flex space-x-2 navigation-buttons">
+                 <button 
+                   onClick={showPreviousDay}
+                   className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm"
+                 >
+                   Previous Day
+                 </button>
+                 <button 
+                   onClick={showNextDay}
+                   className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm"
+                 >
+                   Next Day
+                 </button>
+               </div>
+               <button 
+                 onClick={closeEmployeesModal}
+                 className="ml-4 text-gray-500 hover:text-gray-700 text-xl font-bold close"
+               >
+                 &times;
+               </button>
+             </div>
+
+             {/* Modal Body */}
+             <div className="modal-body">
+               {(() => {
+                 const dateString = currentModalDate.toISOString().split('T')[0];
+                 const dayOfWeek = daysOfWeek[currentModalDate.getUTCDay()];
+                 
+                 // Filtrar empleados programados para esta fecha
+                 const scheduledEmployees = employees.filter(employee => {
+                   // Verificar si está de leave
+                   const isOnLeave = employee.leave?.some(l => {
+                     const leaveStart = new Date(l.startDate + 'T00:00:00Z');
+                     const leaveEnd = new Date(l.endDate + 'T00:00:00Z');
+                     const current = new Date(dateString + 'T00:00:00Z');
+                     return current >= leaveStart && current <= leaveEnd;
+                   });
+                   
+                   if (isOnLeave) return true; // Está de leave, incluirlo
+                   
+                   const manualShift = employee.manualShifts?.[dateString];
+                   const fixedShift = employee.fixedShifts?.[dayOfWeek]?.[0];
+                   
+                   // Verificar si tiene un turno asignado
+                   if (manualShift && manualShift !== 'day-off') return true;
+                   if (!manualShift && fixedShift && fixedShift !== 'day-off') return true;
+                   
+                   return false; // No tiene turno asignado
+                 });
+                 
+                 if (scheduledEmployees.length === 0) {
+                   return (
+                     <div className="text-center p-4 bg-gray-100 rounded mb-6">
+                       <p className="text-gray-600">There are no employees scheduled for this date.</p>
+                     </div>
+                   );
+                 }
+                 
+                 return (
+                   <div>
+                     <h3 className="text-lg font-semibold mb-3">Scheduled Employees</h3>
+                     <table className="w-full border-collapse mb-6">
+                       <thead className="bg-gray-100">
+                         <tr>
+                           <th className="border px-4 py-2 text-left">Name</th>
+                           <th className="border px-4 py-2 text-left">Shift</th>
+                           <th className="border px-4 py-2 text-left">Comment</th>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         {scheduledEmployees.map(employee => {
+                           const manualShift = employee.manualShifts?.[dateString];
+                           const fixedShift = employee.fixedShifts?.[dayOfWeek]?.[0];
+                           const comment = employee.shiftComments?.[dateString] || '';
+                           
+                           // Determinar el turno asignado
+                           let shiftInfo = 'Not assigned';
+                           const isOnLeave = employee.leave?.some(l => {
+                             const leaveStart = new Date(l.startDate + 'T00:00:00Z');
+                             const leaveEnd = new Date(l.endDate + 'T00:00:00Z');
+                             const current = new Date(dateString + 'T00:00:00Z');
+                             return current >= leaveStart && current <= leaveEnd;
+                           });
+                           
+                           if (isOnLeave) {
+                             const leaveInfo = employee.leave?.find(l => {
+                               const leaveStart = new Date(l.startDate + 'T00:00:00Z');
+                               const leaveEnd = new Date(l.endDate + 'T00:00:00Z');
+                               const current = new Date(dateString + 'T00:00:00Z');
+                               return current >= leaveStart && current <= leaveEnd;
+                             });
+                             shiftInfo = `${leaveInfo?.leaveType || 'Leave'} (${leaveInfo?.hoursPerDay || 0} hrs/day)`;
+                           } else if (manualShift) {
+                             if (manualShift === 'day-off') {
+                               shiftInfo = 'Day Off';
+                             } else {
+                               const shift = shifts.find(s => s.id === manualShift);
+                               if (shift) {
+                                 shiftInfo = `${convertTo12Hour(shift.start)} - ${convertTo12Hour(shift.end)}`;
+                               }
+                             }
+                           } else if (fixedShift) {
+                             if (fixedShift === 'day-off') {
+                               shiftInfo = 'Day Off';
+                             } else {
+                               const shift = shifts.find(s => s.id === fixedShift);
+                               if (shift) {
+                                 shiftInfo = `${convertTo12Hour(shift.start)} - ${convertTo12Hour(shift.end)}`;
+                               }
+                             }
+                           }
+                           
+                           return (
+                             <tr key={employee.id} className="border-b">
+                               <td className="border px-4 py-2">{employee.name}</td>
+                               <td className="border px-4 py-2">{shiftInfo}</td>
+                               <td className="border px-4 py-2">{comment}</td>
+                             </tr>
+                           );
+                         })}
+                       </tbody>
+                     </table>
+                     
+                     <h3 className="text-lg font-semibold mb-3">Shift Information</h3>
+                     <table className="w-full border-collapse">
+                       <thead className="bg-gray-100">
+                         <tr>
+                           <th className="border px-4 py-2 text-left">Shift</th>
+                           <th className="border px-4 py-2 text-left">Ideal Staff per Shift</th>
+                           <th className="border px-4 py-2 text-left">Staff for this Shift</th>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         {shifts.map(shift => {
+                           const ideal = shift.nurseCounts[dayOfWeek] || 0;
+                           const scheduled = countScheduledEmployees(shift, currentModalDate, employees);
+                           
+                           return (
+                             <tr key={shift.id} className="border-b">
+                               <td className="border px-4 py-2">
+                                 {convertTo12Hour(shift.start)} - {convertTo12Hour(shift.end)}
+                               </td>
+                               <td className="border px-4 py-2">{ideal}</td>
+                               <td className="border px-4 py-2">{scheduled}</td>
+                             </tr>
+                           );
+                         })}
+                       </tbody>
+                     </table>
+                   </div>
+                 );
+               })()}
+             </div>
+           </div>
+         </div>
+       )}
 
        {/* Note: Modals like Block Shift, Priorities, Calendar, Overtime, etc., are not included here */}
        {/* as they are separate UI elements triggered by interactions not replicated in this static structure. */}
