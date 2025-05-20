@@ -156,7 +156,7 @@ const ScheduleRulesTable: React.FC = () => {
         <button 
           id="toggle-schedule-rules-table"
           onClick={toggleTableBody}
-          className={`px-4 py-2 rounded transition-colors ${isTableBodyHidden ? 'bg-[#ffd700] text-black table-hidden-button' : 'bg-white text-[#19b08d] hover:bg-gray-100'}`}
+          className={`px-4 py-2 rounded transition-colors ${isTableBodyHidden ? 'bg-yellow-500 text-black table-hidden-button' : 'bg-white text-[#19b08d] hover:bg-gray-100'}`}
           data-es-show="Mostrar Tabla de Reglas de Horario"
           data-es-hide="Ocultar Tabla de Reglas de Horario"
         >
@@ -165,7 +165,7 @@ const ScheduleRulesTable: React.FC = () => {
       </div>
 
       {isTableBodyHidden && (
-        <div className="bg-[#ffd700] border border-gray-300 text-black text-center py-4 px-2 rounded mb-4">
+        <div className="bg-yellow-100 text-black text-center py-4 px-2 rounded mb-4">
           <span className="table-hidden-message font-bold">
             Schedule Rules Table is hidden. Press 'Show Schedule Rules Table' button to make it visible again
           </span>

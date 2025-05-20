@@ -709,7 +709,7 @@ const EmployeeScheduleTable: React.FC = () => {
           {/* Toggle button for the table */}
           <button
              id="toggle-employee-schedule-table"
-             className={`px-4 py-2 rounded transition-colors ${isScheduleTableHidden ? 'bg-[#ffd700] text-black' : 'bg-white text-[#19b08d] hover:bg-gray-100'}`}
+             className={`px-4 py-2 rounded transition-colors ${isScheduleTableHidden ? 'bg-yellow-500 text-black' : 'bg-white text-[#19b08d] hover:bg-gray-100'}`}
              onClick={() => {
                const newState = !isScheduleTableHidden;
                setIsScheduleTableHidden(newState);
@@ -733,8 +733,8 @@ const EmployeeScheduleTable: React.FC = () => {
 
       {/* Message shown when table is hidden */}
       {isScheduleTableHidden && (
-        <div className="bg-[#ffd700] border border-gray-300 rounded-lg p-4 mb-6 text-center">
-          <p className="text-lg font-bold text-black" data-en="Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again" data-es="La Tabla de Horario de Empleados está oculta. Presiona 'Mostrar Tabla Horario Empleados' para hacerla visible de nuevo">
+        <div className="bg-yellow-100 border rounded-lg p-4 mb-6 text-center">
+          <p className="text-lg" data-en="Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again" data-es="La Tabla de Horario de Empleados está oculta. Presiona 'Mostrar Tabla Horario Empleados' para hacerla visible de nuevo">
             Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again
           </p>
         </div>
