@@ -709,7 +709,7 @@ const EmployeeScheduleTable: React.FC = () => {
           {/* Toggle button for the table */}
           <button
              id="toggle-employee-schedule-table"
-             className={`px-4 py-2 rounded transition-colors ${isScheduleTableHidden ? 'bg-yellow-500 text-black' : 'bg-white text-[#19b08d] hover:bg-gray-100'}`}
+             className={`px-4 py-2 rounded transition-colors ${isScheduleTableHidden ? 'bg-[#ffd700] text-black' : 'bg-white text-[#19b08d] hover:bg-gray-100'}`}
              onClick={() => {
                const newState = !isScheduleTableHidden;
                setIsScheduleTableHidden(newState);
