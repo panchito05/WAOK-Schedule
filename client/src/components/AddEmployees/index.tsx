@@ -628,7 +628,7 @@ const AddEmployees: React.FC = () => {
                           className={`w-full px-3 py-1.5 rounded text-sm font-semibold transition-colors ${
                             isBlocked 
                               ? 'bg-red-500 text-white hover:opacity-90' 
-                              : 'bg-gradient-to-r from-[#19b08d] to-[#117cee] text-white hover:opacity-90'
+                              : 'bg-blue-500 text-white hover:bg-blue-600'
                           }`}
                         >
                           Block Shift {shiftIndex + 1}: {shift.startTime} - {shift.endTime}
@@ -670,13 +670,13 @@ const AddEmployees: React.FC = () => {
                   <div className="space-y-2">
                     <button
                       onClick={() => setLeaveModalState({ isOpen: true, employeeIndex: index })}
-                      className="w-full bg-gradient-to-r from-[#19b08d] to-[#117cee] text-white px-4 py-2 rounded hover:opacity-90 transition-colors font-semibold"
+                      className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors font-semibold"
                     >
                       Add Vacation,<br />Sick Leave...
                     </button>
                     <button 
                       onClick={() => setAssignShiftsModalState({ isOpen: true, employeeIndex: index })}
-                      className="w-full bg-gradient-to-r from-[#19b08d] to-[#117cee] text-white px-4 py-2 rounded hover:opacity-90 transition-colors font-semibold"
+                      className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors font-semibold"
                     >
                       Assign Permanent<br />Shifts
                     </button>
