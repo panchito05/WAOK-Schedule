@@ -37,7 +37,7 @@ const PersonnelTable: React.FC = () => {
 
       {shiftData.map((shift) => (
         <div key={shift.id} className="mb-8">
-          <h3 className="text-lg font-semibold mb-4">
+          <h3 className="text-lg font-semibold mb-4 text-center">
             {shift.name}: {shift.timeRange}
           </h3>
 
@@ -58,7 +58,7 @@ const PersonnelTable: React.FC = () => {
               </thead>
               <tbody>
                 <tr className="bg-white">
-                  <td className="px-4 py-3 border-r border-gray-300">Count</td>
+                  <td className="px-4 py-3 border-r border-gray-300 font-semibold">Count</td>
                   {shift.counts.map((count, index) => (
                     <td key={index} className="px-4 py-3 border-r border-gray-300">
                       <input
@@ -74,11 +74,11 @@ const PersonnelTable: React.FC = () => {
                           );
                           setShiftData(newShifts);
                         }}
-                        className="w-16 border border-gray-300 rounded px-2 py-1 text-center"
+                        className="w-16 border border-gray-300 rounded px-2 py-2 text-center font-medium focus:border-[#19b08d] focus:ring focus:ring-[#117cee] focus:ring-opacity-20"
                       />
                     </td>
                   ))}
-                  <td className="px-4 py-3 font-medium">
+                  <td className="px-4 py-3 font-semibold text-center bg-gray-50">
                     {shift.idealNumber.toFixed(2)}
                   </td>
                 </tr>
