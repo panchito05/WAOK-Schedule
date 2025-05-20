@@ -103,7 +103,7 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
 
             <button
               onClick={() => handleSelectEmployees(columnIndex)}
-              className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+              className="w-full bg-gradient-to-r from-[#19b08d] to-[#117cee] text-white px-4 py-2 rounded hover:opacity-90 transition-colors font-semibold"
             >
               Select Employees
             </button>
