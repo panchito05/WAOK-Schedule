@@ -444,18 +444,6 @@ const EmployeeScheduleTable: React.FC = () => {
     return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
   
-  // Función para formatear fecha como texto
-  const formatDateForTitle = (date: Date): string => {
-    const options: Intl.DateTimeFormatOptions = { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      weekday: 'long',
-      timeZone: 'UTC'
-    };
-    return date.toLocaleDateString('en-US', options);
-  };
-  
   // Función para contar empleados programados para un turno específico
   const countScheduledEmployees = (shift: Shift, date: Date, allEmployees: Employee[]): number => {
     const dateString = date.toISOString().split('T')[0];
