@@ -19,16 +19,30 @@ interface ShiftContextType {
 const ShiftContext = createContext<ShiftContextType | undefined>(undefined);
 
 export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { getCurrentList, updateList } = useEmployeeLists();
+  // Usar try-catch para manejar el posible error de contexto no disponible
+  let employeeListsContext;
+  try {
+    employeeListsContext = useEmployeeLists();
+  } catch (error) {
+    console.warn("EmployeeListsContext not available yet, using default values");
+    employeeListsContext = {
+      getCurrentList: () => null,
+      updateList: () => console.warn("updateList not available")
+    };
+  }
+  
+  const { getCurrentList, updateList } = employeeListsContext;
   
   // Uso de useMemo para evitar recálculos innecesarios del array shifts y la propiedad isGlobalOvertimeActive
   const { shifts, isGlobalOvertimeActive } = useMemo(() => {
-    const currentList = getCurrentList();
+    const currentList = getCurrentList?.() || null;
     const shiftsArray = currentList?.shifts || [];
     // Aseguramos que cada shift tiene su propiedad isOvertimeActive correctamente definida
     const safeShiftsArray = shiftsArray.map(shift => ({
       ...shift,
-      isOvertimeActive: shift.isOvertimeActive || false
+      id: shift.id || `shift_${Math.random().toString(36).substr(2, 9)}`,
+      isOvertimeActive: shift.isOvertimeActive || false,
+      overtimeEntries: shift.overtimeEntries || []
     }));
     const globalOvertimeStatus = safeShiftsArray.length > 0 && safeShiftsArray.every(shift => shift.isOvertimeActive);
     return { 

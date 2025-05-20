@@ -31,8 +31,22 @@ const formatDate = (date: Date) => {
 };
 
 export const RulesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { getCurrentList, updateList } = useEmployeeLists();
-  const currentList = getCurrentList();
+  // Usar try-catch para manejar el posible error de contexto no disponible
+  let employeeListsContext;
+  try {
+    employeeListsContext = useEmployeeLists();
+  } catch (error) {
+    console.warn("EmployeeListsContext not available yet, using default values");
+    employeeListsContext = {
+      getCurrentList: () => null,
+      updateList: () => console.warn("updateList not available")
+    };
+  }
+  
+  const { getCurrentList, updateList } = employeeListsContext;
+  
+  // Usar el operador opcional para evitar errores si getCurrentList es undefined
+  const currentList = getCurrentList?.();
   const rules = currentList?.rules || {
     startDate: formatDate(today),
     endDate: formatDate(nextMonth),
