@@ -1375,12 +1375,9 @@ const EmployeeScheduleTable: React.FC = () => {
                    const selectedShift = shifts.find(s => s.id === shiftId);
                    
                    if (selectedShift) {
-                     // Cerrar y volver a abrir el modal con el nuevo turno (solución sencilla)
-                     setStaffModalOpen(false);
-                     setTimeout(() => {
-                       setCurrentShiftForModal(selectedShift);
-                       setStaffModalOpen(true);
-                     }, 50);
+                     // Actualizar directamente el turno sin cerrar el modal
+                     console.log("Actualizando a turno:", selectedShift);
+                     setCurrentShiftForModal(selectedShift);
                    }
                  }}
                 >
