@@ -399,12 +399,13 @@ function countScheduledEmployees(shift: Shift, date: Date, allEmployees: Employe
         shiftOptions.push("3:00 PM - 11:00 PM");
         shiftOptions.push("3:00 PM - 11:0");
         shiftOptions.push("3 PM - 11 PM");
+        shiftOptions.push("3:00 AM - 11:"); // Caso especial - corrigiendo este valor que debe ser turno 2
+        shiftOptions.push("3:00 AM - 11:0"); // Caso especial - corrigiendo este valor que debe ser turno 2
     }
     else if (shiftIndex === 3) {
         shiftOptions.push("11:00 PM - 7:00 AM");
         shiftOptions.push("11:00 PM - 7:0");
         shiftOptions.push("11 PM - 7 AM");
-        shiftOptions.push("3:00 AM - 11:0"); // Caso especial de la tabla
     }
     
     allEmployees.forEach(employee => {
