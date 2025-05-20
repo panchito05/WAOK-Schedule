@@ -5,6 +5,7 @@ import { RulesProvider } from './context/RulesContext';
 import { ShiftProvider } from './context/ShiftContext';
 import { PersonnelDataProvider } from './context/PersonnelDataContext';
 import { ShiftPrioritiesProvider } from './context/ShiftPrioritiesContext';
+import { SelectedEmployeesProvider } from './context/SelectedEmployeesContext';
 import EmployeeScheduleTable from './components/EmployeeScheduleProvisional';
 import ShiftConfiguration from './components/ShiftConfiguration';
 import ShiftRules from './components/ShiftRulesForAllEmployees';
@@ -24,28 +25,30 @@ function App() {
         <ShiftProvider>
           <PersonnelDataProvider>
             <ShiftPrioritiesProvider>
-              <div className="min-h-screen bg-gray-100">
-                <Header onViewChange={setActiveView} />
-                <div className="px-8">
-                  {activeView === 'all' && (
-                    <>
-                      <div className="flex justify-between">
-                        <ShiftConfiguration />
-                        <ShiftRules />
-                      </div>
-                      <SelectEmployeesForThisCombinationWorkingHours />
-                      <AddEmployees />
-                      <PersonnelTable />
-                      <ScheduleRulesTable />
-                      <EmployeeScheduleTable />
-                    </>
-                  )}
-                  {activeView === 'schedule' && <EmployeeScheduleTable />}
-                  {activeView === 'employees' && <AddEmployees />}
-                  {activeView === 'personnel' && <PersonnelTable />}
-                  {activeView === 'rules' && <ScheduleRulesTable />}
+              <SelectedEmployeesProvider>
+                <div className="min-h-screen bg-gray-100">
+                  <Header onViewChange={setActiveView} />
+                  <div className="px-8">
+                    {activeView === 'all' && (
+                      <>
+                        <div className="flex justify-between">
+                          <ShiftConfiguration />
+                          <ShiftRules />
+                        </div>
+                        <SelectEmployeesForThisCombinationWorkingHours />
+                        <AddEmployees />
+                        <PersonnelTable />
+                        <ScheduleRulesTable />
+                        <EmployeeScheduleTable />
+                      </>
+                    )}
+                    {activeView === 'schedule' && <EmployeeScheduleTable />}
+                    {activeView === 'employees' && <AddEmployees />}
+                    {activeView === 'personnel' && <PersonnelTable />}
+                    {activeView === 'rules' && <ScheduleRulesTable />}
+                  </div>
                 </div>
-              </div>
+              </SelectedEmployeesProvider>
             </ShiftPrioritiesProvider>
           </PersonnelDataProvider>
         </ShiftProvider>
