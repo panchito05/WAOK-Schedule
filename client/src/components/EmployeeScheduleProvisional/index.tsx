@@ -425,6 +425,96 @@ const EmployeeScheduleTable: React.FC = () => {
   // Usar el contexto de selección de empleados
   const { selectedEmployeeIds } = useSelectedEmployees();
   
+  // Estado para el modal de overtime
+  const [overtimeModal, setOvertimeModal] = useState<{
+    isOpen: boolean;
+    shift: { startTime: string; endTime: string; index?: number } | null;
+  }>({
+    isOpen: false,
+    shift: null
+  });
+  
+  // Estado para el modal de empleados del día
+  const [employeesModalData, setEmployeesModalData] = useState<{
+    isOpen: boolean;
+    date: Date | null;
+  }>({
+    isOpen: false,
+    date: null
+  });
+  
+  // Función para mostrar los empleados de una fecha específica
+  const showEmployeesForDate = (date: Date) => {
+    setEmployeesModalData({
+      isOpen: true,
+      date: new Date(date)
+    });
+  };
+  
+  // Función para cerrar el modal
+  const closeEmployeesModal = () => {
+    setEmployeesModalData({
+      isOpen: false,
+      date: null
+    });
+  };
+  
+  // Funciones para navegar entre días
+  const goToPreviousDay = () => {
+    if (employeesModalData.date) {
+      const prevDate = new Date(employeesModalData.date);
+      prevDate.setUTCDate(prevDate.getUTCDate() - 1);
+      showEmployeesForDate(prevDate);
+    }
+  };
+  
+  const goToNextDay = () => {
+    if (employeesModalData.date) {
+      const nextDate = new Date(employeesModalData.date);
+      nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+      showEmployeesForDate(nextDate);
+    }
+  };
+  
+  // Función para formatear la fecha de forma legible para el título
+  const formatDateForTitle = (date: Date): string => {
+    const options: Intl.DateTimeFormatOptions = { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      weekday: 'long',
+      timeZone: 'UTC'
+    };
+    return date.toLocaleDateString('en-US', options);
+  };
+  
+  // Función para contar empleados programados para un turno específico
+  const countScheduledEmployees = (shift: Shift, date: Date, allEmployees: Employee[]): number => {
+    const dateString = date.toISOString().split('T')[0];
+    const dayOfWeek = daysOfWeek[date.getUTCDay()];
+    
+    return allEmployees.filter(employee => {
+      // Si está de licencia, no cuenta para este turno
+      const isOnLeave = employee.leave?.some(l => {
+        const leaveStart = new Date(l.startDate + 'T00:00:00Z');
+        const leaveEnd = new Date(l.endDate + 'T00:00:00Z');
+        return date >= leaveStart && date <= leaveEnd;
+      });
+      
+      if (isOnLeave) return false;
+      
+      // Verificar asignación manual
+      const manualShift = employee.manualShifts?.[dateString];
+      if (manualShift === shift.id) return true;
+      
+      // Verificar asignación fija si no hay asignación manual o si esta es 'day-off'
+      const fixedShift = employee.fixedShifts?.[dayOfWeek]?.[0];
+      if (fixedShift === shift.id && (!manualShift || manualShift === 'day-off')) return true;
+      
+      return false;
+    }).length;
+  };
+  
   // Use memo to prevent unnecessary rerenders of employees data
   // Filtramos los empleados para mostrar solo los seleccionados
   const employees = useMemo(() => {
@@ -543,7 +633,10 @@ const EmployeeScheduleTable: React.FC = () => {
                             >
                                 {/* Using dangerouslySetInnerHTML to render formatted date HTML */}
                                 <div dangerouslySetInnerHTML={{ __html: formatDate(date) }}></div>
-                                <button className="mt-2 w-full bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-1">
+                                <button 
+                                    onClick={() => showEmployeesForDate(new Date(date))}
+                                    className="mt-2 w-full bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
+                                >
                                     <Users className="h-4 w-4" /> {/* Lucide icon */}
                                     <span data-en="View Today's Employees" data-es="Visualizar Personal de Hoy">View Today's Employees</span> {/* Added translation */}
                                 </button>
@@ -890,6 +983,25 @@ const EmployeeScheduleTable: React.FC = () => {
          onClose={() => setOvertimeModal({ isOpen: false, shift: null })}
          shift={overtimeModal.shift || { startTime: '', endTime: '' }}
        />
+       
+       {/* Today's Employees Modal */}
+       {todaysEmployeesModal.date && (
+         <TodaysEmployeesModal
+           isOpen={todaysEmployeesModal.isOpen}
+           onClose={closeTodaysEmployeesModal}
+           title={`Employees for: ${formatDateForTitle(todaysEmployeesModal.date)}`}
+           onPreviousDay={goToPreviousDay}
+           onNextDay={goToNextDay}
+         >
+           <TodaysEmployeesContent
+             date={todaysEmployeesModal.date}
+             employees={employees}
+             timeRanges={timeRanges}
+             countScheduledEmployees={countScheduledEmployees}
+             convertTo12Hour={convertTo12Hour}
+           />
+         </TodaysEmployeesModal>
+       )}
 
        {/* Note: Modals like Block Shift, Priorities, Calendar, Overtime, etc., are not included here */}
        {/* as they are separate UI elements triggered by interactions not replicated in this static structure. */}
