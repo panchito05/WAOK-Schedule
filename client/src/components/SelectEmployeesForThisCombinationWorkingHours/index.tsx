@@ -106,14 +106,8 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
     setColumns(prev => {
       const newColumns = [...prev];
       
-      // Verificar si intentamos seleccionar el mismo turno arriba y abajo
-      if (position === 'top' && newColumns[columnIndex].bottomShift.shiftId === shiftId && shiftId !== '') {
-        alert("No puedes seleccionar el mismo turno arriba y abajo.");
-        return prev;
-      } else if (position === 'bottom' && newColumns[columnIndex].topShift.shiftId === shiftId && shiftId !== '') {
-        alert("No puedes seleccionar el mismo turno arriba y abajo.");
-        return prev;
-      }
+      // No hacemos nada si se intenta seleccionar el mismo turno arriba y abajo
+      // La validación se hará en el renderizado de las opciones
       
       // Actualizar el turno seleccionado
       if (position === 'top') {
@@ -295,18 +289,32 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
         {columns.map((column, columnIndex) => (
           <div key={columnIndex} className="space-y-4">
             <div className="flex items-center gap-2">
-              <select
-                value={column.topShift.shiftId}
-                onChange={(e) => handleShiftChange(columnIndex, 'top', e.target.value)}
-                className="flex-1 border border-gray-300 rounded px-3 py-2"
-              >
-                <option value="">Select Shift</option>
-                {shifts.map((shift, index) => (
-                  <option key={index} value={`shift_${index + 1}`}>
-                    {shift.startTime} - {shift.endTime}
-                  </option>
-                ))}
-              </select>
+              <div className="w-full">
+                <select
+                  value={column.topShift.shiftId}
+                  onChange={(e) => handleShiftChange(columnIndex, 'top', e.target.value)}
+                  className="flex-1 w-full border border-gray-300 rounded px-3 py-2"
+                >
+                  <option value="">Select Shift</option>
+                  {shifts.map((shift, index) => {
+                    const shiftId = `shift_${index + 1}`;
+                    const isDisabled = column.bottomShift.shiftId === shiftId;
+                    return (
+                      <option 
+                        key={index} 
+                        value={shiftId} 
+                        disabled={isDisabled}
+                        className={isDisabled ? "text-gray-400" : ""}
+                      >
+                        {shift.startTime} - {shift.endTime}
+                      </option>
+                    );
+                  })}
+                </select>
+                {column.bottomShift.shiftId && column.topShift.shiftId === column.bottomShift.shiftId && (
+                  <div className="text-red-500 text-xs mt-1">No se puede seleccionar el mismo turno en ambas posiciones</div>
+                )}
+              </div>
               <input
                 type="number"
                 min="0"
@@ -317,18 +325,32 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <select
-                value={column.bottomShift.shiftId}
-                onChange={(e) => handleShiftChange(columnIndex, 'bottom', e.target.value)}
-                className="flex-1 border border-gray-300 rounded px-3 py-2"
-              >
-                <option value="">Select Shift</option>
-                {shifts.map((shift, index) => (
-                  <option key={index} value={`shift_${index + 1}`}>
-                    {shift.startTime} - {shift.endTime}
-                  </option>
-                ))}
-              </select>
+              <div className="w-full">
+                <select
+                  value={column.bottomShift.shiftId}
+                  onChange={(e) => handleShiftChange(columnIndex, 'bottom', e.target.value)}
+                  className="flex-1 w-full border border-gray-300 rounded px-3 py-2"
+                >
+                  <option value="">Select Shift</option>
+                  {shifts.map((shift, index) => {
+                    const shiftId = `shift_${index + 1}`;
+                    const isDisabled = column.topShift.shiftId === shiftId;
+                    return (
+                      <option 
+                        key={index} 
+                        value={shiftId} 
+                        disabled={isDisabled}
+                        className={isDisabled ? "text-gray-400" : ""}
+                      >
+                        {shift.startTime} - {shift.endTime}
+                      </option>
+                    );
+                  })}
+                </select>
+                {column.topShift.shiftId && column.topShift.shiftId === column.bottomShift.shiftId && (
+                  <div className="text-red-500 text-xs mt-1">No se puede seleccionar el mismo turno en ambas posiciones</div>
+                )}
+              </div>
               <input
                 type="number"
                 min="0"
