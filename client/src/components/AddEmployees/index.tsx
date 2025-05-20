@@ -1,9 +1,9 @@
-// src/components/AddEmployees/index.tsx
-import React, { useState, useEffect, useRef } from 'react';
+// src/components/AddEmployees/index.tsx - CODIGO CON LA SOLUCION aplicando la copia profunda
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Calendar } from 'lucide-react';
 import DatePickerModal from '../DatePickerModal';
 import { useShiftContext } from '../../context/ShiftContext';
-import { useEmployeeLists } from '../../context/EmployeeListsContext';
+import { useEmployeeLists } from '../../context/EmployeeListsContext'; // Correcto
 import { useRules } from '../../context/RulesContext';
 import { useSelectedEmployees } from '../../context/SelectedEmployeesContext';
 import BlockShiftModal from '../BlockShiftModal';
@@ -167,7 +167,8 @@ const AddEmployees: React.FC = () => {
     const savedState = localStorage.getItem('employeesTableHidden');
     return savedState ? JSON.parse(savedState) : false;
   });
-
+  
+  // Eliminar llamada a getCurrentList de aquí - es parte del problema
   // Definimos un estado local para rastrear el empleado list cargado
   const [employeeStateLoaded, setEmployeeStateLoaded] = useState(false);
   
@@ -327,6 +328,11 @@ const AddEmployees: React.FC = () => {
     }
   };
 
+   // Keep other handler functions (handleBlockClick, handleSaveBlockedDays, etc.)
+   // as they correctly update specific parts of the employee object and then call updateList.
+   // If deep copy is needed for these updates too based on your diagnosis,
+   // you would apply similar JSON.parse(JSON.stringify(...)) before updateList calls.
+
   const handleBlockClick = (employeeIndex: number, shift: { id: string; startTime: string; endTime: string }) => {
     setModalState({
       isOpen: true,
@@ -353,10 +359,16 @@ const AddEmployees: React.FC = () => {
       }
       return emp;
     });
+    // Deep copy here if needed for blocked shifts updates too
+    // const updatedEmployeesDeepCopy = JSON.parse(JSON.stringify(updatedEmployees));
+    // updateList(currentEmployeeList.id, { employees: updatedEmployeesDeepCopy });
     updateList(currentEmployeeList.id, { employees: updatedEmployees }); // Standard shallow update
   };
 
   const handlePreferencesChange = (employeeIndex: number, newPreferences: (number | null)[]) => {
+    // Deep copy here if needed for preferences updates too
+    // const updatedPreferencesDeepCopy = JSON.parse(JSON.stringify(newPreferences));
+    // updateEmployeeProperty(employeeIndex, 'shiftPreferences', updatedPreferencesDeepCopy);
     updateEmployeeProperty(employeeIndex, 'shiftPreferences', newPreferences); // Standard shallow update
   };
 
@@ -365,16 +377,23 @@ const AddEmployees: React.FC = () => {
       const newLeaveEntry = { ...leaveData, id: crypto.randomUUID(), leaveType: leaveData.type };
       const employeeToUpdate = employees[employeeIndex];
       const updatedLeave = [...(employeeToUpdate.leave || []), newLeaveEntry];
+       // Deep copy here if needed for leave updates too
+      // const updatedLeaveDeepCopy = JSON.parse(JSON.stringify(updatedLeave));
+      // updateEmployeeProperty(employeeIndex, 'leave', updatedLeaveDeepCopy);
       updateEmployeeProperty(employeeIndex, 'leave', updatedLeave); // Standard shallow update
     }
   };
 
   const handleSaveFixedShifts = (fixedShifts: { [day: string]: string[] }) => {
     if (assignShiftsModalState.employeeIndex === null || !currentEmployeeList) return;
+    // Deep copy here if needed for fixed shifts updates too
+    // const fixedShiftsDeepCopy = JSON.parse(JSON.stringify(fixedShifts));
+    // updateEmployeeProperty(assignShiftsModalState.employeeIndex, 'fixedShifts', fixedShiftsDeepCopy);
     updateEmployeeProperty(assignShiftsModalState.employeeIndex, 'fixedShifts', fixedShifts); // Standard shallow update
   };
   
   // Estas funciones ahora vienen del contexto de SelectedEmployees
+
 
   if (isLoading && employees.length === 0 && !currentEmployeeList) {
     return (
@@ -394,6 +413,7 @@ const AddEmployees: React.FC = () => {
         </div>
     );
   }
+
 
   return (
     <div className="w-full bg-white rounded-lg shadow-lg p-6 mt-8 font-['Viata']">
