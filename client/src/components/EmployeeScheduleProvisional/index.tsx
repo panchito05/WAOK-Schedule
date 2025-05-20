@@ -668,7 +668,7 @@ const EmployeeScheduleTable: React.FC = () => {
 
                                  {/* Shift Select */}
                                  <select
-                                     className={`w-full border border-gray-300 rounded px-1 py-0.5 text-sm mb-1
+                                     className={`w-full border border-gray-300 rounded px-1 py-0.5 text-sm mb-1 focus:outline-none
                                         ${assignedShift === 'day-off' ? 'bg-yellow-200' : ''}
                                      `}
                                      value={assignedShift || ''} // Use assignedShift as the value
@@ -713,7 +713,7 @@ const EmployeeScheduleTable: React.FC = () => {
                                  </select>
                                  {/* Swap Shift Button */}
                                  <button
-                                     className="change-shift-btn bg-blue-500 hover:bg-blue-600 text-white text-sm px-2 py-1 rounded"
+                                     className="change-shift-btn bg-blue-500 hover:bg-blue-600 text-white text-sm px-2 py-1 rounded focus:outline-none"
                                      title="Swapping Shifts Between Employees"
                                  >
                                      🔄 {/* Swap icon */}
