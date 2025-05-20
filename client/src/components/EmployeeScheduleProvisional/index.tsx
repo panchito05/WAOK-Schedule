@@ -702,7 +702,7 @@ const EmployeeScheduleTable: React.FC = () => {
   // --- Renderizado del Componente ---
 
   return (
-    <div className="w-full bg-white rounded-lg shadow-lg p-6 mt-8 font-['Viata']">
+    <div className="w-full bg-white rounded-lg shadow-lg p-6 mt-8 font-['Viata'] overflow-x-auto">
       <div className="bg-gradient-to-r from-[#19b08d] to-[#117cee] p-4 rounded-t-lg mb-6 flex justify-between items-center">
         <h2 className="text-2xl font-bold text-white" data-en="Employee Schedule" data-es="Horario Empleados">Employee Schedule Provisional</h2> {/* Added data-en/es */}
         <div className="space-x-2">
@@ -761,12 +761,12 @@ const EmployeeScheduleTable: React.FC = () => {
                         return (
                             <th
                                 key={dateString}
-                                className={`px-2 py-1 text-center border border-gray-300 w-[120px] ${isSunday ? 'bg-gray-100' : ''}`} // Added Sunday class
+                                className={`px-2 py-1 text-center border border-gray-300 w-[180px] ${isSunday ? 'bg-gray-100' : ''}`} // Increased width for date columns
                             >
                                 {/* Using dangerouslySetInnerHTML to render formatted date HTML */}
                                 <div dangerouslySetInnerHTML={{ __html: formatDate(date) }}></div>
                                 <button 
-                                    className="mt-2 w-full bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
+                                    className="mt-2 w-full bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
                                     onClick={() => showEmployeesForDate(date)}
                                 >
                                     <Users className="h-4 w-4" /> {/* Lucide icon */}
@@ -795,7 +795,7 @@ const EmployeeScheduleTable: React.FC = () => {
               return (
                 <tr key={employee.uniqueId} className="border-b border-gray-300 align-top"> {/* Added align-top */}
                   {/* Employee Info Cell */}
-                  <td className="px-2 py-1 border border-gray-300 w-[150px]"> {/* Added width */}
+                  <td className="px-2 py-1 border border-gray-300 w-[180px]"> {/* Increased width */}
                     <div className="flex flex-col"> {/* Use flex-col for stacking */}
                         <span>{index + 1}. {employee.name}</span> {/* Added employee number */}
                         <span className="text-sm text-gray-500">({matchPercentage}% match)
@@ -856,7 +856,7 @@ const EmployeeScheduleTable: React.FC = () => {
                     return (
                       <td
                          key={dateString}
-                         className={`px-1 py-1 border border-gray-300 w-[120px] ${isSunday ? 'bg-gray-100' : ''}
+                         className={`px-1 py-1 border border-gray-300 w-[180px] ${isSunday ? 'bg-gray-100' : ''}
                            ${exceedsMax || violatesMinRest ? 'bg-yellow-300' : ''} // Highlight if rules violated (placeholder)
                          `}
                          style={{ position: 'relative' }} // Needed for absolute positioning of swap button
