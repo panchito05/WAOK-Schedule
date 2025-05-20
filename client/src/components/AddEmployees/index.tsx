@@ -707,11 +707,6 @@ const AddEmployees: React.FC = () => {
         employeeName={modalState.employeeIndex !== null && employees[modalState.employeeIndex] ? employees[modalState.employeeIndex].name : 'Employee'}
         shift={modalState.shift!}
         onSave={handleSaveBlockedDays}
-        initialBlockedDays={
-            modalState.employeeIndex !== null && modalState.shift && employees[modalState.employeeIndex]?.blockedShifts?.[modalState.shift.id]
-            ? employees[modalState.employeeIndex].blockedShifts[modalState.shift!.id]
-            : []
-        }
       />
       <DatePickerModal
         isOpen={isDatePickerOpen}
