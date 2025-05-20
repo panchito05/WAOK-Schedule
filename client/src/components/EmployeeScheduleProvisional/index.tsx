@@ -6,7 +6,6 @@ import { useShiftContext } from '../../context/ShiftContext';
 import { usePersonnelData } from '../../context/PersonnelDataContext';
 import { useSelectedEmployees } from '../../context/SelectedEmployeesContext';
 import OvertimeModal from '../OvertimeModal';
-import ViewTodaysEmployeesButton from '../ViewTodaysEmployeesButton';
 
 // --- Definición de Tipos de Datos (Simulando la estructura del JS) ---
 
@@ -424,53 +423,6 @@ const EmployeeScheduleTable: React.FC = () => {
   // Usar el contexto de selección de empleados
   const { selectedEmployeeIds } = useSelectedEmployees();
   
-  // Este es el único estado para el modal de overtime que mantendremos
-  const [overtimeModal, setOvertimeModal] = useState<{
-    isOpen: boolean;
-    shift: { startTime: string; endTime: string; index?: number } | null;
-  }>({
-    isOpen: false,
-    shift: null
-  });
-  
-  // Función para convertir horas al formato 12h
-  const convertTo12Hour = (time: string | undefined): string => {
-    if (!time) return '';
-    const [hours, minutes] = time.split(':').map(Number);
-    if (isNaN(hours) || isNaN(minutes)) return time;
-    
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const hours12 = hours % 12 || 12;
-    return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
-  };
-  
-  // Función para contar empleados programados para un turno específico
-  const countScheduledEmployees = (shift: Shift, date: Date, allEmployees: Employee[]): number => {
-    const dateString = date.toISOString().split('T')[0];
-    const dayOfWeek = daysOfWeek[date.getUTCDay()];
-    
-    return allEmployees.filter(employee => {
-      // Si está de licencia, no cuenta para este turno
-      const isOnLeave = employee.leave?.some(l => {
-        const leaveStart = new Date(l.startDate + 'T00:00:00Z');
-        const leaveEnd = new Date(l.endDate + 'T00:00:00Z');
-        return date >= leaveStart && date <= leaveEnd;
-      });
-      
-      if (isOnLeave) return false;
-      
-      // Verificar asignación manual
-      const manualShift = employee.manualShifts?.[dateString];
-      if (manualShift === shift.id) return true;
-      
-      // Verificar asignación fija si no hay asignación manual o si esta es 'day-off'
-      const fixedShift = employee.fixedShifts?.[dayOfWeek]?.[0];
-      if (fixedShift === shift.id && (!manualShift || manualShift === 'day-off')) return true;
-      
-      return false;
-    }).length;
-  };
-  
   // Use memo to prevent unnecessary rerenders of employees data
   // Filtramos los empleados para mostrar solo los seleccionados
   const employees = useMemo(() => {
@@ -508,15 +460,12 @@ const EmployeeScheduleTable: React.FC = () => {
   const { rules } = useRules();
 
   const [isScheduleTableHidden, setIsScheduleTableHidden] = useState(false);
-  // Nota: overtimeModal ya está declarado arriba, así que eliminamos la duplicación
-  
-  // Estado para el modal de empleados del día
-  const [employeesModalData, setEmployeesModalData] = useState<{
+  const [overtimeModal, setOvertimeModal] = useState<{
     isOpen: boolean;
-    date: Date | null;
+    shift: { startTime: string; endTime: string } | null;
   }>({
     isOpen: false,
-    date: null
+    shift: null
   });
 
   // --- Generar rango de fechas dinámicamente ---
@@ -592,10 +541,7 @@ const EmployeeScheduleTable: React.FC = () => {
                             >
                                 {/* Using dangerouslySetInnerHTML to render formatted date HTML */}
                                 <div dangerouslySetInnerHTML={{ __html: formatDate(date) }}></div>
-                                <button 
-                                    onClick={() => showEmployeesForDate(new Date(date))}
-                                    className="mt-2 w-full bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
-                                >
+                                <button className="mt-2 w-full bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-1">
                                     <Users className="h-4 w-4" /> {/* Lucide icon */}
                                     <span data-en="View Today's Employees" data-es="Visualizar Personal de Hoy">View Today's Employees</span> {/* Added translation */}
                                 </button>
@@ -908,14 +854,6 @@ const EmployeeScheduleTable: React.FC = () => {
                                                   <small style={{ color: '#666' }}></small> {/* Placeholder for message */}
                                               </div>
                                          )}
-                                         
-                                        {/* View Today's Employees Button */}
-                                        <button
-                                            onClick={() => window.alert("Esta funcionalidad estará disponible pronto")}
-                                            className="mt-2 text-white text-sm bg-blue-500 hover:bg-blue-600 px-2 py-1 rounded"
-                                        >
-                                            View Today's Employees
-                                        </button>
                                     </div>
                                 </td>
                             );
@@ -950,8 +888,6 @@ const EmployeeScheduleTable: React.FC = () => {
          onClose={() => setOvertimeModal({ isOpen: false, shift: null })}
          shift={overtimeModal.shift || { startTime: '', endTime: '' }}
        />
-       
-       {/* Note: The Today's Employees Modal is now handled by the ViewTodaysEmployeesButton component */}
 
        {/* Note: Modals like Block Shift, Priorities, Calendar, Overtime, etc., are not included here */}
        {/* as they are separate UI elements triggered by interactions not replicated in this static structure. */}
