@@ -4,7 +4,7 @@ import { ShiftOvertime, Shift } from '../types/common';
 
 // Interfaz de compatibilidad para transición gradual
 export interface ShiftRow extends Partial<Shift> {
-  id: string;
+  id?: string;
   startTime: string;
   endTime: string;
   duration: string;

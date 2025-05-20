@@ -6,8 +6,7 @@ import { useShiftContext, ShiftRow } from '../../context/ShiftContext';
 import { usePersonnelData } from '../../context/PersonnelDataContext';
 import { useSelectedEmployees } from '../../context/SelectedEmployeesContext';
 import OvertimeModal from '../OvertimeModal';
-import { Employee as EmployeeType, Shift as ShiftType, RulesState } from '../../types/common';
-import { ShiftOvertime } from '../../context/ShiftContext';
+import { Employee as EmployeeType, Shift as ShiftType, ShiftOvertime, RulesState } from '../../types/common';
 import { convertTo12Hour, formatDate as formatDateUtil, formatDateHTML as formatDateHtmlUtil } from '../../lib/utils';
 
 // --- Definición de Tipos de Datos Internos ---
@@ -736,7 +735,7 @@ const EmployeeScheduleTable: React.FC = () => {
                                 className={`px-2 py-1 text-center border border-gray-300 w-[120px] ${isSunday ? 'bg-gray-100' : ''}`} // Added Sunday class
                             >
                                 {/* Using dangerouslySetInnerHTML to render formatted date HTML */}
-                                <div dangerouslySetInnerHTML={{ __html: formatDateHtmlUtil(date) }}></div>
+                                <div dangerouslySetInnerHTML={{ __html: formatDate(date) }}></div>
                                 <button 
                                     className="mt-2 w-full bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
                                     onClick={() => showEmployeesForDate(date)}
