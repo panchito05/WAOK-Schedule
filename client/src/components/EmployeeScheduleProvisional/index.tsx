@@ -62,9 +62,10 @@ const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'fri
 
 // Función para verificar si un empleado está de vacaciones o licencia en una fecha específica
 const isEmployeeOnLeave = (employee: Employee, dateString: string): boolean => {
-  if (!employee.leave || !Array.isArray(employee.leave)) return false;
+  if (!employee || !employee.leave || !Array.isArray(employee.leave)) return false;
   
   return employee.leave.some(leave => {
+    if (!leave || !leave.startDate || !leave.endDate) return false;
     const startDate = leave.startDate;
     const endDate = leave.endDate;
     return dateString >= startDate && dateString <= endDate;
@@ -73,6 +74,7 @@ const isEmployeeOnLeave = (employee: Employee, dateString: string): boolean => {
 
 // Función para verificar si se supera el máximo de turnos consecutivos (placeholder, lógica simplificada)
 const exceedsMaxConsecutiveShifts = (employee: Employee, dateString: string, rules: any, shifts: TimeRange[]): boolean => {
+  if (!employee || !dateString || !rules || !shifts) return false;
   // Lógica de simulación - en un sistema real, esto verificaría los turnos anteriores
   // y determinaría si añadir este turno excedería el límite máximo
   return false; // Placeholder - retorna falso para no mostrar advertencias
@@ -80,6 +82,7 @@ const exceedsMaxConsecutiveShifts = (employee: Employee, dateString: string, rul
 
 // Función para verificar si se viola el tiempo mínimo de descanso (placeholder, lógica simplificada)
 const violatesMinRestTime = (employee: Employee, dateString: string, shiftId: string, rules: any, shifts: TimeRange[]): boolean => {
+  if (!employee || !dateString || !rules || !shifts) return false;
   // Lógica de simulación - en un sistema real, esto verificaría los turnos anteriores y siguientes
   // y calcularía si hay suficiente tiempo de descanso entre turnos
   return false; // Placeholder - retorna falso para no mostrar advertencias
@@ -87,28 +90,49 @@ const violatesMinRestTime = (employee: Employee, dateString: string, shiftId: st
 
 // Contabilizar empleados programados para un turno específico
 const countScheduledEmployees = (shift: Shift, date: Date, employees: Employee[]): number => {
-  const dateString = date.toISOString().split('T')[0];
-  const dayOfWeek = daysOfWeek[date.getUTCDay()];
+  if (!shift || !date || !employees || !Array.isArray(employees)) return 0;
   
-  return employees.filter(emp => {
-    // Verificar turnos manuales para esta fecha
-    if (emp.manualShifts && emp.manualShifts[dateString] === shift.id) return true;
+  try {
+    const dateString = date.toISOString().split('T')[0];
+    const dayIndex = date.getUTCDay();
+    if (dayIndex < 0 || dayIndex >= daysOfWeek.length) return 0;
     
-    // Verificar turnos fijos para este día de la semana
-    if (emp.fixedShifts && emp.fixedShifts[dayOfWeek] && emp.fixedShifts[dayOfWeek].includes(shift.id)) return true;
+    const dayOfWeek = daysOfWeek[dayIndex];
     
-    return false;
-  }).length;
+    return employees.filter(emp => {
+      if (!emp) return false;
+      
+      // Verificar turnos manuales para esta fecha
+      if (emp.manualShifts && emp.manualShifts[dateString] === shift.id) return true;
+      
+      // Verificar turnos fijos para este día de la semana
+      if (emp.fixedShifts && emp.fixedShifts[dayOfWeek] && Array.isArray(emp.fixedShifts[dayOfWeek]) && 
+          emp.fixedShifts[dayOfWeek].includes(shift.id)) return true;
+      
+      return false;
+    }).length;
+  } catch(error) {
+    console.error("Error en countScheduledEmployees:", error);
+    return 0;
+  }
 };
 
 // Verificar si se debe mostrar disponibilidad de horas extra
 const shouldDisplayOvertime = (shift: Shift, dateString: string, employees: Employee[], timeRanges: TimeRange[]): number => {
-  // Verificar si las horas extra están activas para este turno
-  if (!shift.isOvertimeActive) return 0;
+  // Validación de parámetros
+  if (!shift || !dateString || !employees || !Array.isArray(employees) || !timeRanges) return 0;
   
-  // En un sistema real, esto calcularía cuántas posiciones de horas extra están disponibles
-  // basado en configuraciones, necesidades, límites presupuestarios, etc.
-  return Math.floor(Math.random() * 3); // Placeholder - número aleatorio entre 0 y 2
+  try {
+    // Verificar si las horas extra están activas para este turno
+    if (!shift.isOvertimeActive) return 0;
+    
+    // En un sistema real, esto calcularía cuántas posiciones de horas extra están disponibles
+    // basado en configuraciones, necesidades, límites presupuestarios, etc.
+    return Math.floor(Math.random() * 3); // Placeholder - número aleatorio entre 0 y 2
+  } catch (error) {
+    console.error("Error en shouldDisplayOvertime:", error);
+    return 0;
+  }
 };
 
 // Función para formatear las horas bi-semanales con colores según umbrales
