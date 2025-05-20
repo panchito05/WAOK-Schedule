@@ -289,7 +289,26 @@ const EditListModal: React.FC<EditListModalProps> = ({
 
 // SecondaryNavigation Component
 const SecondaryNavigation: React.FC = () => {
-  const { lists, currentListId, addList, setCurrentList, updateList, removeList } = useEmployeeLists();
+  // Wrap in try/catch to prevent application crashing if context is not available yet
+  let lists: any[] = [];
+  let currentListId: string | null = null;
+  let addList: (name: string) => void = () => {};
+  let setCurrentList: (id: string) => void = () => {};
+  let updateList: (id: string, data: any) => void = () => {};
+  let removeList: (id: string) => void = () => {};
+  
+  try {
+    const employeeListsContext = useEmployeeLists();
+    lists = employeeListsContext.lists;
+    currentListId = employeeListsContext.currentListId;
+    addList = employeeListsContext.addList;
+    setCurrentList = employeeListsContext.setCurrentList;
+    updateList = employeeListsContext.updateList;
+    removeList = employeeListsContext.removeList;
+  } catch (error) {
+    console.warn("EmployeeListsContext not available yet, using default values");
+  }
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [newListName, setNewListName] = useState('');
