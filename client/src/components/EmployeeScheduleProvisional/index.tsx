@@ -750,9 +750,9 @@ const EmployeeScheduleTable: React.FC = () => {
              {!isScheduleTableHidden && (
                  <tr>
                     {/* Static Headers */}
-                    <th className="px-2 py-1 text-left border border-gray-300 w-[150px]" data-en="Employees" data-es="Empleados">Employees</th> {/* Added width guess */}
-                    <th className="px-2 py-1 text-left border border-gray-300 w-[150px]" data-en="Shift: Preferences or Locked" data-es="Turno: Preferencias o Bloqueado">Shift: Preferences or Locked</th> {/* Added width guess */}
-                    <th className="px-2 py-1 text-left border border-gray-300 w-[220px]" data-en="Total Shifts / Hours" data-es="Total Turnos / Horas">Total Shifts / Hours</th> {/* Increased width for more space */}
+                    <th className="px-2 py-1 text-left border border-gray-300 w-[180px]" data-en="Employees" data-es="Empleados">Employees</th> {/* Increased width */}
+                    <th className="px-2 py-1 text-left border border-gray-300 w-[200px]" data-en="Shift: Preferences or Locked" data-es="Turno: Preferencias o Bloqueado">Shift: Preferences or Locked</th> {/* Increased width */}
+                    <th className="px-2 py-1 text-left border border-gray-300 w-[250px]" data-en="Total Shifts / Hours" data-es="Total Turnos / Horas">Total Shifts / Hours</th> {/* Increased width more */}
 
                     {/* Dynamic Date Headers */}
                     {dateRange.map((date) => {
@@ -808,12 +808,12 @@ const EmployeeScheduleTable: React.FC = () => {
 
                   {/* Preferences/Blocked Cell */}
                    {/* Using dangerouslySetInnerHTML to render formatted HTML string */}
-                  <td className="px-2 py-1 border border-gray-300 w-[150px]" dangerouslySetInnerHTML={{ __html: getPreferenceAndBlockedInfo(employee, timeRanges) }}>
+                  <td className="px-2 py-1 border border-gray-300 w-[200px]" dangerouslySetInnerHTML={{ __html: getPreferenceAndBlockedInfo(employee, timeRanges) }}>
                      {/* Content rendered by getPreferenceAndBlockedInfo */}
                   </td>
 
                   {/* Total Hours / Weekends Cell */}
-                  <td className="px-2 py-1 border border-gray-300 w-[220px]">
+                  <td className="px-2 py-1 border border-gray-300 w-[250px]">
                       {/* Using dangerouslySetInnerHTML for colored hours */}
                       <div dangerouslySetInnerHTML={{ __html: formatBiweeklyHours(hoursData, minBiweeklyHours) }}></div>
                       <div style={{
