@@ -15,16 +15,35 @@ const PersonnelTable: React.FC = () => {
   const { shiftData, setShiftData } = usePersonnelData();
 
   useEffect(() => {
-    // Update shiftData when shifts change
-    const newShiftData = shifts.map((shift, index) => ({
-      id: index + 1,
-      name: `Shift ${index + 1}`,
-      timeRange: `${shift.startTime} - ${shift.endTime}`,
-      counts: [4, 4, 4, 4, 4, 4, 4],
-      idealNumber: 5.60
-    }));
-    setShiftData(newShiftData);
-  }, [shifts]);
+    // Solo actualizar shiftData si los turnos han cambiado y shiftData está vacío 
+    // o si hay una diferencia en el número de turnos, para evitar bucles infinitos
+    const shouldUpdateShiftData = 
+      shiftData.length === 0 || 
+      shiftData.length !== shifts.length || 
+      !shifts.every((shift, index) => 
+        index < shiftData.length && 
+        `${shift.startTime} - ${shift.endTime}` === shiftData[index].timeRange
+      );
+
+    if (shouldUpdateShiftData) {
+      console.log("Actualizando shiftData basado en cambios en shifts");
+      const newShiftData = shifts.map((shift, index) => {
+        // Preservar los counts existentes si ya existen para este shift
+        const existingShift = shiftData.find(s => 
+          s.timeRange === `${shift.startTime} - ${shift.endTime}`
+        );
+        
+        return {
+          id: index + 1,
+          name: `Shift ${index + 1}`,
+          timeRange: `${shift.startTime} - ${shift.endTime}`,
+          counts: existingShift ? existingShift.counts : [4, 4, 4, 4, 4, 4, 4],
+          idealNumber: existingShift ? existingShift.idealNumber : 5.60
+        };
+      });
+      setShiftData(newShiftData);
+    }
+  }, [shifts, shiftData]);
 
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
