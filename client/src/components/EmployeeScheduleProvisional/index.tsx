@@ -824,10 +824,10 @@ const EmployeeScheduleTable: React.FC = () => {
                                 >
                                     <div className="flex flex-col items-center">
                                         {/* Scheduled Count with Staff button */}
-                                         <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#3B82F6', padding: '2px 5px', borderRadius: '3px' }}>
-                                            <span style={{color: 'white', fontWeight: 'bold', marginRight: '4px'}}>{scheduledCount}</span>
+                                         <div style={{ display: 'flex', alignItems: 'center', padding: '2px 5px', borderRadius: '3px', border: '1px solid #ccc' }}>
+                                            <span style={{fontWeight: 'bold', marginRight: '4px'}}>{scheduledCount}</span>
                                             <button
-                                                 className="text-white text-xs ml-1 bg-transparent border-none underline cursor-pointer"
+                                                 className="text-xs ml-1 bg-transparent border-none underline cursor-pointer"
                                                  title="Staff For This Shift"
                                             >
                                                  Staff For This Shift
