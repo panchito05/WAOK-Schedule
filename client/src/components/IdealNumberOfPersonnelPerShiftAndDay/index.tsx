@@ -33,7 +33,7 @@ const PersonnelTable: React.FC = () => {
 
   return (
     <div className="w-full bg-white rounded-lg shadow-lg p-6 mt-8">
-      <h2 className="text-2xl font-bold mb-6">Ideal Number of Personnel per Shift and Day</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-[#19b08d] to-[#117cee] text-white py-3 rounded">Ideal Number of Personnel per Shift and Day</h2>
 
       {shiftData.map((shift) => (
         <div key={shift.id} className="mb-8">
@@ -44,10 +44,10 @@ const PersonnelTable: React.FC = () => {
           <div className="border rounded-lg overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-100">
-                  <th className="px-4 py-3 text-left border-r border-gray-300 w-32">Day</th>
+                <tr className="bg-gradient-to-r from-[#19b08d] to-[#117cee] text-white">
+                  <th className="px-4 py-3 text-left border-r border-gray-100 w-32">Day</th>
                   {days.map((day) => (
-                    <th key={day} className="px-4 py-3 text-left border-r border-gray-300">
+                    <th key={day} className="px-4 py-3 text-left border-r border-gray-100">
                       {day}
                     </th>
                   ))}
@@ -88,7 +88,7 @@ const PersonnelTable: React.FC = () => {
         </div>
       ))}
 
-      <div className="bg-green-500 text-white p-4 rounded-lg flex justify-between items-center">
+      <div className="bg-gradient-to-r from-[#19b08d] to-[#117cee] text-white p-4 rounded-lg flex justify-between items-center">
         <span className="text-lg">
           Total Number of Employees Needed to Meet Staffing Requirements Across All Shifts:
         </span>
