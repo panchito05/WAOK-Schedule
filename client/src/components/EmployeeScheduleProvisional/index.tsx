@@ -698,13 +698,13 @@ const EmployeeScheduleTable: React.FC = () => {
   // --- Renderizado del Componente ---
 
   return (
-    <div className="w-full bg-white rounded-lg shadow-lg p-6 mt-8">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold" data-en="Employee Schedule" data-es="Horario Empleados">Employee Schedule Provisional</h2> {/* Added data-en/es */}
+    <div className="w-full bg-white rounded-lg shadow-lg p-6 mt-8 font-['Viata']">
+      <div className="bg-gradient-to-r from-[#19b08d] to-[#117cee] p-4 rounded-t-lg mb-6 flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-white" data-en="Employee Schedule" data-es="Horario Empleados">Employee Schedule Provisional</h2> {/* Added data-en/es */}
         <div className="space-x-2">
           {/* Toggle button for the table */}
           <button
-             className={`px-4 py-2 rounded hover:bg-blue-600 transition-colors ${isScheduleTableHidden ? 'bg-yellow-500 text-black' : 'bg-blue-500 text-white'}`}
+             className={`px-4 py-2 rounded transition-colors ${isScheduleTableHidden ? 'bg-yellow-500 text-black' : 'bg-white text-[#19b08d] hover:bg-gray-100'}`}
              onClick={() => setIsScheduleTableHidden(!isScheduleTableHidden)}
              data-en-show="Show Employee Schedule Table" data-en-hide="Hide Employee Schedule Table"
              data-es-show="Mostrar Tabla Horario Empleados" data-es-hide="Ocultar Tabla Horario Empleados"
@@ -713,10 +713,10 @@ const EmployeeScheduleTable: React.FC = () => {
           </button>
 
           {/* AI and Print buttons (text and functionality are placeholders) */}
-          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
+          <button className="bg-white text-[#19b08d] px-4 py-2 rounded hover:bg-gray-100 transition-colors">
             Create Schedule with AI
           </button>
-          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
+          <button className="bg-white text-[#19b08d] px-4 py-2 rounded hover:bg-gray-100 transition-colors">
             Print Schedule
           </button>
         </div>
