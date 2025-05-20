@@ -161,6 +161,14 @@ const AddEmployees: React.FC = () => {
   const { getCurrentList, updateList } = useEmployeeLists();
   const { rules } = useRules();
 
+  // Estados para la funcionalidad de Hide/Show
+  const [isTableBodyHidden, setIsTableBodyHidden] = useState(() => {
+    const savedState = localStorage.getItem('employeesTableHidden');
+    return savedState ? JSON.parse(savedState) : false;
+  });
+  
+  const [isTableHidden, setIsTableHidden] = useState(false);
+
   // Eliminar llamada a getCurrentList de aquí - es parte del problema
   // Definimos un estado local para rastrear el empleado list cargado
   const [employeeStateLoaded, setEmployeeStateLoaded] = useState(false);
@@ -387,6 +395,13 @@ const AddEmployees: React.FC = () => {
   
   // Estas funciones ahora vienen del contexto de SelectedEmployees
 
+  // Función para manejar el toggle del cuerpo de la tabla
+  const toggleTableBody = () => {
+    const newState = !isTableBodyHidden;
+    setIsTableBodyHidden(newState);
+    localStorage.setItem('employeesTableHidden', JSON.stringify(newState));
+  };
+
 
   if (isLoading && employees.length === 0 && !currentEmployeeList) {
     return (
@@ -416,10 +431,23 @@ const AddEmployees: React.FC = () => {
       
       <div className="flex justify-between items-center mb-6">
         <div></div> {/* Espacio vacío para mantener el justify-between */}
-        <button className="text-gray-600 hover:text-gray-800">
-          Hide Employees Table
+        <button 
+          onClick={toggleTableBody}
+          className={`px-4 py-2 rounded transition-colors ${isTableBodyHidden ? 'bg-[#ffd700] text-black' : 'bg-white text-[#19b08d] hover:bg-gray-100 border border-gray-300'}`}
+          data-es-show="Mostrar Tabla de Empleados"
+          data-es-hide="Ocultar Tabla de Empleados"
+        >
+          {isTableBodyHidden ? 'Show Employees Table' : 'Hide Employees Table'}
         </button>
       </div>
+      
+      {isTableBodyHidden && (
+        <div className="bg-[#ffd700] border border-gray-300 text-black text-center py-4 px-2 rounded mb-4">
+          <span className="font-bold">
+            Employees Table is hidden. Press 'Show Employees Table' button to make it visible again
+          </span>
+        </div>
+      )}
 
       <div className="space-y-4 mb-8">
         {formError && (
