@@ -745,7 +745,7 @@ const EmployeeScheduleTable: React.FC = () => {
         {/* Table */}
         <table className="w-full border-collapse employee-schedule-table text-base">
           {/* Table Header */}
-          <thead className={`bg-gray-200 ${isScheduleTableHidden ? 'table-header-hidden' : ''}`}>
+          <thead className={`bg-gray-200 sticky top-0 z-10 ${isScheduleTableHidden ? 'table-header-hidden' : ''}`}>
               {/* Este mensaje dentro de la tabla ya no es necesario porque tenemos uno fuera */}
              {!isScheduleTableHidden && (
                  <tr>
