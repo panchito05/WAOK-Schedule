@@ -2,7 +2,7 @@ import React, { createContext, useContext, ReactNode, useMemo, useCallback } fro
 import { useEmployeeLists } from './EmployeeListsContext';
 import { ShiftRow, ShiftOvertime } from '../types/common';
 
-// Exportamos la interfaz para que pueda ser utilizada en otras partes
+// Re-exportamos los tipos para mantener compatibilidad
 export type { ShiftRow, ShiftOvertime };
 
 interface ShiftContextType {

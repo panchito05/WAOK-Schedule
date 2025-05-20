@@ -9,7 +9,8 @@ import { PersonnelDataProvider } from './context/PersonnelDataContext';
 import { ShiftPrioritiesProvider } from './context/ShiftPrioritiesContext';
 import { SelectedEmployeesProvider } from './context/SelectedEmployeesContext';
 
-// Usamos la estructura original de contextos para mantener la aplicación funcionando
+// NOTA IMPORTANTE: Mantener este orden específico de providers
+// EmployeeListsProvider debe estar más externo que los demás providers que lo usan
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <EmployeeListsProvider>
