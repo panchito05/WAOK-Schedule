@@ -139,19 +139,19 @@ const ShiftConfiguration: React.FC = () => {
   return (
     <div className="relative w-[800px] bg-white rounded-lg shadow-lg p-6 mt-8 font-['Viata']">
       <div className="bg-gradient-to-r from-[#19b08d] to-[#117cee] p-4 rounded-t-lg mb-6">
-        <h2 className="text-2xl font-bold text-white">Shift Configuration</h2>
+        <h2 className="text-2xl font-bold text-white text-center">Shift Configuration</h2>
       </div>
 
-      <div className="flex gap-4 mb-6">
+      <div className="flex justify-center gap-4 mb-6">
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition-colors"
+          className="bg-gradient-to-r from-[#19b08d] to-[#117cee] text-white px-6 py-2 rounded hover:opacity-90 transition-colors font-semibold"
         >
           Create Shift
         </button>
         <button 
           onClick={() => setIsPrioritiesModalOpen(true)}
-          className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition-colors"
+          className="bg-gradient-to-r from-[#19b08d] to-[#117cee] text-white px-6 py-2 rounded hover:opacity-90 transition-colors font-semibold"
         >
           Set Shift Priorities
         </button>
