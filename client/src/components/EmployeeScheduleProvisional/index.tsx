@@ -1073,18 +1073,60 @@ const EmployeeScheduleTable: React.FC = () => {
                              if (manualShift === 'day-off') {
                                shiftInfo = 'Day Off';
                              } else {
-                               const shift = shifts.find(s => s.id === manualShift);
-                               if (shift) {
-                                 shiftInfo = `${convertTo12Hour(shift.start)} - ${convertTo12Hour(shift.end)}`;
+                               // Primero intentamos encontrar el turno por ID
+                               const shiftById = shifts.find(s => s.id === manualShift);
+                               
+                               if (shiftById) {
+                                 // Si tiene propiedades start/end, usamos esas
+                                 if (shiftById.start && shiftById.end) {
+                                   shiftInfo = `${convertTo12Hour(shiftById.start)} - ${convertTo12Hour(shiftById.end)}`;
+                                 } 
+                                 // Si tiene startTime/endTime (del tipo ShiftRow), usamos esas
+                                 else if (shiftById.startTime && shiftById.endTime) {
+                                   shiftInfo = `${shiftById.startTime} - ${shiftById.endTime}`;
+                                 }
+                               } 
+                               // Si no lo encontramos por ID, buscamos por índice (si es 'shift_1', buscamos index 0)
+                               else if (manualShift.startsWith('shift_')) {
+                                 const shiftIndex = parseInt(manualShift.replace('shift_', '')) - 1;
+                                 if (shiftIndex >= 0 && shiftIndex < shifts.length) {
+                                   const foundShift = shifts[shiftIndex];
+                                   if (foundShift.startTime && foundShift.endTime) {
+                                     shiftInfo = `${foundShift.startTime} - ${foundShift.endTime}`;
+                                   } else if (foundShift.start && foundShift.end) {
+                                     shiftInfo = `${convertTo12Hour(foundShift.start)} - ${convertTo12Hour(foundShift.end)}`;
+                                   }
+                                 }
                                }
                              }
                            } else if (fixedShift) {
                              if (fixedShift === 'day-off') {
                                shiftInfo = 'Day Off';
                              } else {
-                               const shift = shifts.find(s => s.id === fixedShift);
-                               if (shift) {
-                                 shiftInfo = `${convertTo12Hour(shift.start)} - ${convertTo12Hour(shift.end)}`;
+                               // Primero intentamos encontrar el turno por ID
+                               const shiftById = shifts.find(s => s.id === fixedShift);
+                               
+                               if (shiftById) {
+                                 // Si tiene propiedades start/end, usamos esas
+                                 if (shiftById.start && shiftById.end) {
+                                   shiftInfo = `${convertTo12Hour(shiftById.start)} - ${convertTo12Hour(shiftById.end)}`;
+                                 } 
+                                 // Si tiene startTime/endTime (del tipo ShiftRow), usamos esas
+                                 else if (shiftById.startTime && shiftById.endTime) {
+                                   shiftInfo = `${shiftById.startTime} - ${shiftById.endTime}`;
+                                 }
+                               } 
+                               // Si no lo encontramos por ID, buscamos por índice (si es 'shift_1', buscamos index 0)
+                               else if (fixedShift.startsWith('shift_')) {
+                                 const shiftIndex = parseInt(fixedShift.replace('shift_', '')) - 1;
+                                 if (shiftIndex >= 0 && shiftIndex < shifts.length) {
+                                   const foundShift = shifts[shiftIndex];
+                                   if (foundShift.startTime && foundShift.endTime) {
+                                     shiftInfo = `${foundShift.startTime} - ${foundShift.endTime}`;
+                                   } else if (foundShift.start && foundShift.end) {
+                                     shiftInfo = `${convertTo12Hour(foundShift.start)} - ${convertTo12Hour(foundShift.end)}`;
+                                   }
+                                 }
                                }
                              }
                            }
@@ -1110,16 +1152,19 @@ const EmployeeScheduleTable: React.FC = () => {
                          </tr>
                        </thead>
                        <tbody>
-                         {shifts.map(shift => {
+                         {shifts.map((shift, index) => {
                            // Protegemos contra la ausencia de nurseCounts o valores específicos para el día
                            const ideal = shift.nurseCounts && dayOfWeek in shift.nurseCounts ? 
                                         shift.nurseCounts[dayOfWeek] : 0;
                            const scheduled = countScheduledEmployees(shift, currentModalDate, employees);
                            
+                           // Obtener la representación del horario del turno
+                           const shiftTime = `${shift.startTime || convertTo12Hour(shift.start)} - ${shift.endTime || convertTo12Hour(shift.end)}`;
+                           
                            return (
-                             <tr key={shift.id} className="border-b">
+                             <tr key={shift.id || `shift-${index}`} className="border-b">
                                <td className="border px-4 py-2">
-                                 {convertTo12Hour(shift.start)} - {convertTo12Hour(shift.end)}
+                                 {shiftTime}
                                </td>
                                <td className="border px-4 py-2">{ideal}</td>
                                <td className="border px-4 py-2">{scheduled}</td>
