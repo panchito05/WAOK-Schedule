@@ -90,7 +90,10 @@ const ShiftConfiguration: React.FC = () => {
       startTime: editingShift.startTime,
       endTime: editingShift.endTime,
       duration,
-      lunchBreakDeduction: editingShift.lunchBreakDeduction
+      lunchBreakDeduction: editingShift.lunchBreakDeduction,
+      id: shifts[index].id || `shift_${index + 1}`,
+      isOvertimeActive: shifts[index].isOvertimeActive,
+      overtimeEntries: shifts[index].overtimeEntries
     });
     setEditingShiftIndex(null);
   };
@@ -128,7 +131,9 @@ const ShiftConfiguration: React.FC = () => {
       startTime: formattedStartTime,
       endTime: formattedEndTime,
       duration,
-      lunchBreakDeduction: newShift.lunchBreakDeduction
+      lunchBreakDeduction: newShift.lunchBreakDeduction,
+      isOvertimeActive: false,
+      overtimeEntries: []
     };
 
     addShift(newShiftRow);

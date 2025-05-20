@@ -109,19 +109,32 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (currentList) {
       const newShifts = [...currentList.shifts];
       const shift = newShifts[shiftIndex];
+      
+      // Crear una copia del shift para no modificar el original directamente
+      const updatedShift: ShiftRow = {
+        ...shift,
+        id: shift.id || `shift_${shiftIndex + 1}`,
+        isOvertimeActive: shift.isOvertimeActive || false,
+        overtimeEntries: shift.overtimeEntries ? [...shift.overtimeEntries] : []
+      };
 
-      if (!shift.overtimeEntries) {
-        shift.overtimeEntries = [];
-      }
-
-      const existingEntryIndex = shift.overtimeEntries.findIndex(entry => entry.date === date);
+      const existingEntryIndex = updatedShift.overtimeEntries.findIndex(entry => entry.date === date);
 
       if (existingEntryIndex >= 0) {
-        shift.overtimeEntries[existingEntryIndex] = { date, quantity, isActive };
+        // Creamos un nuevo array para mantener la inmutabilidad
+        updatedShift.overtimeEntries = [
+          ...updatedShift.overtimeEntries.slice(0, existingEntryIndex),
+          { date, quantity, isActive },
+          ...updatedShift.overtimeEntries.slice(existingEntryIndex + 1)
+        ];
       } else {
-        shift.overtimeEntries.push({ date, quantity, isActive });
+        updatedShift.overtimeEntries = [...updatedShift.overtimeEntries, { date, quantity, isActive }];
       }
 
+      // Actualizar el shift en el array
+      newShifts[shiftIndex] = updatedShift;
+      
+      // Actualizar la lista
       updateList(currentList.id, { shifts: newShifts });
     }
   }, [getCurrentList, updateList]);

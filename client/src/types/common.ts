@@ -16,13 +16,13 @@ export interface ShiftOvertime {
  * Definición completa de un turno de trabajo
  */
 export interface ShiftRow {
-  id: string; // Hacemos id obligatorio ya que es usado en muchas partes 
+  id: string; // ID obligatorio para identificación única
   startTime: string;
   endTime: string;
   duration: string;
   lunchBreakDeduction: number;
-  isOvertimeActive?: boolean;
-  overtimeEntries?: ShiftOvertime[];
+  isOvertimeActive: boolean; // Ahora requerido, no opcional
+  overtimeEntries: ShiftOvertime[]; // Ahora requerido, no opcional
   // Propiedades adicionales usadas en EmployeeScheduleProvisional
   start?: string; 
   end?: string;
