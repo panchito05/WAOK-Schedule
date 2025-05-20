@@ -750,9 +750,9 @@ const EmployeeScheduleTable: React.FC = () => {
              {!isScheduleTableHidden && (
                  <tr>
                     {/* Static Headers */}
-                    <th className="px-2 py-1 text-left border border-gray-300 w-[218px]" data-en="Employees" data-es="Empleados">Employees</th> {/* Width increased by 45% */}
-                    <th className="px-2 py-1 text-left border border-gray-300 w-[218px]" data-en="Shift: Preferences or Locked" data-es="Turno: Preferencias o Bloqueado">Shift: Preferences or Locked</th> {/* Width increased by 45% */}
-                    <th className="px-2 py-1 text-left border border-gray-300 w-[319px]" data-en="Total Shifts / Hours" data-es="Total Turnos / Horas">Total Shifts / Hours</th> {/* Width increased by 45% */}
+                    <th className="px-2 py-1 text-left border border-gray-300 w-[150px]" data-en="Employees" data-es="Empleados">Employees</th> {/* Added width guess */}
+                    <th className="px-2 py-1 text-left border border-gray-300 w-[150px]" data-en="Shift: Preferences or Locked" data-es="Turno: Preferencias o Bloqueado">Shift: Preferences or Locked</th> {/* Added width guess */}
+                    <th className="px-2 py-1 text-left border border-gray-300 w-[220px]" data-en="Total Shifts / Hours" data-es="Total Turnos / Horas">Total Shifts / Hours</th> {/* Increased width for more space */}
 
                     {/* Dynamic Date Headers */}
                     {dateRange.map((date) => {
@@ -761,7 +761,7 @@ const EmployeeScheduleTable: React.FC = () => {
                         return (
                             <th
                                 key={dateString}
-                                className={`px-2 py-1 text-center border border-gray-300 w-[174px] ${isSunday ? 'bg-gray-100' : ''}`} // Width increased by 45%
+                                className={`px-2 py-1 text-center border border-gray-300 w-[120px] ${isSunday ? 'bg-gray-100' : ''}`} // Added Sunday class
                             >
                                 {/* Using dangerouslySetInnerHTML to render formatted date HTML */}
                                 <div dangerouslySetInnerHTML={{ __html: formatDate(date) }}></div>
@@ -776,7 +776,7 @@ const EmployeeScheduleTable: React.FC = () => {
                         );
                     })}
                     {/* Summary Header */}
-                     <th className="px-2 py-1 text-left border border-gray-300 w-[290px]" data-en="Summary and/or Considerations for this Schedule" data-es="Resumen y/o Consideraciones para este Horario">Summary and/or Considerations for this Schedule</th> {/* Width increased by 45% */}
+                     <th className="px-2 py-1 text-left border border-gray-300 w-[200px]" data-en="Summary and/or Considerations for this Schedule" data-es="Resumen y/o Consideraciones para este Horario">Summary and/or Considerations for this Schedule</th> {/* Added width guess */}
                  </tr>
              )}
           </thead>
@@ -795,7 +795,7 @@ const EmployeeScheduleTable: React.FC = () => {
               return (
                 <tr key={employee.uniqueId} className="border-b border-gray-300 align-top"> {/* Added align-top */}
                   {/* Employee Info Cell */}
-                  <td className="px-2 py-1 border border-gray-300 w-[218px]"> {/* Width increased by 45% */}
+                  <td className="px-2 py-1 border border-gray-300 w-[150px]"> {/* Added width */}
                     <div className="flex flex-col"> {/* Use flex-col for stacking */}
                         <span>{index + 1}. {employee.name}</span> {/* Added employee number */}
                         <span className="text-sm text-gray-500">({matchPercentage}% match)
@@ -808,12 +808,12 @@ const EmployeeScheduleTable: React.FC = () => {
 
                   {/* Preferences/Blocked Cell */}
                    {/* Using dangerouslySetInnerHTML to render formatted HTML string */}
-                  <td className="px-2 py-1 border border-gray-300 w-[218px]" dangerouslySetInnerHTML={{ __html: getPreferenceAndBlockedInfo(employee, timeRanges) }}>
+                  <td className="px-2 py-1 border border-gray-300 w-[150px]" dangerouslySetInnerHTML={{ __html: getPreferenceAndBlockedInfo(employee, timeRanges) }}>
                      {/* Content rendered by getPreferenceAndBlockedInfo */}
                   </td>
 
                   {/* Total Hours / Weekends Cell */}
-                  <td className="px-2 py-1 border border-gray-300 w-[319px]">
+                  <td className="px-2 py-1 border border-gray-300 w-[220px]">
                       {/* Using dangerouslySetInnerHTML for colored hours */}
                       <div dangerouslySetInnerHTML={{ __html: formatBiweeklyHours(hoursData, minBiweeklyHours) }}></div>
                       <div style={{
@@ -856,7 +856,7 @@ const EmployeeScheduleTable: React.FC = () => {
                     return (
                       <td
                          key={dateString}
-                         className={`px-1 py-1 border border-gray-300 w-[174px] ${isSunday ? 'bg-gray-100' : ''}
+                         className={`px-1 py-1 border border-gray-300 w-[120px] ${isSunday ? 'bg-gray-100' : ''}
                            ${exceedsMax || violatesMinRest ? 'bg-yellow-300' : ''} // Highlight if rules violated (placeholder)
                          `}
                          style={{ position: 'relative' }} // Needed for absolute positioning of swap button
@@ -980,7 +980,7 @@ const EmployeeScheduleTable: React.FC = () => {
                 Total Employees by Shifts
               </td>
               {dateRange.map((date) => (
-                <td key={date.toISOString().split('T')[0]} className="px-2 py-1 border border-gray-300 w-[174px]">
+                <td key={date.toISOString().split('T')[0]} className="px-2 py-1 border border-gray-300 w-[120px]">
                   {/* Content is empty in the original JS output for this row */}
                 </td>
               ))}
@@ -1033,12 +1033,12 @@ const EmployeeScheduleTable: React.FC = () => {
                          </td>
 
                          {/* Preference Count Cell */}
-                         <td className="px-2 py-1 border border-gray-300 text-center w-[218px]"> {/* Width increased by 45% */}
+                         <td className="px-2 py-1 border border-gray-300 text-center w-[150px]"> {/* Centered as in JS */}
                              Pref: {preferenceCount}
                          </td>
 
                          {/* Preference Percentage Cell */}
-                         <td className="px-2 py-1 border border-gray-300 text-center w-[218px]"> {/* Width increased by 45% */}
+                         <td className="px-2 py-1 border border-gray-300 text-center w-[150px]"> {/* Centered as in JS */}
                              {preferencePercentage}%
                          </td>
 
@@ -1055,7 +1055,7 @@ const EmployeeScheduleTable: React.FC = () => {
                             return (
                                 <td
                                     key={dateString}
-                                    className={`px-2 py-1 border border-gray-300 text-center w-[174px] ${isSunday ? 'bg-gray-100' : ''}`}
+                                    className={`px-2 py-1 border border-gray-300 text-center w-[120px] ${isSunday ? 'bg-gray-100' : ''}`}
                                 >
                                     <div className="flex flex-col items-center">
                                         {/* Scheduled Count with Staff button */}
@@ -1089,7 +1089,7 @@ const EmployeeScheduleTable: React.FC = () => {
                             );
                          })}
                          {/* Summary Comment Cell */}
-                         <td className="px-2 py-1 border border-gray-300 w-[290px]">
+                         <td className="px-2 py-1 border border-gray-300 w-[200px]">
                               {/* Use textarea matching JS output, pre-filled with shift.shiftComments */}
                              <textarea
                                 className="comment-textarea w-full h-[60px] border border-gray-300 resize-none p-1 text-sm overflow-hidden"
