@@ -419,18 +419,15 @@ const EmployeeScheduleTable: React.FC = () => {
   const { getCurrentList, updateList } = useEmployeeLists(); // Added updateList here
   const { shifts } = useShiftContext();
   const { shiftData } = usePersonnelData();
-  const [employees, setEmployees] = useState<Employee[]>(() => {
+  // Use memo to prevent unnecessary rerenders of employees data
+  const employees = useMemo(() => {
     const currentList = getCurrentList();
     return currentList?.employees || [];
-  });
+  }, [getCurrentList]);
 
-  // Update employees in context when they change
-  useEffect(() => {
-    const currentList = getCurrentList();
-    if (currentList) {
-      updateList(currentList.id, { employees });
-    }
-  }, [employees, getCurrentList, updateList]); // Added updateList to dependency array
+  // We're removing this useEffect that causes an infinite update cycle
+  // The employees are already managed by the parent context,
+  // and we don't need to update the list every time local employees state changes
 
   // Convert shifts to the format expected by the component
   const timeRanges = useMemo(() => shifts.map((shift, index) => ({
@@ -683,11 +680,8 @@ const EmployeeScheduleTable: React.FC = () => {
                                          employeeToUpdate.manualShifts[dateString] = e.target.value;
                                        }
 
-                                       // Update the employees state which will trigger a re-render
-                                       // and update the staff counter through countScheduledEmployees
-                                       setEmployees(newEmployees);
-
-                                       // Also update the context to persist changes
+                                       // Since we no longer have a setEmployees function
+                                       // we'll only update through the context
                                        const currentList = getCurrentList();
                                        if (currentList) {
                                          updateList(currentList.id, { employees: newEmployees });
