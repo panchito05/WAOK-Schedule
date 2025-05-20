@@ -586,7 +586,7 @@ const EmployeeScheduleTable: React.FC = () => {
                   </td>
 
                   {/* Total Hours / Weekends Cell */}
-                  <td style={{width: "150px", minWidth: "150px"}} className="px-2 py-1 border border-gray-300">
+                  <td style={{width: "210px", minWidth: "210px"}} className="px-2 py-1 border border-gray-300">
                       {/* Using dangerouslySetInnerHTML for colored hours */}
                       <div dangerouslySetInnerHTML={{ __html: formatBiweeklyHours(hoursData, minBiweeklyHours) }}></div>
                       <div style={{
@@ -644,7 +644,35 @@ const EmployeeScheduleTable: React.FC = () => {
                            ) : (
                                // Render shift select if not on leave
                               <div className="flex flex-col items-center">
-                                 {/* Shift Select */}
+                                 {/* Row con 4 botones/iconos uniformemente espaciados - MOVIDO ARRIBA */}
+                                 <div className="flex justify-between items-center w-full px-1 mb-1">
+                                     {/* Primer botón: Lock Checkbox */}
+                                     <input
+                                         type="checkbox"
+                                         className="lock-shift h-3 w-3"
+                                         checked={!!isLocked}
+                                         readOnly // Make checkbox read-only for static demo
+                                         title="Check This Box To Fix The Shift For The Chosen Day As An Employee Request, Ensuring It Can't Be Changed By Mistake Unless You Uncheck It."
+                                     />
+                                     
+                                     {/* Segundo botón: Comment Icon */}
+                                     <span className="comment-icon text-sm cursor-help" title="Any Comment Written Here Is Visible To Both The Supervisor And The Employee In The Work Schedule.">
+                                          📝
+                                     </span>
+                                     
+                                     {/* Tercer botón: Swap Shift */}
+                                     <button
+                                         className="change-shift-btn text-sm focus:outline-none"
+                                         title="Swapping Shifts Between Employees"
+                                     >
+                                         🔄
+                                     </button>
+                                     
+                                     {/* Cuarto botón: espacio reservado para un futuro botón */}
+                                     <span className="w-4"></span>
+                                 </div>
+
+                                 {/* Shift Select - MOVIDO ABAJO */}
                                  <select
                                      className={`w-full border border-gray-300 rounded px-1 py-0.5 text-sm mb-1 focus:outline-none
                                         ${assignedShift === 'day-off' ? 'bg-yellow-200' : ''}
@@ -689,33 +717,6 @@ const EmployeeScheduleTable: React.FC = () => {
                                       {/* Add Leave option - Placeholder */}
                                       <option value="add-leave" disabled>Add Leave</option>
                                  </select>
-
-                                 {/* Row con 4 botones/iconos uniformemente espaciados */}
-                                 <div className="flex justify-between items-center w-full px-1 mb-1">
-                                     {/* Primer botón: Lock Checkbox */}
-                                     <input
-                                         type="checkbox"
-                                         className="lock-shift h-3 w-3"
-                                         checked={!!isLocked}
-                                         readOnly // Make checkbox read-only for static demo
-                                         title="Check This Box To Fix The Shift For The Chosen Day As An Employee Request, Ensuring It Can't Be Changed By Mistake Unless You Uncheck It."
-                                     />
-                                     
-                                     {/* Segundo botón: Comment Icon */}
-                                     <span className="comment-icon text-sm cursor-help" title="Any Comment Written Here Is Visible To Both The Supervisor And The Employee In The Work Schedule.">
-                                          📝
-                                     </span>
-                                     
-                                     {/* Tercer botón: Swap Shift */}
-                                     <button
-                                         className="change-shift-btn text-sm focus:outline-none"
-                                         title="Swapping Shifts Between Employees"
-                                     >
-                                         🔄
-                                     </button>
-                                     
-                                     {/* Cuarto botón: espacio reservado para un futuro botón */}
-                                     <span className="w-4"></span>
                                  </div>
                                  
                                  {/* Área para mostrar comentarios si existen */}
