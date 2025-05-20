@@ -160,15 +160,14 @@ const AddEmployees: React.FC = () => {
   const { getCurrentList, updateList } = useEmployeeLists();
   const { rules } = useRules();
 
-  // Uso de useMemo para evitar recálculos innecesarios y romper el ciclo de renders
-  const { currentEmployeeList, employees } = useMemo(() => {
-    const list = getCurrentList();
-    return {
-      currentEmployeeList: list,
-      employees: list?.employees || []
-    };
-  }, [getCurrentList]);
-
+  // Eliminar llamada a getCurrentList de aquí - es parte del problema
+  // Definimos un estado local para rastrear el empleado list cargado
+  const [employeeStateLoaded, setEmployeeStateLoaded] = useState(false);
+  
+  // Estado local para hacer caching de la lista actual para evitar re-renders continuos
+  const [localEmployeeList, setLocalEmployeeList] = useState<any>(null);
+  const [localEmployees, setLocalEmployees] = useState<any[]>([]);
+  
   const [formError, setFormError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -194,16 +193,22 @@ const AddEmployees: React.FC = () => {
     employeeIndex: null
   });
 
-  // useEffect con dependencias correctas y usando una función de estado funcional
+  // Usamos useEffect una sola vez para cargar los datos iniciales
   useEffect(() => {
-    // Usar una función de estado para evitar dependencias en el estado actual
-    setIsLoading(prevLoading => {
-      if (currentEmployeeList) {
-        return false;
+    if (!employeeStateLoaded) {
+      const list = getCurrentList();
+      if (list) {
+        setLocalEmployeeList(list);
+        setLocalEmployees(list.employees || []);
+        setIsLoading(false);
+        setEmployeeStateLoaded(true);
       }
-      return prevLoading;
-    });
-  }, [currentEmployeeList]);
+    }
+  }, [getCurrentList, employeeStateLoaded]);
+  
+  // Acceso directo para el código que necesita estas variables
+  const currentEmployeeList = localEmployeeList;
+  const employees = localEmployees;
 
 
   const formatDateInput = (value: string) => {
