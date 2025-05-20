@@ -26,7 +26,14 @@ export const SelectedEmployeesProvider: React.FC<{ children: ReactNode }> = ({ c
 
   // Función para seleccionar/deseleccionar todos
   const toggleAllEmployees = (allEmployeeIds: string[]) => {
-    if (selectedEmployeeIds.length === allEmployeeIds.length) {
+    // Verificamos si allEmployeeIds es un array válido
+    if (!Array.isArray(allEmployeeIds)) {
+      console.error("toggleAllEmployees recibió un valor no válido:", allEmployeeIds);
+      return;
+    }
+    
+    if (selectedEmployeeIds.length === allEmployeeIds.length &&
+        allEmployeeIds.every(id => selectedEmployeeIds.includes(id))) {
       // Si todos están seleccionados, deseleccionar todos
       setSelectedEmployeeIds([]);
     } else {

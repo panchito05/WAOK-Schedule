@@ -532,7 +532,10 @@ const AddEmployees: React.FC = () => {
                   type="checkbox" 
                   className="rounded border-gray-300" 
                   checked={selectedEmployeeIds.length === employees.length && employees.length > 0}
-                  onChange={toggleAllEmployees}
+                  onChange={(e) => {
+                    // Ignoramos el evento y simplemente llamamos a toggleAllEmployees con el array de IDs
+                    toggleAllEmployees(employees.map(emp => emp.id))
+                  }}
                 />
               </th>
               <th className="w-1/4 px-4 py-3 text-left border-r border-gray-300">NAME & USER ID</th>
