@@ -32,8 +32,10 @@ const PersonnelTable: React.FC = () => {
     sum + Math.max(...shift.counts), 0);
 
   return (
-    <div className="w-full bg-white rounded-lg shadow-lg p-6 mt-8">
-      <h2 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-[#19b08d] to-[#117cee] text-white py-3 rounded">Ideal Number of Personnel per Shift and Day</h2>
+    <div className="w-full bg-white rounded-lg shadow-lg p-6 mt-8 font-['Viata']">
+      <div className="bg-gradient-to-r from-[#19b08d] to-[#117cee] p-4 rounded-t-lg mb-6">
+        <h2 className="text-2xl font-bold text-white text-center">Ideal Number of Personnel per Shift and Day</h2>
+      </div>
 
       {shiftData.map((shift) => (
         <div key={shift.id} className="mb-8">
