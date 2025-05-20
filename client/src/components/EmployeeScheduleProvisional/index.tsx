@@ -8,378 +8,563 @@ import { useSelectedEmployees } from '../../context/SelectedEmployeesContext';
 import OvertimeModal from '../OvertimeModal';
 
 // --- Definición de Tipos de Datos (Simulando la estructura del JS) ---
-interface Employee {
-  id: string;
-  name: string;
-  uniqueId: string;
-  preferences: (number | null)[];
-  unavailableShifts: { [shiftId: number]: number[] };
-  selected: boolean;
-  manualShifts: { [date: string]: string };
-  leave: { startDate: string; endDate: string; leaveType: string; hoursPerDay: number }[];
-  lockedShifts: { [date: string]: string };
-  fixedShifts: { [day: string]: string[] };
-  autoDaysOff: string[];
-  shiftComments: { [date: string]: string };
-  columnComments: string;
-}
 
+// Estructura simplificada de un Turno (Shift)
 interface Shift {
   id: string;
-  start: string;
-  end: string;
-  nurseCounts: { [day: string]: number };
+  start: string; // HH:mm
+  end: string;   // HH:mm
+  duration: string; // e.g., "8h 0m"
+  lunchBreak: number; // minutes
+  nurseCounts: { [dayOfWeek: string]: number }; // e.g., { "Monday": 5, "Tuesday": 6 }
   shiftComments?: string;
-  isOvertimeActive?: boolean;
+  // Propiedades de Overtime (simuladas)
+  isOvertimeActiveForShift?: boolean;
+  disableOvertime?: boolean;
+  overtimeEntries?: { date: string; isActive: boolean; quantity: number }[];
 }
 
-// Función auxiliar para convertir hora de 24h a 12h (AM/PM)
-const convertTo12Hour = (time24: string): string => {
-  // If time is already formatted, just return it
-  if (time24.includes('AM') || time24.includes('PM')) {
-    return time24;
-  }
-  
-  // Extract hours and minutes
-  const [hours, minutes] = time24.split(':').map(Number);
-  
-  // Convert to 12-hour format
-  const period = hours >= 12 ? 'PM' : 'AM';
-  const hours12 = hours % 12 || 12; // Convert 0 to 12 for midnight
-  
-  // Format and return the time
-  return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
-};
-
-interface TimeRange {
-  start: string;
-  end: string;
-  id: string;
+// Estructura simplificada de un Empleado
+interface Employee {
+  id: string; // Employee ID
+  uniqueId: string; // Unique ID used internally
+  name: string;
+  hireDate?: string; // YYYY-MM-DD
+  commentOrRules?: string;
+  note?: string; // Confidential note
+  preferences: (number | null)[]; // Array matching timeRanges order, 1 for first pref, etc.
+  unavailableShifts: { [shiftIndex: number]: number[] }; // { shiftIndex: [dayIndex, ...] }
+  selected: boolean;
+  maxConsecutiveShiftsForThisSpecificEmployee: number;
+  leave: { id: string; startDate: string; endDate: string; leaveType: string; hoursPerDay: number }[]; // Array of leave objects
+  fixedShifts: { [dayOfWeek: string]: string[] }; // { dayOfWeek: [shiftId] or ['day-off'] }
+  manualShifts: { [date: string]: string | 'day-off' }; // { YYYY-MM-DD: shiftId or 'day-off' }
+  autoDaysOff?: string[]; // Array of YYYY-MM-DD strings
+  lockedShifts?: { [date: string]: string }; // { YYYY-MM-DD: shiftId }
+  columnComments?: string; // Comment for the summary column
 }
 
-// Nombres de los días de la semana (para búsqueda/indexación)
-const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+// Estructura de Reglas Generales
+interface Rules {
+  startDate: string; // YYYY-MM-DD
+  endDate: string;   // YYYY-MM-DD
+  maxConsecutiveShiftsForAllEmployees: string; // Stored as string from select
+  daysOffAfterMaxConsecutiveShift: string; // Stored as string from select
+  weekendsOffPerMonth: string; // Stored as string from select
+  minRestHoursBetweenShifts: string; // Stored as string from select
+  writtenRule1: string;
+  writtenRule2: string;
+  minHoursWeek: string; // Stored as string from input
+  minHoursBiweekly: string; // Stored as string from input
+}
 
-// Función para verificar si un empleado está de vacaciones o licencia en una fecha específica
-const isEmployeeOnLeave = (employee: Employee, dateString: string): boolean => {
-  if (!employee || !employee.leave || !Array.isArray(employee.leave)) return false;
-  
-  return employee.leave.some(leave => {
-    if (!leave || !leave.startDate || !leave.endDate) return false;
-    const startDate = leave.startDate;
-    const endDate = leave.endDate;
-    return dateString >= startDate && dateString <= endDate;
-  });
-};
 
-// Función para verificar si se supera el máximo de turnos consecutivos (placeholder, lógica simplificada)
-const exceedsMaxConsecutiveShifts = (employee: Employee, dateString: string, rules: any, shifts: TimeRange[]): boolean => {
-  if (!employee || !dateString || !rules || !shifts) return false;
-  // Lógica de simulación - en un sistema real, esto verificaría los turnos anteriores
-  // y determinaría si añadir este turno excedería el límite máximo
-  return false; // Placeholder - retorna falso para no mostrar advertencias
-};
+// --- Funciones de Utilidad (Adaptadas de tu código JS) ---
 
-// Función para verificar si se viola el tiempo mínimo de descanso (placeholder, lógica simplificada)
-const violatesMinRestTime = (employee: Employee, dateString: string, shiftId: string, rules: any, shifts: TimeRange[]): boolean => {
-  if (!employee || !dateString || !rules || !shifts) return false;
-  // Lógica de simulación - en un sistema real, esto verificaría los turnos anteriores y siguientes
-  // y calcularía si hay suficiente tiempo de descanso entre turnos
-  return false; // Placeholder - retorna falso para no mostrar advertencias
-};
+const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-// Contabilizar empleados programados para un turno específico
-const countScheduledEmployees = (shift: Shift, date: Date, employees: Employee[]): number => {
-  if (!shift || !date || !employees || !Array.isArray(employees)) return 0;
-  
-  try {
-    const dateString = date.toISOString().split('T')[0];
-    const dayIndex = date.getUTCDay();
-    if (dayIndex < 0 || dayIndex >= daysOfWeek.length) return 0;
-    
-    const dayOfWeek = daysOfWeek[dayIndex];
-    
-    return employees.filter(emp => {
-      if (!emp) return false;
-      
-      // Verificar turnos manuales para esta fecha
-      if (emp.manualShifts && emp.manualShifts[dateString] === shift.id) return true;
-      
-      // Verificar turnos fijos para este día de la semana
-      if (emp.fixedShifts && emp.fixedShifts[dayOfWeek] && Array.isArray(emp.fixedShifts[dayOfWeek]) && 
-          emp.fixedShifts[dayOfWeek].includes(shift.id)) return true;
-      
-      return false;
-    }).length;
-  } catch(error) {
-    console.error("Error en countScheduledEmployees:", error);
-    return 0;
+function calculateShiftDuration(start: string, end: string, lunchBreak: number = 0): string {
+  // Simplified calculation for display purposes
+  if (!start || !end) return 'N/A';
+  const startTime = new Date(`2000-01-01T${start}`);
+  let endTime = new Date(`2000-01-01T${end}`);
+  if (endTime < startTime) {
+    endTime.setDate(endTime.getDate() + 1);
   }
-};
+  let diff = endTime.getTime() - startTime.getTime() - (lunchBreak * 60000);
+  const hours = Math.floor(diff / 3600000);
+  const minutes = Math.round((diff % 3600000) / 60000);
+  return `${hours}h ${minutes}m`;
+}
 
-// Verificar si se debe mostrar disponibilidad de horas extra
-const shouldDisplayOvertime = (shift: Shift, dateString: string, employees: Employee[], timeRanges: TimeRange[]): number => {
-  // Validación de parámetros
-  if (!shift || !dateString || !employees || !Array.isArray(employees) || !timeRanges) return 0;
-  
-  try {
-    // Verificar si las horas extra están activas para este turno
-    if (!shift.isOvertimeActive) return 0;
-    
-    // En un sistema real, esto calcularía cuántas posiciones de horas extra están disponibles
-    // basado en configuraciones, necesidades, límites presupuestarios, etc.
-    return Math.floor(Math.random() * 3); // Placeholder - número aleatorio entre 0 y 2
-  } catch (error) {
-    console.error("Error en shouldDisplayOvertime:", error);
-    return 0;
-  }
-};
+function convertTo12Hour(time: string | undefined): string {
+  if (!time) return 'Not set';
+  const [hour, minute] = time.split(':');
+  const hourNum = parseInt(hour);
+  const ampm = hourNum >= 12 ? 'PM' : 'AM';
+  const hour12 = hourNum % 12 || 12;
+  return `${hour12}:${minute} ${ampm}`;
+}
 
-// Función para formatear las horas bi-semanales con colores según umbrales
-const formatBiweeklyHours = (hours: number, minHours: number): string => {
-  let color = 'inherit';
-  let message = '';
-  
-  // Definir color basado en horas (bajo=rojo, óptimo=verde, alto=amarillo)
-  if (hours < minHours) {
-    color = '#FF5555'; // Rojo para horas insuficientes
-    message = 'Insufficient Hours';
-  } else if (hours > minHours * 1.25) {
-    color = '#FFD700'; // Amarillo para horas excesivas
-    message = 'Excessive Hours';
-  } else {
-    color = '#44CC44'; // Verde para rango óptimo
-    message = 'Optimal Hours';
-  }
-  
-  return `<div style="color: ${color};">${hours} hours ${message ? `<span style="font-size: 0.85em;">(${message})</span>` : ''}</div>`;
-};
+function formatDate(date: Date): string {
+    // Adaptado para mostrar solo Día/Mes/Año y Día de la semana
+    // Usando UTC para simular el comportamiento original
+    const options: Intl.DateTimeFormatOptions = { timeZone: 'UTC' };
+    const day = date.getUTCDate();
+    const month = date.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' });
+    const year = date.getUTCFullYear();
+    const weekday = date.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
 
-// Función para obtener información de preferencias y turnos bloqueados
-const getPreferenceAndBlockedInfo = (employee: Employee, shifts: TimeRange[]): string => {
-  let result = '<div class="flex flex-col">';
-  
-  // Preferencias de turnos
-  result += '<div><strong>Preferred:</strong>';
-  
-  const hasPreferences = employee.preferences && employee.preferences.some(p => p === 1);
-  
-  if (hasPreferences && Array.isArray(employee.preferences)) {
-    result += '<ul class="pl-4">';
-    employee.preferences.forEach((pref, index) => {
-      if (pref === 1 && shifts[index]) {
-        result += `<li>${convertTo12Hour(shifts[index].start)} - ${convertTo12Hour(shifts[index].end)}</li>`;
-      }
-    });
-    result += '</ul>';
-  } else {
-    result += ' <span class="text-gray-500">None</span>';
-  }
-  result += '</div>';
-  
-  // Turnos bloqueados
-  result += '<div class="mt-2"><strong>Blocked:</strong>';
-  
-  let hasBlocked = false;
-  if (employee.unavailableShifts) {
-    const blockedShifts = Object.entries(employee.unavailableShifts);
-    
-    if (blockedShifts.length > 0) {
-      hasBlocked = true;
-      result += '<ul class="pl-4">';
-      blockedShifts.forEach(([shiftIndex, days]) => {
-        const shift = shifts[parseInt(shiftIndex)];
-        if (shift) {
-          result += `<li>${convertTo12Hour(shift.start)} - ${convertTo12Hour(shift.end)}`;
-          result += ` (${days.map(day => daysOfWeek[day].charAt(0).toUpperCase() + daysOfWeek[day].slice(1, 3)).join(', ')})</li>`;
-        }
-      });
-      result += '</ul>';
+    return `
+        <div style="text-align: center;">
+            <div>${day} / ${month} / ${year}</div>
+            <div>${weekday}</div>
+        </div>
+    `;
+}
+
+function calculatePreferenceMatchPercentage(employee: Employee, shifts: Shift[], startDateStr: string, endDateStr: string): string {
+    if (!employee || !Array.isArray(employee.preferences)) {
+        return '0.00';
     }
-  }
-  
-  if (!hasBlocked) {
-    result += ' <span class="text-gray-500">None</span>';
-  }
-  result += '</div>';
-  
-  result += '</div>';
-  return result;
-};
 
-// --- Componente Principal de la Tabla de Programación de Empleados ---
+    const startDate = new Date(startDateStr + 'T00:00:00Z');
+    const endDate = new Date(endDateStr + 'T00:00:00Z');
+    let totalScheduledOrLeaveDays = 0;
+    let successfulMatchDays = 0;
+
+    const firstPreferenceIndex = employee.preferences.indexOf(1);
+    const preferredShiftId = (firstPreferenceIndex !== -1 && shifts[firstPreferenceIndex]) ? shifts[firstPreferenceIndex].id : null;
+
+    for (let d = new Date(startDate); d <= endDate; d.setUTCDate(d.getUTCDate() + 1)) {
+        const dateString = d.toISOString().split('T')[0];
+        const dayOfWeek = daysOfWeek[d.getUTCDay()];
+
+        const isOnLeave = employee.leave?.some(l => {
+            const leaveStart = new Date(l.startDate + 'T00:00:00Z');
+            const leaveEnd = new Date(l.endDate + 'T00:00:00Z');
+            const currentDate = new Date(dateString + 'T00:00:00Z');
+            return currentDate >= leaveStart && currentDate <= leaveEnd;
+        });
+
+        if (isOnLeave) {
+            totalScheduledOrLeaveDays++;
+            successfulMatchDays++;
+        } else {
+            const manualShift = employee.manualShifts?.[dateString];
+            const fixedShift = employee.fixedShifts?.[dayOfWeek]?.[0];
+
+            let assignedShiftId = null;
+            if (manualShift && manualShift !== 'day-off') {
+                assignedShiftId = manualShift;
+            } else if (!manualShift && fixedShift && fixedShift !== 'day-off') {
+                assignedShiftId = fixedShift;
+            }
+
+            if (assignedShiftId) {
+                totalScheduledOrLeaveDays++;
+                if (preferredShiftId && assignedShiftId === preferredShiftId) {
+                    successfulMatchDays++;
+                }
+            }
+        }
+    }
+
+    return totalScheduledOrLeaveDays > 0 ? (successfulMatchDays / totalScheduledOrLeaveDays * 100).toFixed(2) : '0.00';
+}
+
+function getPreferenceAndBlockedInfo(employee: Employee, shifts: Shift[]): string {
+    let html = '<div class="space-y-2">';
+
+    // Preferred Shifts
+    html += '<div class="mb-2">';
+    html += '<strong>Preferred:</strong><br>';
+    if (Array.isArray(employee.preferences) && employee.preferences.length > 0) {
+        const preferredShiftIndex = employee.preferences.indexOf(1);
+        if (preferredShiftIndex !== -1 && shifts[preferredShiftIndex]) {
+            const shift = shifts[preferredShiftIndex];
+            html += `${shift.startTime} - ${shift.endTime}`;
+        } else {
+            html += 'None';
+        }
+    } else {
+        html += 'None';
+    }
+    html += '</div>';
+
+    // Blocked Shifts
+    html += '<div>';
+    html += '<strong>Blocked:</strong><br>';
+    if (employee.blockedShifts && Object.keys(employee.blockedShifts).length > 0) {
+        const blockedEntries = Object.entries(employee.blockedShifts)
+            .map(([shiftId, days]) => {
+                const shiftIndex = parseInt(shiftId.split('_')[1]) - 1;
+                const shift = shifts[shiftIndex];
+                if (!shift || !days.length) return null;
+                const dayNames = days.map(day => day.substr(0, 3)).join(', ');
+                return `${shift.startTime} - ${shift.endTime} (${dayNames})`;
+            })
+            .filter(Boolean);
+        html += blockedEntries.length ? blockedEntries.join('<br>') : 'None';
+    } else {
+        html += 'None';
+    }
+    html += '</div>';
+
+    html += '</div>';
+    return html;
+}
+
+function calculateShiftHours(start: string, end: string, lunchBreak: number = 0): number {
+    const startTime = new Date(`2000-01-01T${start}`);
+    let endTime = new Date(`2000-01-01T${end}`);
+    if (endTime < startTime) {
+        endTime.setDate(endTime.getDate() + 1);
+    }
+    let diff = endTime.getTime() - startTime.getTime();
+    if (lunchBreak) {
+        diff -= lunchBreak * 60000;
+    }
+    return diff / (1000 * 60 * 60);
+}
+
+function countFreeWeekends(employee: Employee, startDateStr: string, endDateStr: string, shifts: Shift[]): number {
+    let freeWeekends = 0;
+    const startDate = new Date(startDateStr + 'T00:00:00Z');
+    const endDate = new Date(endDateStr + 'T00:00:00Z');
+
+    for (let d = new Date(startDate); d.getTime() <= endDate.getTime(); d.setUTCDate(d.getUTCDate() + 1)) {
+        const currentDate = new Date(d);
+        const currentUTCDayIndex = currentDate.getUTCDay();
+
+        if (currentUTCDayIndex === 6) { // Saturday UTC
+            const saturdayString = currentDate.toISOString().split('T')[0];
+            const sundayDate = new Date(currentDate.getTime());
+            sundayDate.setUTCDate(sundayDate.getUTCDate() + 1);
+            const sundayString = sundayDate.toISOString().split('T')[0];
+
+            if (sundayDate.getTime() <= endDate.getTime()) {
+                const isSaturdayWorking = getCurrentShift(employee, saturdayString, shifts) && getCurrentShift(employee, saturdayString, shifts) !== 'day-off';
+                const isSundayWorking = getCurrentShift(employee, sundayString, shifts) && getCurrentShift(employee, sundayString, shifts) !== 'day-off';
+                 // Also check leaves
+                 const isSaturdayOnLeave = employee.leave?.some(l => { const ls=new Date(l.startDate+'T00:00:00Z'); const le=new Date(l.endDate+'T00:00:00Z'); const cur=new Date(saturdayString+'T00:00:00Z'); return cur >= ls && cur <= le; });
+                 const isSundayOnLeave = employee.leave?.some(l => { const ls=new Date(l.startDate+'T00:00:00Z'); const le=new Date(l.endDate+'T00:00:00Z'); const cur=new Date(sundayString+'T00:00:00Z'); return cur >= ls && cur <= le; });
+
+
+                if (!isSaturdayWorking && !isSundayWorking && !isSaturdayOnLeave && !isSundayOnLeave) {
+                    freeWeekends++;
+                }
+            }
+        }
+    }
+    return freeWeekends;
+}
+
+
+function formatBiweeklyHours(hoursData: number[], minBiweeklyHours: number): string {
+    return hoursData.map((hours, index) => {
+        let backgroundColor = 'transparent';
+        let textColor = 'black';
+        if (hours < minBiweeklyHours) {
+            backgroundColor = 'yellow';
+            textColor = 'black';
+        } else if (hours > minBiweeklyHours) {
+            backgroundColor = 'red';
+            textColor = 'white';
+        }
+        return `<div style="background-color: ${backgroundColor}; color: ${textColor}; padding: 2px; margin-bottom: 2px;">Biweekly ${index + 1}: ${hours.toFixed(2)} hours</div>`;
+    }).join('');
+}
+
+function calculateEmployeeHours(employee: Employee, startDateStr: string, endDateStr: string, shifts: Shift[]): number[] {
+    let biweeklyHours: number[] = [];
+    let currentBiweeklyHours = 0;
+    let dayCount = 0;
+
+    const startDate = new Date(startDateStr + 'T00:00:00Z');
+    const endDate = new Date(endDateStr + 'T00:00:00Z');
+
+    for (let d = new Date(startDate); d.getTime() <= endDate.getTime(); d.setUTCDate(d.getUTCDate() + 1)) {
+        const currentDate = new Date(d.getTime()); // Use copy UTC
+        const dateString = currentDate.toISOString().split('T')[0];
+        const dayOfWeek = daysOfWeek[currentDate.getUTCDay()];
+
+        let hoursForThisDay = 0;
+
+        const leaveForThisDay = employee.leave?.find(l => {
+            const leaveStart = new Date(l.startDate + 'T00:00:00Z');
+            const leaveEnd = new Date(l.endDate + 'T00:00:00Z');
+            const current = new Date(dateString + 'T00:00:00Z');
+            return current >= leaveStart && current <= leaveEnd;
+        });
+
+
+        if (leaveForThisDay) {
+             hoursForThisDay = leaveForThisDay.hoursPerDay || 0;
+         } else {
+             const manualShift = employee.manualShifts?.[dateString];
+             const fixedShift = employee.fixedShifts?.[dayOfWeek]?.[0];
+             let effectiveShiftId = null;
+             if (manualShift && manualShift !== 'day-off') {
+                effectiveShiftId = manualShift;
+             } else if (fixedShift && fixedShift !== 'day-off' && (!manualShift || manualShift === 'day-off')) {
+                 effectiveShiftId = fixedShift;
+             }
+
+             if (effectiveShiftId) {
+                 const shift = shifts.find(r => r.id === effectiveShiftId);
+                 if (shift && shift.start && shift.end) {
+                     hoursForThisDay = calculateShiftHours(shift.start, shift.end, shift.lunchBreak || 0);
+                 }
+             }
+        }
+
+
+        currentBiweeklyHours += hoursForThisDay;
+        dayCount++;
+        const isEndOfBiweeklyPeriod = (dayCount === 14);
+        const isLastDayOfRange = (currentDate.getTime() >= endDate.getTime());
+
+        if (isEndOfBiweeklyPeriod || isLastDayOfRange) {
+            biweeklyHours.push(Number(currentBiweeklyHours.toFixed(2)));
+            currentBiweeklyHours = 0;
+            if (isEndOfBiweeklyPeriod && !isLastDayOfRange) {
+                 dayCount = 0;
+            }
+        }
+    }
+    return biweeklyHours;
+}
+
+function getCurrentShift(employee: Employee, dateString: string, shifts: Shift[]): string | null {
+    if (!employee || !dateString || !shifts) return null;
+
+    const date = new Date(dateString + 'T00:00:00Z'); // Use UTC
+    const dayOfWeek = daysOfWeek[date.getUTCDay()]; // Use UTC day
+
+    const fixedShift = employee.fixedShifts?.[dayOfWeek]?.[0];
+    if (fixedShift) {
+        return fixedShift;
+    }
+
+    const manualShift = employee.manualShifts?.[dateString];
+    if (manualShift !== undefined) { // Check specifically for undefined
+         return manualShift;
+    }
+
+    return null;
+}
+
+
+function getShiftTime(shiftId: string, shifts: Shift[]): string {
+    const shift = shifts.find(s => s.id === shiftId);
+    return shift ? `${convertTo12Hour(shift.start)} - ${convertTo12Hour(shift.end)}` : 'Unknown Shift';
+}
+
+
+function countScheduledEmployees(shift: Shift, date: Date, allEmployees: Employee[]): number {
+    let count = 0;
+    const dateString = date.toISOString().split('T')[0]; // UTC date string
+    const dayOfWeek = daysOfWeek[date.getUTCDay()]; // UTC day
+
+    allEmployees.forEach(employee => {
+        const isOnLeave = employee.leave?.some(l => {
+            const leaveStart = new Date(l.startDate + 'T00:00:00Z');
+            const leaveEnd = new Date(l.endDate + 'T00:00:00Z');
+            const current = new Date(dateString + 'T00:00:00Z');
+            return current >= leaveStart && current <= leaveEnd;
+        });
+
+        if (!isOnLeave) {
+            const manualShift = employee.manualShifts?.[dateString];
+            const fixedShift = employee.fixedShifts?.[dayOfWeek]?.[0];
+
+            // Check if the employee has this shift assigned
+            if (manualShift === shift.id) {
+                count++;
+            } else if (!manualShift && fixedShift === shift.id) {
+                count++;
+            }
+        }
+    });
+    return count;
+}
+
+function shouldDisplayOvertime(shift: Shift, dateString: string, allEmployees: Employee[], shifts: Shift[]): number {
+    let totalOvertime = 0;
+    const date = new Date(dateString + 'T00:00:00Z'); // Use UTC
+    const dayOfWeek = daysOfWeek[date.getUTCDay()]; // Use UTC day
+
+    const idealStaff = shift.nurseCounts[dayOfWeek] || 0;
+    const currentStaff = countScheduledEmployees(shift, date, allEmployees);
+    const staffNeeded = Math.max(0, idealStaff - currentStaff);
+
+    // Check if the shift has overtime enabled and is not disabled
+    if (shift.isOvertimeActive) {
+        totalOvertime = staffNeeded;
+    }
+
+    // Specific day overtime (always added)
+    if (shift.overtimeEntries) {
+        const entry = shift.overtimeEntries.find(
+            entry => entry.date === dateString
+        );
+        if (entry) {
+            if (entry.isActive) {
+                totalOvertime += entry.quantity;
+            }
+        }
+    }
+
+    return totalOvertime;
+}
+
+function exceedsMaxConsecutiveShifts(employee: Employee, dateString: string, rules: Rules, shifts: Shift[]): boolean {
+    // Simplified check - actual logic in JS involves counting previous shifts
+    // For display purposes, let's just assume we can check a flag or simplify
+    // This is a placeholder - replicating the exact JS logic here is complex without the full context
+    // A real implementation would look back from dateString and count shifts
+     return false; // Placeholder - needs actual logic
+}
+
+function violatesMinRestTime(employee: Employee, dateString: string, newShiftId: string, rules: Rules, shifts: Shift[]): boolean {
+    // Simplified check - actual logic in JS involves checking shifts before and after
+    // This is a placeholder - replicating the exact JS logic here is complex
+    return false; // Placeholder - needs actual logic
+}
+
+// --- Componente React ---
+
 const EmployeeScheduleTable: React.FC = () => {
-  // Estado local
-  const [overtimeModal, setOvertimeModal] = useState<{ isOpen: boolean; shift: { startTime: string; endTime: string } | null }>({ isOpen: false, shift: null });
-  const [isScheduleTableHidden, setIsScheduleTableHidden] = useState(false);
-  
-  // Acceso a los contextos
-  const { rules } = useRules();
-  const { getCurrentList } = useEmployeeLists();
-  const { shifts: contextShifts } = useShiftContext();
+  // --- Simulación de datos y estado inicial ---
+  const { getCurrentList, updateList } = useEmployeeLists(); // Added updateList here
+  const { shifts } = useShiftContext();
+  const { shiftData } = usePersonnelData();
+  // Usar el contexto de selección de empleados
   const { selectedEmployeeIds } = useSelectedEmployees();
   
-  // Obtener la lista actual y sus empleados
-  const currentList = getCurrentList();
-  const employees = currentList?.employees || [];
-  const updateList = useEmployeeLists().updateList;
-  
-  // Convertir los turnos del contexto a TimeRange para uso en este componente
-  const timeRanges: TimeRange[] = useMemo(() => contextShifts.map((shift, index) => ({
-    id: index.toString(), // Convertir índice a string para usarlo como ID
-    start: shift.startTime,
-    end: shift.endTime
-  })), [contextShifts]);
-  
-  // Filtrar empleados seleccionados
-  const filteredEmployees = useMemo(() => {
-    return employees.filter(emp => selectedEmployeeIds.includes(emp.id));
-  }, [employees, selectedEmployeeIds]);
-  
-  // Fecha de inicio para el rango de fechas (de Rules)
-  const startDateString = rules.startDate || new Date().toISOString().split('T')[0];
-  
-  // Generar rango de fechas para las columnas de días
-  const dateRange = useMemo(() => {
-    const start = new Date(startDateString);
-    const end = new Date(start);
-    end.setDate(end.getDate() + 14); // 2 semanas
-    
-    const dates = [];
-    const current = new Date(start);
-    
-    while (current < end) {
-      dates.push(new Date(current));
-      current.setDate(current.getDate() + 1);
+  // Use memo to prevent unnecessary rerenders of employees data
+  // Filtramos los empleados para mostrar solo los seleccionados
+  const employees = useMemo(() => {
+    const currentList = getCurrentList();
+    const allEmployees = currentList?.employees || [];
+    // Solo mostramos los empleados que estén seleccionados
+    return allEmployees.filter(employee => selectedEmployeeIds.includes(employee.id));
+  }, [getCurrentList, selectedEmployeeIds]);
+
+  // We're removing this useEffect that causes an infinite update cycle
+  // The employees are already managed by the parent context,
+  // and we don't need to update the list every time local employees state changes
+
+  // Convert shifts to the format expected by the component
+  const timeRanges = useMemo(() => shifts.map((shift, index) => ({
+    id: `shift_${index + 1}`,
+    start: shift.startTime.split(' ')[0],
+    end: shift.endTime.split(' ')[0],
+    duration: shift.duration,
+    lunchBreak: shift.lunchBreakDeduction,
+    isOvertimeActive: shift.isOvertimeActive,
+    overtimeEntries: shift.overtimeEntries || [],
+    nurseCounts: {
+      Sunday: shiftData[index]?.counts[0] || 0,
+      Monday: shiftData[index]?.counts[1] || 0,
+      Tuesday: shiftData[index]?.counts[2] || 0,
+      Wednesday: shiftData[index]?.counts[3] || 0,
+      Thursday: shiftData[index]?.counts[4] || 0,
+      Friday: shiftData[index]?.counts[5] || 0,
+      Saturday: shiftData[index]?.counts[6] || 0
+    },
+    shiftComments: ''
+  })), [shifts, shiftData]);
+
+  const { rules } = useRules();
+
+  const [isScheduleTableHidden, setIsScheduleTableHidden] = useState(false);
+  const [overtimeModal, setOvertimeModal] = useState<{
+    isOpen: boolean;
+    shift: { startTime: string; endTime: string } | null;
+  }>({
+    isOpen: false,
+    shift: null
+  });
+
+  // --- Generar rango de fechas dinámicamente ---
+  const dateRange: Date[] = [];
+  const startDate = new Date(rules.startDate + 'T00:00:00Z');
+  const endDate = new Date(rules.endDate + 'T00:00:00Z');
+
+  if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && startDate <= endDate) {
+    for (let d = new Date(startDate); d.getTime() <= endDate.getTime(); d.setUTCDate(d.getUTCDate() + 1)) {
+      dateRange.push(new Date(d)); // Store Date objects (UTC midnight)
     }
-    
-    return dates;
-  }, [startDateString]);
-  
+  } else {
+      console.error("Invalid date range:", rules.startDate, rules.endDate);
+  }
+
+
   // --- Renderizado del Componente ---
+
   return (
-    <div className="employee-schedule-table mt-4">
-      {/* Controls Row */}
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center">
+    <div className="w-full bg-white rounded-lg shadow-lg p-6 mt-8">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold" data-en="Employee Schedule" data-es="Horario Empleados">Employee Schedule Provisional</h2> {/* Added data-en/es */}
+        <div className="space-x-2">
+          {/* Toggle button for the table */}
           <button
-            className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded focus:outline-none"
-            onClick={() => setIsScheduleTableHidden(!isScheduleTableHidden)}
+             className={`px-4 py-2 rounded hover:bg-blue-600 transition-colors ${isScheduleTableHidden ? 'bg-yellow-500 text-black' : 'bg-blue-500 text-white'}`}
+             onClick={() => setIsScheduleTableHidden(!isScheduleTableHidden)}
+             data-en-show="Show Employee Schedule Table" data-en-hide="Hide Employee Schedule Table"
+             data-es-show="Mostrar Tabla Horario Empleados" data-es-hide="Ocultar Tabla Horario Empleados"
           >
-            {isScheduleTableHidden ? 'Show Schedule' : 'Hide Schedule'}
+             {isScheduleTableHidden ? 'Show Employee Schedule Table' : 'Hide Employee Schedule Table'} {/* Default text */}
           </button>
-        </div>
-        <div className="flex gap-2">
-          <button className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded focus:outline-none">
-            Export to Excel
+
+          {/* AI and Print buttons (text and functionality are placeholders) */}
+          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
+            Create Schedule with AI
           </button>
-          <button className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded focus:outline-none flex items-center">
-            <CalendarIcon className="w-4 h-4 mr-1" /> View in Calendar
+          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
+            Print Schedule
           </button>
         </div>
       </div>
-      
-      {/* Schedule Table */}
-      <div className="overflow-x-auto relative" style={{ minHeight: '300px' }}> {/* Set a minimum height */}
-        <table className="min-w-full border-collapse table-fixed">
-          <thead className="bg-gray-100">
-            <tr>
-               {/* Employee Count Header */}
-               <th colSpan={3} className="px-2 py-1 text-left border border-gray-300">
-                 <div className="flex justify-between items-center">
-                   <span>
-                     {filteredEmployees.length} Employees
-                   </span>
-                   <div className="ml-auto">
-                     <button className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded focus:outline-none text-xs flex items-center">
-                       <Users className="w-3 h-3 mr-1" /> 
-                       View All Employees
-                     </button>
-                   </div>
-                 </div>
-               </th>
-                
-               {/* Dynamic Date Headers */}
-               {dateRange.map((date) => {
-                  const isSunday = date.getUTCDay() === 0;
-                  return (
-                    <th 
-                      key={date.toISOString().split('T')[0]} 
-                      className={`px-2 py-1 text-center border border-gray-300 w-[120px] ${isSunday ? 'bg-gray-200' : ''}`}
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-bold">
-                          {date.getUTCDate()} / {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][date.getUTCMonth()]} /
-                        </span>
-                        <span>
-                          {date.getUTCFullYear()}
-                        </span>
-                        <span className="text-sm">
-                          {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getUTCDay()]}
-                        </span>
-                      </div>
-                      
-                      {/* View Today's Employees Button */}
-                      <button className="mt-1 w-full bg-blue-500 hover:bg-blue-600 text-white px-1 py-0.5 rounded text-sm">
-                        View<br />Today's<br />Employees
-                      </button>
-                    </th>
-                  );
-               })}
-               {/* Summary Column Header */}
-               <th className="px-2 py-1 text-left border border-gray-300 w-[200px]">
-                  Comments
-               </th>
-            </tr>
-            
-            {/* Column Headers for Shift Configuration */}
-             {!isScheduleTableHidden && (
-                <tr>
-                   {/* Static Headers */}
-                   <th style={{width: "150px", minWidth: "150px"}} className="px-2 py-1 text-left border border-gray-300" data-en="Employees" data-es="Empleados">Employees</th>
-                   <th style={{width: "150px", minWidth: "150px"}} className="px-2 py-1 text-left border border-gray-300" data-en="Shift: Preferences or Locked" data-es="Turno: Preferencias o Bloqueado">Shift: Preferences or Locked</th>
-                   <th style={{width: "150px", minWidth: "150px"}} className="px-2 py-1 text-left border border-gray-300" data-en="Total Shifts / Hours" data-es="Total Turnos / Horas">Total Shifts / Hours</th> {/* Todas las columnas con el mismo ancho */}
 
-                   {/* Dynamic Date Headers */}
-                   {dateRange.map((date) => {
-                      const isSunday = date.getUTCDay() === 0;
-                      return (
-                        <th 
-                          key={date.toISOString().split('T')[0]} 
-                          className={`px-2 py-1 text-center border border-gray-300 ${isSunday ? 'bg-gray-100' : ''}`}
-                          style={{width: "120px", minWidth: "120px"}}
-                        >
-                          <div className="flex flex-col items-center">
-                            <span>{['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getUTCDay()]}</span>
-                            <span>{date.getUTCDate()}</span>
-                          </div>
-                          {/* Este header específico no tiene acción adicional */}
-                        </th>
-                      );
-                   })}
-                   {/* Summary Column Sub-Header */}
-                   <th className="px-2 py-1 text-center border border-gray-300 w-[200px]" data-en="Employee Notes" data-es="Notas del Empleado">
-                      Employee Notes
-                   </th>
-                </tr>
+      {/* Table Container with Scroll */}
+      <div className={`border rounded-lg overflow-x-auto employee-schedule-table-container ${isScheduleTableHidden ? 'hidden' : ''}`}>
+        {/* Table */}
+        <table className="w-full border-collapse employee-schedule-table">
+          {/* Table Header */}
+          <thead className={`bg-gray-200 ${isScheduleTableHidden ? 'table-header-hidden' : ''}`}>
+              {/* Hidden message row - rendered dynamically in JS, simplified here */}
+              {isScheduleTableHidden && (
+                  <tr>
+                       <th colSpan={4 + dateRange.length} className="bg-yellow-500 text-black text-center py-2">
+                            <span data-en="Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again" data-es="La Tabla de Horario de Empleados está oculta. Presiona 'Mostrar Tabla Horario Empleados' para hacerla visible de nuevo">Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again</span>
+                       </th>
+                   </tr>
+              )}
+             {!isScheduleTableHidden && (
+                 <tr>
+                    {/* Static Headers */}
+                    <th style={{width: "150px", minWidth: "150px"}} className="px-2 py-1 text-left border border-gray-300" data-en="Employees" data-es="Empleados">Employees</th>
+                    <th style={{width: "150px", minWidth: "150px"}} className="px-2 py-1 text-left border border-gray-300" data-en="Shift: Preferences or Locked" data-es="Turno: Preferencias o Bloqueado">Shift: Preferences or Locked</th>
+                    <th style={{width: "150px", minWidth: "150px"}} className="px-2 py-1 text-left border border-gray-300" data-en="Total Shifts / Hours" data-es="Total Turnos / Horas">Total Shifts / Hours</th> {/* Todas las columnas con el mismo ancho */}
+
+                    {/* Dynamic Date Headers */}
+                    {dateRange.map((date) => {
+                       const isSunday = date.getUTCDay() === 0;
+                        const dateString = date.toISOString().split('T')[0];
+                        return (
+                            <th
+                                key={dateString}
+                                className={`px-2 py-1 text-center border border-gray-300 w-[120px] ${isSunday ? 'bg-gray-100' : ''}`} // Added Sunday class
+                            >
+                                {/* Using dangerouslySetInnerHTML to render formatted date HTML */}
+                                <div dangerouslySetInnerHTML={{ __html: formatDate(date) }}></div>
+                                <button className="mt-2 w-full bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-1">
+                                    <Users className="h-4 w-4" /> {/* Lucide icon */}
+                                    <span data-en="View Today's Employees" data-es="Visualizar Personal de Hoy">View Today's Employees</span> {/* Added translation */}
+                                </button>
+                            </th>
+                        );
+                    })}
+                    {/* Summary Header */}
+                     <th className="px-2 py-1 text-left border border-gray-300 w-[200px]" data-en="Summary and/or Considerations for this Schedule" data-es="Resumen y/o Consideraciones para este Horario">Summary and/or Considerations for this Schedule</th> {/* Added width guess */}
+                 </tr>
              )}
           </thead>
+
+          {/* Table Body */}
           <tbody>
             {/* Employee Rows */}
-            {filteredEmployees.map((employee, index) => {
-              // Calcular porcentaje de coincidencia como ejemplo (en un sistema real esto sería calculado basado en preferencias vs asignación)
-              const matchPercentage = '0.00';
-              
-              // Calcular horas bi-semanales para mostrar en el resumen
-              const hoursData = 80; // Placeholder - en un sistema real se contarían las horas programadas
-              
-              // Extraer valores del contexto de Rules para validaciones
-              const minBiweeklyHours = rules.minHoursPerTwoWeeks ? parseInt(rules.minHoursPerTwoWeeks) : 72;
-              
-              // Dato ficticio para ejemplo - turnos de fin de semana trabajados/requeridos
-              const weekendShiftsWorked = 2;
-              const weekendsOffPerMonth = rules.minWeekendsOffPerMonth ? parseInt(rules.minWeekendsOffPerMonth) : 2;
-              
+            {employees.map((employee, index) => {
+              const matchPercentage = calculatePreferenceMatchPercentage(employee, timeRanges, rules.startDate, rules.endDate);
+              const hoursData = calculateEmployeeHours(employee, rules.startDate, rules.endDate, timeRanges);
+              const minBiweeklyHours = parseInt(rules.minBiweeklyHours) || 0;
+              const freeWeekends = countFreeWeekends(employee, rules.startDate, rules.endDate, timeRanges);
+              const requiredWeekendsForPeriod = Math.ceil((parseInt(rules.weekendsOffPerMonth) || 0) * (dateRange.length / 28)); // Simple approx
+
+
               return (
                 <tr key={employee.uniqueId} className="border-b border-gray-300 align-top"> {/* Added align-top */}
                   {/* Employee Info Cell */}
@@ -388,13 +573,10 @@ const EmployeeScheduleTable: React.FC = () => {
                         <span>{index + 1}. {employee.name}</span> {/* Added employee number */}
                         <span className="text-sm text-gray-500">({matchPercentage}% match)
 </span> {/* Added match % */}
-                        <button 
-                            className="mt-1 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
-                            data-en="View in Calendar" data-es="Ver en Calendario"
-                        >
-                            View in Calendar
-                        </button>
                     </div>
+                    <button className="mt-2 bg-blue-500 hover:bg-blue-600 text-white text-sm px-2 py-1 rounded" data-en="View in Calendar" data-es="Ver en Calendario"> {/* Added text-sm, translation */}
+                      View in Calendar
+                    </button>
                   </td>
 
                   {/* Preferences/Blocked Cell */}
@@ -411,38 +593,37 @@ const EmployeeScheduleTable: React.FC = () => {
                            marginTop: '5px',
                            borderTop: '1px solid #ddd',
                            padding: '5px',
-                      }}>
-                          <div className="text-sm">Weekends Off: {weekendsOffPerMonth - weekendShiftsWorked}/{weekendsOffPerMonth}</div>
-                          <div className="text-sm text-gray-600">Required Days Off: {weekendsOffPerMonth}</div>
-                      </div>
+                           backgroundColor: freeWeekends < requiredWeekendsForPeriod ? 'yellow' : 'transparent', // Highlight weekends if insufficient
+                           color: freeWeekends < requiredWeekendsForPeriod ? 'black' : 'inherit',
+                           fontSize: '0.9em' // Smaller font for weekend info
+                       }}>
+                           <strong># Free Weekends:</strong> {freeWeekends}
+                       </div>
                   </td>
 
-                  {/* Dynamic Date Cells */}
+                  {/* Dynamic Daily Cells */}
                   {dateRange.map((date) => {
                     const dateString = date.toISOString().split('T')[0];
+                    const dayOfWeek = daysOfWeek[date.getUTCDay()];
                     const isSunday = date.getUTCDay() === 0;
 
-                    // Determinar si ya hay una asignación para este día
-                    const isOnLeave = isEmployeeOnLeave(employee, dateString);
-                    
-                    // Aquí se determina qué turno está asignado (de varias fuentes posibles)
-                    const dayOfWeek = daysOfWeek[date.getUTCDay()];
-                    
-                    // Prioridad: 1) turno manual, 2) turno fijo, 3) ninguno
-                    let assignedShift = '';
-                    let fixedShift = '';
-                    
-                    if (employee.manualShifts && employee.manualShifts[dateString]) {
-                      assignedShift = employee.manualShifts[dateString];
-                    } else if (employee.fixedShifts && employee.fixedShifts[dayOfWeek] && employee.fixedShifts[dayOfWeek].length > 0) {
-                      fixedShift = employee.fixedShifts[dayOfWeek][0];
-                      assignedShift = fixedShift;
-                    }
+                     // Check if employee is on leave for this date
+                     const isOnLeave = employee.leave?.some(l => {
+                         const leaveStart = new Date(l.startDate + 'T00:00:00Z');
+                         const leaveEnd = new Date(l.endDate + 'T00:00:00Z');
+                         const current = new Date(dateString + 'T00:00:00Z');
+                         return current >= leaveStart && current <= leaveEnd;
+                     });
 
-                    const isAutoDayOff = employee.autoDaysOff?.includes(dateString);
-                    const isLocked = employee.lockedShifts?.[dateString];
-                    const exceedsMax = exceedsMaxConsecutiveShifts(employee, dateString, rules, timeRanges); // Placeholder check
-                    const violatesMinRest = violatesMinRestTime(employee, dateString, assignedShift || '', rules, timeRanges); // Placeholder check
+                     // Determine the assigned shift (manual overrides fixed)
+                     const manualShift = employee.manualShifts?.[dateString];
+                     const fixedShift = employee.fixedShifts?.[dayOfWeek]?.[0];
+                     const assignedShift = (manualShift !== undefined) ? manualShift : fixedShift; // Use undefined check
+
+                     const isAutoDayOff = employee.autoDaysOff?.includes(dateString);
+                     const isLocked = employee.lockedShifts?.[dateString];
+                     const exceedsMax = exceedsMaxConsecutiveShifts(employee, dateString, rules, timeRanges); // Placeholder check
+                     const violatesMinRest = violatesMinRestTime(employee, dateString, assignedShift || '', rules, timeRanges); // Placeholder check
 
 
                     return (
@@ -463,35 +644,7 @@ const EmployeeScheduleTable: React.FC = () => {
                            ) : (
                                // Render shift select if not on leave
                               <div className="flex flex-col items-center">
-                                 {/* Icons Row - INTERCAMBIADO DE POSICIÓN con el Select */}
-                                 <div className="flex justify-between items-center w-full px-1 mb-1">
-                                     {/* Primer botón: Lock Checkbox */}
-                                     <input
-                                         type="checkbox"
-                                         className="lock-shift h-3 w-3"
-                                         checked={!!isLocked}
-                                         readOnly // Make checkbox read-only for static demo
-                                         title="Check This Box To Fix The Shift For The Chosen Day As An Employee Request, Ensuring It Can't Be Changed By Mistake Unless You Uncheck It."
-                                     />
-                                     
-                                     {/* Segundo botón: Comment Icon */}
-                                     <span className="comment-icon text-sm cursor-help" title="Any Comment Written Here Is Visible To Both The Supervisor And The Employee In The Work Schedule.">
-                                          📝
-                                     </span>
-                                     
-                                     {/* Tercer botón: Swap Shift */}
-                                     <button
-                                         className="change-shift-btn text-sm focus:outline-none"
-                                         title="Swapping Shifts Between Employees"
-                                     >
-                                         🔄
-                                     </button>
-                                     
-                                     {/* Cuarto botón: espacio reservado para un futuro botón */}
-                                     <span className="w-4"></span>
-                                 </div>
-
-                                 {/* Shift Select - INTERCAMBIADO DE POSICIÓN con los iconos */}
+                                 {/* Shift Select */}
                                  <select
                                      className={`w-full border border-gray-300 rounded px-1 py-0.5 text-sm mb-1 focus:outline-none
                                         ${assignedShift === 'day-off' ? 'bg-yellow-200' : ''}
@@ -536,6 +689,34 @@ const EmployeeScheduleTable: React.FC = () => {
                                       {/* Add Leave option - Placeholder */}
                                       <option value="add-leave" disabled>Add Leave</option>
                                  </select>
+
+                                 {/* Row con 4 botones/iconos uniformemente espaciados */}
+                                 <div className="flex justify-between items-center w-full px-1 mb-1">
+                                     {/* Primer botón: Lock Checkbox */}
+                                     <input
+                                         type="checkbox"
+                                         className="lock-shift h-3 w-3"
+                                         checked={!!isLocked}
+                                         readOnly // Make checkbox read-only for static demo
+                                         title="Check This Box To Fix The Shift For The Chosen Day As An Employee Request, Ensuring It Can't Be Changed By Mistake Unless You Uncheck It."
+                                     />
+                                     
+                                     {/* Segundo botón: Comment Icon */}
+                                     <span className="comment-icon text-sm cursor-help" title="Any Comment Written Here Is Visible To Both The Supervisor And The Employee In The Work Schedule.">
+                                          📝
+                                     </span>
+                                     
+                                     {/* Tercer botón: Swap Shift */}
+                                     <button
+                                         className="change-shift-btn text-sm focus:outline-none"
+                                         title="Swapping Shifts Between Employees"
+                                     >
+                                         🔄
+                                     </button>
+                                     
+                                     {/* Cuarto botón: espacio reservado para un futuro botón */}
+                                     <span className="w-4"></span>
+                                 </div>
                                  
                                  {/* Área para mostrar comentarios si existen */}
                                  {employee.shiftComments?.[dateString] && (
