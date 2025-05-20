@@ -89,8 +89,33 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
   };
 
   const handleShiftChange = (columnIndex: number, position: 'top' | 'bottom', shiftId: string) => {
+    // Verificar si hay empleados asignados a esta combinación antes de cambiar
+    const currentList = getCurrentList();
+    const buttonId = `special-btn-${columnIndex + 1}`;
+    
+    // Verificar si hay empleados asignados a esta combinación
+    const hasAssignedEmployees = currentList?.specialRules?.employeeSelections?.[buttonId]?.length > 0;
+    
+    if (hasAssignedEmployees) {
+      const confirmChange = window.confirm(
+        "Esta combinación ya tiene empleados asignados. Si cambias el turno, podrías crear conflictos. ¿Deseas continuar?"
+      );
+      if (!confirmChange) return;
+    }
+    
     setColumns(prev => {
       const newColumns = [...prev];
+      
+      // Verificar si intentamos seleccionar el mismo turno arriba y abajo
+      if (position === 'top' && newColumns[columnIndex].bottomShift.shiftId === shiftId && shiftId !== '') {
+        alert("No puedes seleccionar el mismo turno arriba y abajo.");
+        return prev;
+      } else if (position === 'bottom' && newColumns[columnIndex].topShift.shiftId === shiftId && shiftId !== '') {
+        alert("No puedes seleccionar el mismo turno arriba y abajo.");
+        return prev;
+      }
+      
+      // Actualizar el turno seleccionado
       if (position === 'top') {
         newColumns[columnIndex].topShift.shiftId = shiftId;
       } else {
