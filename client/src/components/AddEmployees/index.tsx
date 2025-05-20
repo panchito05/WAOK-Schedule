@@ -161,8 +161,12 @@ const AddEmployees: React.FC = () => {
   const { getCurrentList, updateList } = useEmployeeLists();
   const { rules } = useRules();
 
-  // Definimos un estado local para rastrear el empleado list cargado
+  // Definimos estados locales para el componente
   const [employeeStateLoaded, setEmployeeStateLoaded] = useState(false);
+  const [isTableBodyHidden, setIsTableBodyHidden] = useState(() => {
+    const savedState = localStorage.getItem('employeesTableHidden');
+    return savedState ? JSON.parse(savedState) : false;
+  });
   
   // Estado local para hacer caching de la lista actual para evitar re-renders continuos
   const [localEmployeeList, setLocalEmployeeList] = useState<any>(null);
@@ -414,6 +418,8 @@ const AddEmployees: React.FC = () => {
   }
 
 
+  // Funcionalidad de ocultar/mostrar ya implementada con variables de estado
+
   return (
     <div className="w-full bg-white rounded-lg shadow-lg p-6 mt-8 font-['Viata']">
       <div className="bg-gradient-to-r from-[#19b08d] to-[#117cee] p-4 rounded-t-lg mb-6">
@@ -532,8 +538,7 @@ const AddEmployees: React.FC = () => {
         </div>
       </div>
       
-      {!isTableBodyHidden && (
-        <div className="border rounded-lg overflow-hidden">
+      {!isTableBodyHidden {!isTableBodyHidden && <div{!isTableBodyHidden && <div (<div className="border rounded-lg overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-200">
              {/* Loader row based on loading state and employee count */}
@@ -743,7 +748,7 @@ const AddEmployees: React.FC = () => {
                 </tr>
             )}
           </tbody>
-        </table>
+        </table>)
       </div>
 
       {/* Modales */}
