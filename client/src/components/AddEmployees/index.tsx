@@ -432,8 +432,6 @@ const AddEmployees: React.FC = () => {
         <button 
           onClick={toggleTableBody}
           className={`px-4 py-2 rounded transition-colors ${isTableBodyHidden ? 'bg-[#ffd700] text-black' : 'bg-white text-[#19b08d] hover:bg-gray-100 border border-gray-300'}`}
-          data-es-show="Mostrar Tabla de Empleados"
-          data-es-hide="Ocultar Tabla de Empleados"
         >
           {isTableBodyHidden ? 'Show Employees Table' : 'Hide Employees Table'}
         </button>
