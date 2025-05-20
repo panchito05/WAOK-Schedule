@@ -545,6 +545,10 @@ const EmployeeScheduleTable: React.FC = () => {
                                     <Users className="h-4 w-4" /> {/* Lucide icon */}
                                     <span data-en="View Today's Employees" data-es="Visualizar Personal de Hoy">View Today's Employees</span> {/* Added translation */}
                                 </button>
+                                {/* Select de turno - movido debajo de los iconos según solicitado */}
+                                <select className="mt-2 w-full border border-gray-300 rounded px-1 py-0.5 text-sm focus:outline-none">
+                                    <option>Select Shift</option>
+                                </select>
                             </th>
                         );
                     })}
