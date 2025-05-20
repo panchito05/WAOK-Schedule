@@ -56,10 +56,12 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const currentList = getCurrentList();
     if (currentList) {
       const newShifts = [...currentList.shifts];
-      // Preserve the existing ID when updating
+      // Aseguramos que mantenemos todas las propiedades requeridas
       newShifts[index] = {
         ...shift,
-        id: newShifts[index].id || `shift_${index + 1}`
+        id: shift.id || newShifts[index].id || `shift_${index + 1}`,
+        isOvertimeActive: shift.isOvertimeActive || newShifts[index].isOvertimeActive || false,
+        overtimeEntries: shift.overtimeEntries || newShifts[index].overtimeEntries || []
       };
       updateList(currentList.id, { shifts: newShifts });
     }
@@ -79,7 +81,9 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (currentList) {
       const newShifts = currentList.shifts.map(shift => ({
         ...shift,
-        isOvertimeActive: !isGlobalOvertimeActive
+        id: shift.id || `shift_${Math.random().toString(36).substr(2, 9)}`,
+        isOvertimeActive: !isGlobalOvertimeActive,
+        overtimeEntries: shift.overtimeEntries || []
       }));
       updateList(currentList.id, { shifts: newShifts });
     }
@@ -89,9 +93,12 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const currentList = getCurrentList();
     if (currentList) {
       const newShifts = [...currentList.shifts];
+      // Aseguramos que todas las propiedades requeridas estén presentes
       newShifts[index] = {
         ...newShifts[index],
-        isOvertimeActive: active
+        id: newShifts[index].id || `shift_${index + 1}`,
+        isOvertimeActive: active,
+        overtimeEntries: newShifts[index].overtimeEntries || []
       };
       updateList(currentList.id, { shifts: newShifts });
     }
