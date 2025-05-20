@@ -148,6 +148,27 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
     return "N/A";
   };
   
+  // Función para convertir la duración del turno de formato "8h 0m" a horas decimales
+  const durationToHours = (duration: string): number => {
+    if (duration === "N/A") return 0;
+    
+    const hoursMatch = duration.match(/(\d+)h/);
+    const minutesMatch = duration.match(/(\d+)m/);
+    
+    const hours = hoursMatch ? parseInt(hoursMatch[1]) : 0;
+    const minutes = minutesMatch ? parseInt(minutesMatch[1]) : 0;
+    
+    return hours + (minutes / 60);
+  };
+  
+  // Calcular el total de horas para una columna
+  const calculateTotalHours = (column: Column): number => {
+    const topShiftDuration = durationToHours(getShiftDuration(column.topShift.shiftId));
+    const bottomShiftDuration = durationToHours(getShiftDuration(column.bottomShift.shiftId));
+    
+    return (topShiftDuration * column.topShift.count) + (bottomShiftDuration * column.bottomShift.count);
+  };
+  
   // Verificar si un empleado ya está seleccionado en otro botón
   const isEmployeeSelectedInOtherButton = (employeeId: string): {isSelected: boolean, buttonName?: string} => {
     const currentList = getCurrentList();
@@ -363,9 +384,12 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
             <button
               id={`special-btn-${columnIndex + 1}`}
               onClick={() => handleSelectEmployees(columnIndex)}
-              className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors font-semibold"
+              className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors font-semibold flex justify-between items-center"
             >
-              Select Employees
+              <span>Select Employees</span>
+              <span className="bg-blue-600 px-2 py-1 rounded ml-2">
+                {calculateTotalHours(column).toFixed(1)}h
+              </span>
             </button>
           </div>
         ))}
