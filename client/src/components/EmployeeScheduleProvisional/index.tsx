@@ -1193,42 +1193,12 @@ const EmployeeScheduleTable: React.FC = () => {
                  
                  return (
                    <div>
-                     <h3 className="text-lg font-semibold mb-2">Scheduled Employees ({scheduledEmployees.length})</h3>
-                     <div className="bg-blue-50 p-3 mb-4 rounded-lg text-sm border border-blue-100">
-                       <p className="font-semibold text-blue-700">Staff Summary for {formatDateForTitle(currentModalDate)}</p>
-                       <div className="grid grid-cols-2 gap-2 mt-2">
-                         {timeRanges.map(shift => {
-                           // Count employees on this shift
-                           const employeesOnShift = scheduledEmployees.filter(emp => {
-                             const manualShift = emp.manualShifts?.[dateString];
-                             const fixedShift = emp.fixedShifts?.[dayOfWeek]?.[0];
-                             const effectiveShift = manualShift || fixedShift;
-                             
-                             return effectiveShift === shift.id || 
-                                   (effectiveShift && effectiveShift.includes(shift.startTime));
-                           }).length;
-                           
-                           // Get ideal count for this day of week
-                           const idealCount = shift.nurseCounts?.[dayOfWeek] || 0;
-                           
-                           return (
-                             <div key={shift.id} className={`flex justify-between items-center p-2 rounded ${employeesOnShift < idealCount ? 'bg-red-50 border border-red-100' : 'bg-green-50 border border-green-100'}`}>
-                               <span className="font-medium">{shift.startTime} - {shift.endTime}:</span>
-                               <span className={`ml-2 font-bold ${employeesOnShift < idealCount ? 'text-red-600' : 'text-green-600'}`}>
-                                 {employeesOnShift}/{idealCount} staff
-                               </span>
-                             </div>
-                           );
-                         })}
-                       </div>
-                     </div>
-                     
+                     <h3 className="text-lg font-semibold mb-3">Scheduled Employees</h3>
                      <table className="w-full border-collapse mb-6">
                        <thead className="bg-gray-100">
                          <tr>
                            <th className="border px-4 py-2 text-left">Name</th>
                            <th className="border px-4 py-2 text-left">Shift</th>
-                           <th className="border px-4 py-2 text-left">Status</th>
                            <th className="border px-4 py-2 text-left">Comment</th>
                          </tr>
                        </thead>
