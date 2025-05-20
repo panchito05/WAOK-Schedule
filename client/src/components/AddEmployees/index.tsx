@@ -170,6 +170,7 @@ const AddEmployees: React.FC = () => {
   
   const [formError, setFormError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [leaveModalState, setLeaveModalState] = useState<{ isOpen: boolean; employeeIndex: number | null }>({
     isOpen: false,
@@ -375,6 +376,28 @@ const AddEmployees: React.FC = () => {
     // updateEmployeeProperty(assignShiftsModalState.employeeIndex, 'fixedShifts', fixedShiftsDeepCopy);
     updateEmployeeProperty(assignShiftsModalState.employeeIndex, 'fixedShifts', fixedShifts); // Standard shallow update
   };
+  
+  // Función para manejar la selección de un empleado
+  const toggleEmployeeSelection = (employeeId: string) => {
+    setSelectedEmployeeIds(prev => {
+      if (prev.includes(employeeId)) {
+        return prev.filter(id => id !== employeeId);
+      } else {
+        return [...prev, employeeId];
+      }
+    });
+  };
+
+  // Función para seleccionar o deseleccionar todos los empleados
+  const toggleAllEmployees = () => {
+    if (selectedEmployeeIds.length === employees.length) {
+      // Si todos están seleccionados, deseleccionar todos
+      setSelectedEmployeeIds([]);
+    } else {
+      // Si no todos están seleccionados, seleccionar todos
+      setSelectedEmployeeIds(employees.map(emp => emp.id));
+    }
+  };
 
 
   if (isLoading && employees.length === 0 && !currentEmployeeList) {
@@ -517,7 +540,12 @@ const AddEmployees: React.FC = () => {
             )}
             <tr>
               <th className="w-12 px-4 py-3 text-left border-r border-gray-300">
-                <input type="checkbox" className="rounded border-gray-300" />
+                <input 
+                  type="checkbox" 
+                  className="rounded border-gray-300" 
+                  checked={selectedEmployeeIds.length === employees.length && employees.length > 0}
+                  onChange={toggleAllEmployees}
+                />
               </th>
               <th className="w-1/4 px-4 py-3 text-left border-r border-gray-300">NAME & USER ID</th>
               <th className="w-1/4 px-4 py-3 text-left border-r border-gray-300">SHIFT PREFERENCES</th>
@@ -532,7 +560,12 @@ const AddEmployees: React.FC = () => {
               // Using employee.id as key - ensure it's unique and stable
               <tr key={employee.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                 <td className="px-4 py-3 border-r border-gray-300">
-                  <input type="checkbox" className="rounded border-gray-300" />
+                  <input 
+                    type="checkbox" 
+                    className="rounded border-gray-300" 
+                    checked={selectedEmployeeIds.includes(employee.id)}
+                    onChange={() => toggleEmployeeSelection(employee.id)}
+                  />
                 </td>
                 <td className="w-1/4 px-4 py-3 border-r border-gray-300">
                   <div className="space-y-2">
