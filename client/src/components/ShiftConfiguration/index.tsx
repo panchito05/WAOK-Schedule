@@ -137,8 +137,10 @@ const ShiftConfiguration: React.FC = () => {
   };
 
   return (
-    <div className="relative w-[800px] bg-white rounded-lg shadow-lg p-6 mt-8">
-      <h2 className="text-2xl font-bold mb-6">Shift Configuration</h2>
+    <div className="relative w-[800px] bg-white rounded-lg shadow-lg p-6 mt-8 font-['Viata']">
+      <div className="bg-gradient-to-r from-[#19b08d] to-[#117cee] p-4 rounded-t-lg mb-6">
+        <h2 className="text-2xl font-bold text-white">Shift Configuration</h2>
+      </div>
 
       <div className="flex gap-4 mb-6">
         <button 
@@ -157,7 +159,7 @@ const ShiftConfiguration: React.FC = () => {
 
       <div className="border rounded-lg overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-200">
+          <thead className="bg-gradient-to-r from-[#19b08d] to-[#117cee] text-white">
             <tr>
               <th className="px-4 py-3 text-left">Start Time</th>
               <th className="px-4 py-3 text-left">End Time</th>
