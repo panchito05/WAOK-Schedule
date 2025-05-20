@@ -449,13 +449,14 @@ const AddEmployees: React.FC = () => {
         </div>
       )}
 
-      <div className="space-y-4 mb-8">
-        {formError && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
-            <span>{formError}</span>
-          </div>
-        )}
+      {!isTableBodyHidden && (
+        <div className="space-y-4 mb-8">
+          {formError && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex items-center gap-2">
+              <AlertCircle className="h-5 w-5" />
+              <span>{formError}</span>
+            </div>
+          )}
         <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
