@@ -531,8 +531,9 @@ const AddEmployees: React.FC = () => {
           </div>
         </div>
       </div>
-
-      <div className="border rounded-lg overflow-hidden">
+      
+      {!isTableBodyHidden && (
+        <div className="border rounded-lg overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-200">
              {/* Loader row based on loading state and employee count */}
