@@ -8,17 +8,22 @@ import { useSelectedEmployees } from '../../context/SelectedEmployeesContext';
 import OvertimeModal from '../OvertimeModal';
 import { ShiftRow, Employee as CommonEmployee, Rules as CommonRules, ShiftOvertime } from '../../types/common';
 
-// Estructura específica de Shift para este componente que extiende ShiftRow
-interface Shift extends ShiftRow {
+// Estructura específica de Shift para este componente (reemplaza la extensión por una combinación)
+interface Shift {
+  id: string;
   start: string; // HH:mm
   end: string;   // HH:mm
   lunchBreak: number; // minutes
+  lunchBreakDeduction: number; // Requerido para compatibilidad
+  duration: string;
+  startTime: string;
+  endTime: string;
   nurseCounts: { [dayOfWeek: string]: number }; // e.g., { "Monday": 5, "Tuesday": 6 }
   shiftComments?: string;
+  isOvertimeActive?: boolean;
   isOvertimeActiveForShift?: boolean;
   disableOvertime?: boolean;
-  startTime?: string;
-  endTime?: string;
+  overtimeEntries?: ShiftOvertime[];
 }
 
 // Estructura específica de Employee para este componente que extiende CommonEmployee

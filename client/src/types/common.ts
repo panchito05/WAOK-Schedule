@@ -16,7 +16,7 @@ export interface ShiftOvertime {
  * Definición completa de un turno de trabajo
  */
 export interface ShiftRow {
-  id?: string;
+  id: string; // Hacemos id obligatorio ya que es usado en muchas partes 
   startTime: string;
   endTime: string;
   duration: string;

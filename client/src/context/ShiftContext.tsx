@@ -25,9 +25,14 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const { shifts, isGlobalOvertimeActive } = useMemo(() => {
     const currentList = getCurrentList();
     const shiftsArray = currentList?.shifts || [];
-    const globalOvertimeStatus = shiftsArray.every(shift => shift.isOvertimeActive);
+    // Aseguramos que cada shift tiene su propiedad isOvertimeActive correctamente definida
+    const safeShiftsArray = shiftsArray.map(shift => ({
+      ...shift,
+      isOvertimeActive: shift.isOvertimeActive || false
+    }));
+    const globalOvertimeStatus = safeShiftsArray.length > 0 && safeShiftsArray.every(shift => shift.isOvertimeActive);
     return { 
-      shifts: shiftsArray, 
+      shifts: safeShiftsArray, 
       isGlobalOvertimeActive: globalOvertimeStatus 
     };
   }, [getCurrentList]);
@@ -36,10 +41,12 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const addShift = useCallback((shift: ShiftRow) => {
     const currentList = getCurrentList();
     if (currentList) {
-      // Ensure the shift has an ID
-      const newShift = {
+      // Aseguramos que todos los campos obligatorios estén presentes
+      const newShift: ShiftRow = {
         ...shift,
-        id: `shift_${currentList.shifts.length + 1}`
+        id: shift.id || `shift_${currentList.shifts.length + 1}`,
+        isOvertimeActive: shift.isOvertimeActive || false,
+        overtimeEntries: shift.overtimeEntries || []
       };
       updateList(currentList.id, { shifts: [...currentList.shifts, newShift] });
     }
