@@ -1,9 +1,9 @@
-// src/components/AddEmployees/index.tsx - CODIGO CON LA SOLUCION aplicando la copia profunda
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+// src/components/AddEmployees/index.tsx
+import React, { useState, useEffect, useRef } from 'react';
 import { Calendar } from 'lucide-react';
 import DatePickerModal from '../DatePickerModal';
 import { useShiftContext } from '../../context/ShiftContext';
-import { useEmployeeLists } from '../../context/EmployeeListsContext'; // Correcto
+import { useEmployeeLists } from '../../context/EmployeeListsContext';
 import { useRules } from '../../context/RulesContext';
 import { useSelectedEmployees } from '../../context/SelectedEmployeesContext';
 import BlockShiftModal from '../BlockShiftModal';
@@ -168,7 +168,6 @@ const AddEmployees: React.FC = () => {
     return savedState ? JSON.parse(savedState) : false;
   });
 
-  // Eliminar llamada a getCurrentList de aquí - es parte del problema
   // Definimos un estado local para rastrear el empleado list cargado
   const [employeeStateLoaded, setEmployeeStateLoaded] = useState(false);
   
@@ -328,11 +327,6 @@ const AddEmployees: React.FC = () => {
     }
   };
 
-   // Keep other handler functions (handleBlockClick, handleSaveBlockedDays, etc.)
-   // as they correctly update specific parts of the employee object and then call updateList.
-   // If deep copy is needed for these updates too based on your diagnosis,
-   // you would apply similar JSON.parse(JSON.stringify(...)) before updateList calls.
-
   const handleBlockClick = (employeeIndex: number, shift: { id: string; startTime: string; endTime: string }) => {
     setModalState({
       isOpen: true,
@@ -359,16 +353,10 @@ const AddEmployees: React.FC = () => {
       }
       return emp;
     });
-    // Deep copy here if needed for blocked shifts updates too
-    // const updatedEmployeesDeepCopy = JSON.parse(JSON.stringify(updatedEmployees));
-    // updateList(currentEmployeeList.id, { employees: updatedEmployeesDeepCopy });
     updateList(currentEmployeeList.id, { employees: updatedEmployees }); // Standard shallow update
   };
 
   const handlePreferencesChange = (employeeIndex: number, newPreferences: (number | null)[]) => {
-    // Deep copy here if needed for preferences updates too
-    // const updatedPreferencesDeepCopy = JSON.parse(JSON.stringify(newPreferences));
-    // updateEmployeeProperty(employeeIndex, 'shiftPreferences', updatedPreferencesDeepCopy);
     updateEmployeeProperty(employeeIndex, 'shiftPreferences', newPreferences); // Standard shallow update
   };
 
@@ -377,23 +365,16 @@ const AddEmployees: React.FC = () => {
       const newLeaveEntry = { ...leaveData, id: crypto.randomUUID(), leaveType: leaveData.type };
       const employeeToUpdate = employees[employeeIndex];
       const updatedLeave = [...(employeeToUpdate.leave || []), newLeaveEntry];
-       // Deep copy here if needed for leave updates too
-      // const updatedLeaveDeepCopy = JSON.parse(JSON.stringify(updatedLeave));
-      // updateEmployeeProperty(employeeIndex, 'leave', updatedLeaveDeepCopy);
       updateEmployeeProperty(employeeIndex, 'leave', updatedLeave); // Standard shallow update
     }
   };
 
   const handleSaveFixedShifts = (fixedShifts: { [day: string]: string[] }) => {
     if (assignShiftsModalState.employeeIndex === null || !currentEmployeeList) return;
-    // Deep copy here if needed for fixed shifts updates too
-    // const fixedShiftsDeepCopy = JSON.parse(JSON.stringify(fixedShifts));
-    // updateEmployeeProperty(assignShiftsModalState.employeeIndex, 'fixedShifts', fixedShiftsDeepCopy);
     updateEmployeeProperty(assignShiftsModalState.employeeIndex, 'fixedShifts', fixedShifts); // Standard shallow update
   };
   
   // Estas funciones ahora vienen del contexto de SelectedEmployees
-
 
   if (isLoading && employees.length === 0 && !currentEmployeeList) {
     return (
@@ -413,7 +394,6 @@ const AddEmployees: React.FC = () => {
         </div>
     );
   }
-
 
   return (
     <div className="w-full bg-white rounded-lg shadow-lg p-6 mt-8 font-['Viata']">
@@ -442,311 +422,256 @@ const AddEmployees: React.FC = () => {
         </div>
       )}
 
-      {!isEmployeesTableHidden ? (
-        <div>
+      {!isEmployeesTableHidden && (
+        <>
           <div className="space-y-4 mb-8">
-        {formError && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
-            <span>{formError}</span>
-          </div>
-        )}
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Employee ID <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              placeholder="Enter employee ID"
-              value={newEmployee.id}
-              onChange={(e) => handleInputChange('id', e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Employee Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              placeholder="Enter employee name"
-              value={newEmployee.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Hire Date <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                maxLength={10}
-                placeholder="mm/dd/yyyy"
-                value={newEmployee.hireDate}
-                onChange={(e) => handleInputChange('hireDate', formatDateInput(e.target.value))}
-                className="w-full border border-gray-300 rounded px-3 py-2"
-              />
-              <button
-                onClick={() => setIsDatePickerOpen(true)}
-                className="absolute right-3 top-2.5"
-              >
-                <Calendar className="h-5 w-5 text-gray-400" />
-              </button>
+            {formError && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex items-center gap-2">
+                <AlertCircle className="h-5 w-5" />
+                <span>{formError}</span>
+              </div>
+            )}
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Employee ID <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter employee ID"
+                  value={newEmployee.id}
+                  onChange={(e) => handleInputChange('id', e.target.value)}
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Employee Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter employee name"
+                  value={newEmployee.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Hire Date <span className="text-red-500">*</span>
+                </label>
+                <div className="flex">
+                  <input
+                    type="text"
+                    placeholder="MM/DD/YYYY"
+                    value={newEmployee.hireDate}
+                    onChange={(e) => handleInputChange('hireDate', formatDateInput(e.target.value))}
+                    className="w-full border border-gray-300 rounded-l px-3 py-2"
+                  />
+                  <button 
+                    onClick={() => setIsDatePickerOpen(true)}
+                    className="bg-gray-200 border-t border-r border-b border-gray-300 rounded-r px-3 py-2"
+                  >
+                    <Calendar className="h-5 w-5 text-gray-600" />
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  placeholder="Enter email address"
+                  value={newEmployee.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  placeholder="Enter phone number"
+                  value={newEmployee.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                />
+              </div>
+              <div className="flex items-end">
+                <button
+                  onClick={handleAddEmployee}
+                  className="bg-[#19b08d] text-white px-4 py-2 rounded hover:bg-[#117cee] transition-colors w-full"
+                >
+                  Add Employee
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="grid grid-cols-3 gap-4 mt-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email <span className="text-gray-500">(Optional)</span>
-            </label>
-            <input
-              type="email"
-              placeholder="Enter email address"
-              value={newEmployee.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Phone <span className="text-gray-500">(Optional)</span>
-            </label>
-            <input
-              type="tel"
-              placeholder="Enter phone number"
-              value={newEmployee.phone}
-              onChange={(e) => handleInputChange('phone', e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            />
-          </div>
-          <div className="flex items-end">
-            <button 
-              onClick={handleAddEmployee}
-              className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors font-semibold"
-              disabled={!currentEmployeeList}
-            >
-              Add Employee
-            </button>
-          </div>
-        </div>
-      </div>
 
-      <div className="border rounded-lg overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-200">
-             {/* Loader row based on loading state and employee count */}
-            {isLoading && employees.length === 0 && (
-              <tr>
-                <td colSpan={6} className="text-center py-4">
-                  <div className="flex items-center justify-center gap-2">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>Loading employees...</span>
-                  </div>
-                </td>
-              </tr>
-            )}
-            <tr>
-              <th className="w-12 px-4 py-3 text-left border-r border-gray-300">
-                <input 
-                  type="checkbox" 
-                  className="rounded border-gray-300" 
-                  checked={selectedEmployeeIds.length === employees.length && employees.length > 0}
-                  onChange={(e) => {
-                    // Ignoramos el evento y simplemente llamamos a toggleAllEmployees con el array de IDs
-                    toggleAllEmployees(employees.map(emp => emp.id))
-                  }}
-                />
-              </th>
-              <th className="w-1/4 px-4 py-3 text-left border-r border-gray-300">NAME & USER ID</th>
-              <th className="w-1/4 px-4 py-3 text-left border-r border-gray-300">SHIFT PREFERENCES</th>
-              <th className="w-[12%] px-4 py-3 text-left border-r border-gray-300">LOCKED SHIFT</th>
-              <th className="w-1/4 px-4 py-3 text-left border-r border-gray-300">NOTES</th>
-              <th className="px-4 py-3 text-left">ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* Mapping over employees from context */}
-            {employees.map((employee, index) => (
-              // Using employee.id as key - ensure it's unique and stable
-              <tr key={employee.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                <td className="px-4 py-3 border-r border-gray-300">
-                  <input 
-                    type="checkbox" 
-                    className="rounded border-gray-300" 
-                    checked={selectedEmployeeIds.includes(employee.id)}
-                    onChange={() => toggleEmployeeSelection(employee.id)}
-                  />
-                </td>
-                <td className="w-1/4 px-4 py-3 border-r border-gray-300">
-                  <div className="space-y-2">
-                    {/* Editable Fields for Employee Properties */}
-                    <div className="bg-gray-100 p-2 rounded border border-gray-200">
-                      <div className="flex items-center gap-2 w-full">
-                        <label className="text-xs text-gray-500 w-24">Name:</label>
-                        <EditableField 
-                          value={employee.name}
-                          onChange={(value) => updateEmployeeProperty(index, 'name', value)}
-                        />
-                      </div>
+          <div className="border rounded-lg overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-200">
+                {/* Loader row based on loading state and employee count */}
+                <tr>
+                  <th className="py-2 px-4 text-left border-b">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={employees.length > 0 && selectedEmployeeIds.length === employees.length}
+                        onChange={() => toggleAllEmployees(employees.map(emp => emp.id))}
+                        className="mr-2"
+                      />
+                      ID
                     </div>
-                    <div className="bg-gray-100 p-2 rounded border border-gray-200">
-                      <div className="flex items-center gap-2 w-full">
-                        <label className="text-xs text-gray-500 w-24">Hire Date:</label>
+                  </th>
+                  <th className="py-2 px-4 text-left border-b">Name</th>
+                  <th className="py-2 px-4 text-left border-b">Email / Phone</th>
+                  <th className="py-2 px-4 text-left border-b">Hire Date</th>
+                  <th className="py-2 px-4 text-left border-b">Shift Preferences</th>
+                  <th className="py-2 px-4 text-left border-b">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {employees.map((employee, index) => (
+                  <tr key={employee.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="py-3 px-4 border-b">
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedEmployeeIds.includes(employee.id)}
+                          onChange={() => toggleEmployeeSelection(employee.id)}
+                          className="mr-2"
+                        />
                         <EditableField
-                          value={employee.hireDate}
-                           onChange={(value) => updateEmployeeProperty(index, 'hireDate', value)}
-                        />
-                      </div>
-                    </div>
-                     <div className="bg-gray-100 p-2 rounded border border-gray-200">
-                      <div className="flex items-center gap-2 w-full">
-                        <label className="text-xs text-gray-500 w-24">Employee ID:</label>
-                         <EditableField
                           value={employee.id}
-                           onChange={(value) => updateEmployeeProperty(index, 'id', value)}
+                          onChange={(value) => {
+                            // You might want to disable ID editing or add validation here
+                            updateEmployeeProperty(index, 'id', value);
+                          }}
                         />
                       </div>
-                    </div>
-                    <div className="bg-gray-100 p-2 rounded border border-gray-200">
-                      <div className="flex items-center gap-2 w-full">
-                        <label className="text-xs text-gray-500 w-24">Email:</label>
+                    </td>
+                    <td className="py-3 px-4 border-b">
+                      <EditableField
+                        value={employee.name}
+                        onChange={(value) => updateEmployeeProperty(index, 'name', value)}
+                      />
+                    </td>
+                    <td className="py-3 px-4 border-b">
+                      <div className="space-y-2">
                         <EditableField
-                          value={employee.email || ''}
+                          value={employee.email}
                           onChange={(value) => updateEmployeeProperty(index, 'email', value)}
+                          className="text-xs"
                         />
-                      </div>
-                    </div>
-                    <div className="bg-gray-100 p-2 rounded border border-gray-200">
-                      <div className="flex items-center gap-2 w-full">
-                        <label className="text-xs text-gray-500 w-24">Phone:</label>
                         <EditableField
-                          value={employee.phone || ''}
+                          value={employee.phone}
                           onChange={(value) => updateEmployeeProperty(index, 'phone', value)}
+                          className="text-xs"
                         />
                       </div>
-                    </div>
-                  </div>
-                </td>
-                <td className="w-1/4 px-4 py-3 border-r border-gray-300">
-                  <div className="flex gap-2">
-                    <div className="w-full space-y-2">
-                      <div className="bg-gray-100 p-2 rounded border border-gray-200">
-                        <div className="flex items-center gap-2 w-full">
-                          <label className="text-xs text-gray-500">Max. Consec. Shifts:</label>
-                          <input
-                            type="number"
-                            min="1"
-                            max="7" // Or based on global rules
-                            value={employee.maxConsecutiveShifts || parseInt(rules.maxConsecutiveShifts)}
-                            onChange={(e) => updateEmployeeProperty(index, 'maxConsecutiveShifts', parseInt(e.target.value) || parseInt(rules.maxConsecutiveShifts))}
-                            className="w-16 border border-gray-300 rounded px-2 py-1 text-sm"
-                          />
+                    </td>
+                    <td className="py-3 px-4 border-b">
+                      <EditableField
+                        value={employee.hireDate}
+                        onChange={(value) => updateEmployeeProperty(index, 'hireDate', value)}
+                      />
+                    </td>
+                    <td className="py-3 px-4 border-b">
+                      <div className="space-y-2">
+                        <PreferenceManager
+                          preferences={employee.shiftPreferences}
+                          shifts={shifts}
+                          onChange={(newPreferences) => handlePreferencesChange(index, newPreferences)}
+                        />
+                        <div className="flex items-center justify-between text-xs mt-1">
+                          <button
+                            onClick={() => handleBlockClick(index, shifts[0])}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            Block Shifts
+                          </button>
+                          <button
+                            onClick={() => setLeaveModalState({ isOpen: true, employeeIndex: index })}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            Add Leave
+                          </button>
+                          <button
+                            onClick={() => setAssignShiftsModalState({ isOpen: true, employeeIndex: index })}
+                            className="text-green-600 hover:text-green-800"
+                          >
+                            Fix Shifts
+                          </button>
                         </div>
                       </div>
-                      <PreferenceManager
-                        shifts={shifts} // Assuming shifts are available
-                        initialPreferences={employee.shiftPreferences}
-                        onChange={(preferences) => handlePreferencesChange(index, preferences)}
-                      />
-                    </div>
-                  </div>
-                </td>
-                <td className="w-[12%] px-4 py-3 border-r border-gray-300">
-                   <div className="space-y-2">
-                    {shifts.map((shift, shiftIndex) => {
-                       // Use shift.id if available from context, fallback to index if needed for old data
-                       const shiftId = shift.id || `shift_${shiftIndex + 1}`;
-                      const blockedDays = employee.blockedShifts?.[shiftId] || [];
-                      const isBlocked = blockedDays.length > 0;
-                      const shiftInfo = {
-                         id: shiftId, // Pass a consistent ID to the modal
-                        startTime: shift.startTime,
-                        endTime: shift.endTime
-                      };
-
-                      return (
-                        <button
-                           key={shiftId} // Use the consistent ID for the key
-                          onClick={() => handleBlockClick(index, shiftInfo)}
-                          className={`w-full px-3 py-1.5 rounded text-sm font-semibold transition-colors ${
-                            isBlocked 
-                              ? 'bg-red-500 text-white hover:opacity-90' 
-                              : 'bg-blue-500 text-white hover:bg-blue-600'
-                          }`}
-                        >
-                          Block Shift {shiftIndex + 1}: {shift.startTime} - {shift.endTime}
-                          {isBlocked && (
-                            <span className="block text-xs mt-1">
-                              Blocked: {blockedDays.join(', ')}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </td>
-                <td className="w-1/4 px-4 py-3 border-r border-gray-300">
-                   <div className="space-y-2">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Confidential Note
-                      </label>
-                      <textarea
-                        className="w-full border border-gray-300 rounded px-3 py-2 h-20"
-                        value={employee.notes?.confidential || ''} // Handle potential null/undefined notes object
-                        onChange={(e) => updateEmployeeNoteProperty(index, 'confidential', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        AI Rules
-                      </label>
-                      <textarea
-                        className="w-full border border-gray-300 rounded px-3 py-2 h-20"
-                        value={employee.notes?.aiRules || ''} // Handle potential null/undefined notes object
-                        onChange={(e) => updateEmployeeNoteProperty(index, 'aiRules', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => setLeaveModalState({ isOpen: true, employeeIndex: index })}
-                      className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors font-semibold"
-                    >
-                      Add Vacation,<br />Sick Leave...
-                    </button>
-                    <button 
-                      onClick={() => setAssignShiftsModalState({ isOpen: true, employeeIndex: index })}
-                      className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors font-semibold"
-                    >
-                      Assign Permanent<br />Shifts
-                    </button>
-                    <button 
-                      onClick={() => handleRemoveEmployee(employee.id)}
-                      className="w-full bg-red-500 text-white px-4 py-2 rounded hover:opacity-90 transition-colors font-semibold"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-             {employees.length === 0 && !isLoading && (
-                <tr>
-                    <td colSpan={6} className="text-center py-10 text-gray-500">
-                        No employees added yet. Fill the form above to add your first employee.
                     </td>
-                </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                    <td className="py-3 px-4 border-b">
+                      <div className="flex items-center justify-between">
+                        <button
+                          onClick={() => handleRemoveEmployee(employee.id)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          Remove
+                        </button>
+                        <div className="relative group">
+                          <button className="text-gray-600 hover:text-gray-800">
+                            <ChevronDown className="h-5 w-5" />
+                          </button>
+                          <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden group-hover:block">
+                            <div className="py-1">
+                              <a
+                                href="#"
+                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  console.log('View employee details:', employee);
+                                }}
+                              >
+                                View Details
+                              </a>
+                              <a
+                                href="#"
+                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  console.log('Edit employee:', employee);
+                                }}
+                              >
+                                Edit Information
+                              </a>
+                              <a
+                                href="#"
+                                className="block px-4 py-2 text-sm text-red-700 hover:bg-gray-100"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleRemoveEmployee(employee.id);
+                                }}
+                              >
+                                Delete Employee
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {employees.length === 0 && !isLoading && (
+                  <tr>
+                    <td colSpan={6} className="text-center py-10 text-gray-500">
+                      No employees added yet. Fill the form above to add your first employee.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
 
       {/* Modales */}
       <BlockShiftModal
@@ -766,24 +691,24 @@ const AddEmployees: React.FC = () => {
       />
       {leaveModalState.employeeIndex !== null && employees[leaveModalState.employeeIndex] && (
         <LeaveModal
-            isOpen={leaveModalState.isOpen}
-            onClose={() => setLeaveModalState({ isOpen: false, employeeIndex: null })}
-            employeeName={employees[leaveModalState.employeeIndex].name}
-            onSave={(leave) => {
+          isOpen={leaveModalState.isOpen}
+          onClose={() => setLeaveModalState({ isOpen: false, employeeIndex: null })}
+          employeeName={employees[leaveModalState.employeeIndex].name}
+          onSave={(leave) => {
             if (leaveModalState.employeeIndex !== null) {
-                handleAddLeave(leaveModalState.employeeIndex, leave);
+              handleAddLeave(leaveModalState.employeeIndex, leave);
             }
-            }}
+          }}
         />
       )}
-       {assignShiftsModalState.employeeIndex !== null && employees[assignShiftsModalState.employeeIndex] && (
+      {assignShiftsModalState.employeeIndex !== null && employees[assignShiftsModalState.employeeIndex] && (
         <AssignPermanentShiftsModal
-            isOpen={assignShiftsModalState.isOpen}
-            onClose={() => setAssignShiftsModalState({ isOpen: false, employeeIndex: null })}
-            employeeName={employees[assignShiftsModalState.employeeIndex].name}
-            shifts={shifts} // Assuming shifts are available
-            initialFixedShifts={employees[assignShiftsModalState.employeeIndex].fixedShifts}
-            onSave={handleSaveFixedShifts}
+          isOpen={assignShiftsModalState.isOpen}
+          onClose={() => setAssignShiftsModalState({ isOpen: false, employeeIndex: null })}
+          employeeName={employees[assignShiftsModalState.employeeIndex].name}
+          shifts={shifts} // Assuming shifts are available
+          initialFixedShifts={employees[assignShiftsModalState.employeeIndex].fixedShifts}
+          onSave={handleSaveFixedShifts}
         />
       )}
     </div>
