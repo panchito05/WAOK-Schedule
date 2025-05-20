@@ -107,6 +107,28 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
     }
     return "N/A";
   };
+  
+  // Verificar si un empleado ya está seleccionado en otro botón
+  const isEmployeeSelectedInOtherButton = (employeeId: string): {isSelected: boolean, buttonName?: string} => {
+    const currentList = getCurrentList();
+    if (!currentList || !currentList.specialRules?.employeeSelections) return {isSelected: false};
+    
+    const allSelections = currentList.specialRules.employeeSelections;
+    const buttonIds = Object.keys(allSelections).filter(id => id !== currentButtonId);
+    
+    for (const buttonId of buttonIds) {
+      if (allSelections[buttonId]?.includes(employeeId)) {
+        // Extraer el número de botón para mostrar en qué combinación está seleccionado
+        const buttonNumber = buttonId.replace('special-btn-', '');
+        return {
+          isSelected: true,
+          buttonName: `Combinación ${buttonNumber}`
+        };
+      }
+    }
+    
+    return {isSelected: false};
+  };
 
   const handleSelectEmployees = (columnIndex: number) => {
     const column = columns[columnIndex];
@@ -304,27 +326,38 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {getCurrentList()?.employees.map((employee, index) => (
-                      <tr key={employee.id} className="border-b hover:bg-gray-50">
-                        <td className="p-2">{index + 1}.</td>
-                        <td className="p-2">
-                          <input 
-                            type="checkbox" 
-                            id={`employee-${employee.id}`}
-                            value={employee.id}
-                            checked={selectedEmployees.includes(employee.id)}
-                            onChange={(e) => handleCheckboxChange(employee.id, e.target.checked)}
-                            className="h-5 w-5"
-                          />
-                        </td>
-                        <td className="p-2">
-                          <label htmlFor={`employee-${employee.id}`} className="cursor-pointer">
-                            {employee.name}
-                          </label>
-                        </td>
-                        <td className="p-2 text-gray-600">{employee.id}</td>
-                      </tr>
-                    ))}
+                    {getCurrentList()?.employees.map((employee, index) => {
+                      // Verificar si el empleado está seleccionado en otro botón
+                      const { isSelected, buttonName } = isEmployeeSelectedInOtherButton(employee.id);
+                      
+                      return (
+                        <tr key={employee.id} className={`border-b ${isSelected ? 'bg-gray-100' : 'hover:bg-gray-50'}`}>
+                          <td className="p-2">{index + 1}.</td>
+                          <td className="p-2">
+                            <input 
+                              type="checkbox" 
+                              id={`employee-${employee.id}`}
+                              value={employee.id}
+                              checked={selectedEmployees.includes(employee.id)}
+                              onChange={(e) => handleCheckboxChange(employee.id, e.target.checked)}
+                              disabled={isSelected}
+                              className={`h-5 w-5 ${isSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            />
+                          </td>
+                          <td className="p-2">
+                            <label htmlFor={`employee-${employee.id}`} className={`${isSelected ? 'cursor-not-allowed text-gray-500' : 'cursor-pointer'}`}>
+                              {employee.name}
+                              {isSelected && (
+                                <span className="ml-2 text-xs text-red-500 font-semibold">
+                                  (Ya asignado en {buttonName})
+                                </span>
+                              )}
+                            </label>
+                          </td>
+                          <td className="p-2 text-gray-600">{employee.id}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

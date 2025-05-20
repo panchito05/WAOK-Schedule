@@ -46,6 +46,12 @@ interface ShiftData {
   idealNumber: number;
 }
 
+interface SpecialRules {
+  employeeSelections?: {
+    [buttonId: string]: string[];
+  }
+}
+
 interface EmployeeList {
   id: string;
   name: string;
@@ -54,6 +60,7 @@ interface EmployeeList {
   rules: Rules;
   priorities: ShiftPriorities;
   shiftData: ShiftData[];
+  specialRules?: SpecialRules;
 }
 
 interface EmployeeListsContextType {
