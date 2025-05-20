@@ -145,7 +145,7 @@ const ShiftConfiguration: React.FC = () => {
       <div className="flex justify-center gap-16 mb-3">
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="bg-gradient-to-r from-[#19b08d] to-[#117cee] text-white px-6 py-2 rounded hover:opacity-90 transition-colors font-semibold"
+          className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition-colors font-semibold"
         >
           Create Shift
         </button>
