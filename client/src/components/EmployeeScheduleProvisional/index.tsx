@@ -713,7 +713,7 @@ const EmployeeScheduleTable: React.FC = () => {
                                  </select>
                                  {/* Swap Shift Button */}
                                  <button
-                                     className="change-shift-btn bg-blue-500 hover:bg-blue-600 text-white text-sm px-2 py-1 rounded focus:outline-none"
+                                     className="change-shift-btn text-sm px-2 py-1 rounded focus:outline-none"
                                      title="Swapping Shifts Between Employees"
                                  >
                                      🔄 {/* Swap icon */}
