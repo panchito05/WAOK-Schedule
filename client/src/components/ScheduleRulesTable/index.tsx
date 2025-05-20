@@ -165,10 +165,10 @@ const ScheduleRulesTable: React.FC = () => {
       </div>
 
       {isTableBodyHidden && (
-        <div className="bg-yellow-100 text-black text-center py-4 px-2 rounded mb-4">
-          <span className="table-hidden-message font-bold">
-            Schedule Rules Table is hidden. Press 'Show Schedule Rules Table' button to make it visible again
-          </span>
+        <div className="bg-yellow-100 border rounded-lg p-4 mb-6 text-center">
+          <p className="text-lg font-bold">
+            <strong>Schedule Rules Table is hidden. Press 'Show Schedule Rules Table' button to make it visible again</strong>
+          </p>
         </div>
       )}
 
