@@ -6,8 +6,7 @@ import { useShiftContext } from '../../context/ShiftContext';
 import { usePersonnelData } from '../../context/PersonnelDataContext';
 import { useSelectedEmployees } from '../../context/SelectedEmployeesContext';
 import OvertimeModal from '../OvertimeModal';
-import TodaysEmployeesModal from '../TodaysEmployeesModal';
-import TodaysEmployeesContent from '../TodaysEmployeesContent';
+import ViewTodaysEmployeesButton from '../ViewTodaysEmployeesButton';
 
 // --- Definición de Tipos de Datos (Simulando la estructura del JS) ---
 
@@ -425,85 +424,27 @@ const EmployeeScheduleTable: React.FC = () => {
   // Usar el contexto de selección de empleados
   const { selectedEmployeeIds } = useSelectedEmployees();
   
-  // Función para mostrar los empleados de una fecha específica
-  const showEmployeesForDate = (date: Date) => {
-    setEmployeesModalData({
-      isOpen: true,
-      date: new Date(date)
-    });
+  // Estado para modal de overtime (para editar horas extra)
+  const [overtimeModal, setOvertimeModal] = useState<{
+    isOpen: boolean;
+    shift: { startTime: string; endTime: string; index?: number } | null;
+  }>({
+    isOpen: false,
+    shift: null
+  });
+  
+  // Función para convertir horas al formato 12h
+  const convertTo12Hour = (time: string | undefined): string => {
+    if (!time) return '';
+    const [hours, minutes] = time.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return time;
+    
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const hours12 = hours % 12 || 12;
+    return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
   
-  // Función para cerrar el modal
-  const closeEmployeesModal = () => {
-    setEmployeesModalData({
-      isOpen: false,
-      date: null
-    });
-  };
-  
-  // Funciones para navegar entre días
-  const goToPreviousDay = () => {
-    if (employeesModalData.date) {
-      const prevDate = new Date(employeesModalData.date);
-      prevDate.setUTCDate(prevDate.getUTCDate() - 1);
-      showEmployeesForDate(prevDate);
-    }
-  };
-  
-  const goToNextDay = () => {
-    if (employeesModalData.date) {
-      const nextDate = new Date(employeesModalData.date);
-      nextDate.setUTCDate(nextDate.getUTCDate() + 1);
-      showEmployeesForDate(nextDate);
-    }
-  };
-  
-  // Función para formatear la fecha de forma legible para el título
-  const formatDateForTitle = (date: Date): string => {
-    const options: Intl.DateTimeFormatOptions = { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      weekday: 'long',
-      timeZone: 'UTC'
-    };
-    return date.toLocaleDateString('en-US', options);
-  };
-  
-  // Función para mostrar los empleados de una fecha específica
-  const showEmployeesForDate = (date: Date) => {
-    setEmployeesModalData({
-      isOpen: true,
-      date: new Date(date)
-    });
-  };
-  
-  // Función para cerrar el modal
-  const closeEmployeesModal = () => {
-    setEmployeesModalData({
-      isOpen: false,
-      date: null
-    });
-  };
-  
-  // Funciones para navegar entre días
-  const goToPreviousDay = () => {
-    if (employeesModalData.date) {
-      const prevDate = new Date(employeesModalData.date);
-      prevDate.setUTCDate(prevDate.getUTCDate() - 1);
-      showEmployeesForDate(prevDate);
-    }
-  };
-  
-  const goToNextDay = () => {
-    if (employeesModalData.date) {
-      const nextDate = new Date(employeesModalData.date);
-      nextDate.setUTCDate(nextDate.getUTCDate() + 1);
-      showEmployeesForDate(nextDate);
-    }
-  };
-  
-  // Función para formatear la fecha de forma legible para el título
+  // Función para formatear fecha como texto
   const formatDateForTitle = (date: Date): string => {
     const options: Intl.DateTimeFormatOptions = { 
       year: 'numeric', 
@@ -987,12 +928,13 @@ const EmployeeScheduleTable: React.FC = () => {
                                          )}
                                          
                                         {/* View Today's Employees Button */}
-                                        <button
-                                            onClick={() => showEmployeesForDate(date)}
-                                            className="mt-2 text-white text-sm bg-blue-500 hover:bg-blue-600 px-2 py-1 rounded"
-                                        >
-                                            View Today's Employees
-                                        </button>
+                                        <ViewTodaysEmployeesButton
+                                            date={date}
+                                            employees={employees}
+                                            timeRanges={timeRanges}
+                                            countScheduledEmployees={countScheduledEmployees}
+                                            convertTo12Hour={convertTo12Hour}
+                                        />
                                     </div>
                                 </td>
                             );
@@ -1028,24 +970,7 @@ const EmployeeScheduleTable: React.FC = () => {
          shift={overtimeModal.shift || { startTime: '', endTime: '' }}
        />
        
-       {/* Today's Employees Modal */}
-       {todaysEmployeesModal.date && (
-         <TodaysEmployeesModal
-           isOpen={todaysEmployeesModal.isOpen}
-           onClose={closeTodaysEmployeesModal}
-           title={`Employees for: ${formatDateForTitle(todaysEmployeesModal.date)}`}
-           onPreviousDay={goToPreviousDay}
-           onNextDay={goToNextDay}
-         >
-           <TodaysEmployeesContent
-             date={todaysEmployeesModal.date}
-             employees={employees}
-             timeRanges={timeRanges}
-             countScheduledEmployees={countScheduledEmployees}
-             convertTo12Hour={convertTo12Hour}
-           />
-         </TodaysEmployeesModal>
-       )}
+       {/* Note: The Today's Employees Modal is now handled by the ViewTodaysEmployeesButton component */}
 
        {/* Note: Modals like Block Shift, Priorities, Calendar, Overtime, etc., are not included here */}
        {/* as they are separate UI elements triggered by interactions not replicated in this static structure. */}
