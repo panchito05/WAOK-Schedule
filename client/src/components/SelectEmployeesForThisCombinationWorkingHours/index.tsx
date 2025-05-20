@@ -34,9 +34,31 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
   const modalRef = useRef<HTMLDivElement>(null);
   
   // Get employee selection data from currentList or initialize if not exists
+  // Also load from localStorage if available
   useEffect(() => {
     const currentList = getCurrentList();
     if (currentList) {
+      // Check localStorage first
+      const storedSelectionsJSON = localStorage.getItem(`employeeSelections_${currentList.id}`);
+      
+      if (storedSelectionsJSON) {
+        try {
+          const storedSelections = JSON.parse(storedSelectionsJSON);
+          
+          // Actualizar el currentList con los datos almacenados en localStorage
+          updateList(currentList.id, {
+            specialRules: {
+              employeeSelections: storedSelections
+            }
+          });
+          
+          return; // Si cargamos desde localStorage, no necesitamos inicializar
+        } catch (e) {
+          console.error('Error parsing stored employee selections:', e);
+          // Continuar con la inicialización normal si hay un error
+        }
+      }
+      
       // Initialize specialRules and employeeSelections if they don't exist
       if (!currentList.specialRules) {
         updateList(currentList.id, {
@@ -202,6 +224,13 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
       ...currentSelections,
       [currentButtonId]: selectedEmployees
     };
+    
+    // Guardar en localStorage para persistencia
+    try {
+      localStorage.setItem(`employeeSelections_${currentList.id}`, JSON.stringify(updatedSelections));
+    } catch (e) {
+      console.error('Error saving employee selections to localStorage:', e);
+    }
     
     // Actualizar la lista con las nuevas selecciones
     if (currentList.specialRules) {
