@@ -1,0 +1,15 @@
+Cuando haces clic en el botón "View Today's Employees" que aparece debajo de una fecha específica en el encabezado de la tabla de horarios:
+Identifico la fecha: Tomo la fecha exacta para la cual presionaste el botón.
+Busco a los empleados programados: Reviso la lista de todos tus empleados y, para cada uno, verifico si tienen un turno asignado (ya sea un turno fijo para ese día de la semana o un turno manual específico para esa fecha) que no sea un "día libre". También me aseguro de que no estén de permiso (vacaciones, enfermedad, etc.) en esa fecha.
+Abro una ventana modal (ventana emergente):
+El título de esta ventana será "Employees for: [Fecha seleccionada]" (por ejemplo, "Employees for: August 15, 2024").
+Dentro de esta ventana, te mostraré una tabla con los siguientes detalles para cada empleado encontrado en el paso 2:
+Nombre del empleado.
+Turno asignado: La hora de inicio y fin del turno que tienen para ese día. Si están de permiso, mostraré el tipo de permiso.
+Comentario: Cualquier comentario que hayas añadido específicamente para ese empleado en ese turno o para ese día.
+Si no hay ningún empleado programado para trabajar en esa fecha, te mostraré un mensaje indicándolo.
+Muestro información adicional de turnos: Incluso si no hay empleados programados, o debajo de la lista de empleados, te presento otra pequeña tabla. Esta tabla te dice, para cada uno de los turnos que has configurado (Mañana, Tarde, Noche, etc.):
+Ideal Staff per Shift: El número ideal de personas que definiste que necesitas para ese turno en ese día de la semana.
+Staff for this Shift: El número real de empleados que están actualmente programados para ese turno en esa fecha.
+Añado botones de navegación: En la parte superior de la ventana modal, coloco botones de "Previous Day" y "Next Day". Al hacer clic en ellos, cierro la ventana actual y abro una nueva con la información del día anterior o siguiente, respectivamente, sin que tengas que volver a la tabla principal.
+Cierre del modal: Puedes cerrar esta ventana haciendo clic en la 'X' o, a veces, haciendo clic fuera de ella.
