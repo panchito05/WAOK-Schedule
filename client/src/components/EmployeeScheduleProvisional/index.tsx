@@ -4,6 +4,7 @@ import { useRules } from '../../context/RulesContext';
 import { useEmployeeLists } from '../../context/EmployeeListsContext';
 import { useShiftContext } from '../../context/ShiftContext';
 import { usePersonnelData } from '../../context/PersonnelDataContext';
+import { useSelectedEmployees } from '../../context/SelectedEmployeesContext';
 import OvertimeModal from '../OvertimeModal';
 
 // --- Definición de Tipos de Datos (Simulando la estructura del JS) ---
@@ -419,11 +420,17 @@ const EmployeeScheduleTable: React.FC = () => {
   const { getCurrentList, updateList } = useEmployeeLists(); // Added updateList here
   const { shifts } = useShiftContext();
   const { shiftData } = usePersonnelData();
+  // Usar el contexto de selección de empleados
+  const { selectedEmployeeIds } = useSelectedEmployees();
+  
   // Use memo to prevent unnecessary rerenders of employees data
+  // Filtramos los empleados para mostrar solo los seleccionados
   const employees = useMemo(() => {
     const currentList = getCurrentList();
-    return currentList?.employees || [];
-  }, [getCurrentList]);
+    const allEmployees = currentList?.employees || [];
+    // Solo mostramos los empleados que estén seleccionados
+    return allEmployees.filter(employee => selectedEmployeeIds.includes(employee.id));
+  }, [getCurrentList, selectedEmployeeIds]);
 
   // We're removing this useEffect that causes an infinite update cycle
   // The employees are already managed by the parent context,
