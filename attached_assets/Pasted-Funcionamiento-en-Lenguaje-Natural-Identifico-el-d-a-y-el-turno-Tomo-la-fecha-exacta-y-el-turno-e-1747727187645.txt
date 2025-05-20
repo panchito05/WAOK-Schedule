@@ -1,0 +1,23 @@
+Funcionamiento en Lenguaje Natural:
+Identifico el día y el turno: Tomo la fecha exacta y el turno específico (por ejemplo, "7:00 AM - 3:00 PM") para el cual presionaste el botón.
+Busco los empleados asignados a ESE turno en ESE día:
+Reviso tu lista de empleados.
+Para cada uno, verifico si tienen un turno manual asignado para esa fecha que coincida con el turno que seleccionaste.
+Si no hay turno manual, reviso si tienen un turno fijo para ese día de la semana que coincida con el turno seleccionado.
+Me aseguro de que no estén de permiso ese día.
+Abro una ventana modal (ventana emergente):
+Título: El título es muy específico: "Staff for [Horario del Turno] on [Fecha seleccionada]" (por ejemplo, "Staff for 7:00 AM - 3:00 PM on August 15, 2024").
+Selector de Turnos: Justo debajo del título, aparece un menú desplegable. Este menú te muestra todos los turnos que has configurado. Por defecto, estará seleccionado el turno para el que hiciste clic, pero puedes cambiarlo aquí mismo para ver el personal de otros turnos para la MISMA FECHA sin cerrar la ventana.
+Botón "View All Employees for This Day": Debajo del selector de turnos, hay un botón. Si lo presionas, la ventana modal actual se cierra y se abre la otra ventana modal que te muestra todos los empleados programados para ese día, sin importar el turno (la que explicamos antes).
+Lista de Empleados (si los hay): Si encontré empleados para ese turno y día específico, te muestro una tabla con:
+Nombre del empleado.
+El turno asignado (que debería ser el que seleccionaste).
+Cualquier comentario que hayas añadido para ese empleado en ese turno/día.
+Si no hay empleados para ESE turno en ESE día: Te muestro un mensaje indicándolo, pero también te muestro la tabla "Shift Information" (solo para ese turno) para que veas el ideal vs. el actual (que sería 0).
+Tabla "Shift Information" (si hay empleados): Debajo de la lista de empleados, te muestro una tabla simplificada "Shift Information" que se enfoca únicamente en el turno que estás viendo:
+Shift: El horario del turno actual.
+Ideal Staff per Shift: El número ideal de personas para ESE turno en ESE día de la semana.
+Staff for this Shift: El número de empleados que realmente están en la lista que te mostré arriba para ESE turno.
+Navegación por Día:
+Similar al otro modal, tienes botones de "Previous Day" y "Next Day". Al usarlos, la ventana se actualiza para mostrar el personal para el MISMO TIPO DE TURNO, pero en el día anterior o siguiente.
+Cierre del Modal: Puedes cerrar la ventana con la 'X', haciendo clic fuera, o con la tecla "Escape"
