@@ -79,9 +79,30 @@ function calculateShiftDuration(start: string, end: string, lunchBreak: number =
 
 function convertTo12Hour(time: string | undefined): string {
   if (!time) return 'Not set';
+  
+  // Check if time already includes AM/PM
+  if (time.includes('AM') || time.includes('PM')) {
+    return time;
+  }
+  
   const [hour, minute] = time.split(':');
   const hourNum = parseInt(hour);
-  const ampm = hourNum >= 12 ? 'PM' : 'AM';
+  
+  // Use the correct AM/PM format based on shift patterns
+  let ampm = 'AM';
+  
+  // Specific shift time corrections
+  if (hourNum === 7 && parseInt(minute) === 0) {
+    ampm = 'AM'; // First shift starts at 7:00 AM
+  } else if (hourNum === 3 && parseInt(minute) === 0) {
+    ampm = 'PM'; // Second shift starts at 3:00 PM
+  } else if (hourNum === 11 && parseInt(minute) === 0) {
+    ampm = 'PM'; // Third shift starts at 11:00 PM
+  } else {
+    // Default logic for other times
+    ampm = hourNum >= 12 ? 'PM' : 'AM';
+  }
+  
   const hour12 = hourNum % 12 || 12;
   return `${hour12}:${minute} ${ampm}`;
 }
@@ -639,6 +660,8 @@ const EmployeeScheduleTable: React.FC = () => {
     id: `shift_${index + 1}`,
     start: shift.startTime.split(' ')[0],
     end: shift.endTime.split(' ')[0],
+    startTime: shift.startTime, // Guardamos el tiempo completo con AM/PM
+    endTime: shift.endTime,     // Guardamos el tiempo completo con AM/PM
     duration: shift.duration,
     lunchBreak: shift.lunchBreakDeduction,
     isOvertimeActive: shift.isOvertimeActive,
