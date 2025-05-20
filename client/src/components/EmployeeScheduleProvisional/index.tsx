@@ -530,10 +530,46 @@ const EmployeeScheduleTable: React.FC = () => {
   const [currentModalDate, setCurrentModalDate] = useState<Date | null>(null);
   const modalRef = React.useRef<HTMLDivElement>(null);
   
+  // Estado para el modal específico de "Staff for this Shift"
+  const [staffForShiftModalOpen, setStaffForShiftModalOpen] = useState(false);
+  const [currentShiftForModal, setCurrentShiftForModal] = useState<Shift | null>(null);
+  const [currentDateForShiftModal, setCurrentDateForShiftModal] = useState<Date | null>(null);
+  const staffModalRef = React.useRef<HTMLDivElement>(null);
+  
   // Función para mostrar los empleados para una fecha específica
   const showEmployeesForDate = (date: Date) => {
     setCurrentModalDate(date);
     setEmployeesModalOpen(true);
+  };
+  
+  // Función para mostrar el personal específico de un turno en una fecha
+  const showStaffForShift = (shift: Shift, date: Date) => {
+    setCurrentShiftForModal(shift);
+    setCurrentDateForShiftModal(date);
+    setStaffForShiftModalOpen(true);
+  };
+  
+  // Función para cerrar el modal de Staff for this Shift
+  const closeStaffForShiftModal = () => {
+    setStaffForShiftModalOpen(false);
+  };
+  
+  // Mostrar el día anterior en el modal de Staff for this Shift
+  const showPreviousDayForShift = () => {
+    if (currentDateForShiftModal) {
+      const previousDay = new Date(currentDateForShiftModal);
+      previousDay.setUTCDate(previousDay.getUTCDate() - 1);
+      setCurrentDateForShiftModal(previousDay);
+    }
+  };
+  
+  // Mostrar el día siguiente en el modal de Staff for this Shift
+  const showNextDayForShift = () => {
+    if (currentDateForShiftModal) {
+      const nextDay = new Date(currentDateForShiftModal);
+      nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+      setCurrentDateForShiftModal(nextDay);
+    }
   };
   
   // Función para cerrar el modal
