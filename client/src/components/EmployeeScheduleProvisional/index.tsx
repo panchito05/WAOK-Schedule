@@ -526,9 +526,9 @@ const EmployeeScheduleTable: React.FC = () => {
              {!isScheduleTableHidden && (
                  <tr>
                     {/* Static Headers */}
-                    <th className="px-2 py-1 text-left border border-gray-300 w-[150px]" data-en="Employees" data-es="Empleados">Employees</th> {/* Added width guess */}
-                    <th className="px-2 py-1 text-left border border-gray-300 w-[150px]" data-en="Shift: Preferences or Locked" data-es="Turno: Preferencias o Bloqueado">Shift: Preferences or Locked</th> {/* Added width guess */}
-                    <th style={{width: "210px", minWidth: "210px"}} className="px-2 py-1 text-left border border-gray-300" data-en="Total Shifts / Hours" data-es="Total Turnos / Horas">Total Shifts / Hours</th> {/* Reduced width to 210px */}
+                    <th style={{width: "150px", minWidth: "150px"}} className="px-2 py-1 text-left border border-gray-300" data-en="Employees" data-es="Empleados">Employees</th>
+                    <th style={{width: "150px", minWidth: "150px"}} className="px-2 py-1 text-left border border-gray-300" data-en="Shift: Preferences or Locked" data-es="Turno: Preferencias o Bloqueado">Shift: Preferences or Locked</th>
+                    <th style={{width: "150px", minWidth: "150px"}} className="px-2 py-1 text-left border border-gray-300" data-en="Total Shifts / Hours" data-es="Total Turnos / Horas">Total Shifts / Hours</th> {/* Todas las columnas con el mismo ancho */}
 
                     {/* Dynamic Date Headers */}
                     {dateRange.map((date) => {
@@ -568,7 +568,7 @@ const EmployeeScheduleTable: React.FC = () => {
               return (
                 <tr key={employee.uniqueId} className="border-b border-gray-300 align-top"> {/* Added align-top */}
                   {/* Employee Info Cell */}
-                  <td className="px-2 py-1 border border-gray-300 w-[150px]"> {/* Added width */}
+                  <td style={{width: "150px", minWidth: "150px"}} className="px-2 py-1 border border-gray-300">
                     <div className="flex flex-col"> {/* Use flex-col for stacking */}
                         <span>{index + 1}. {employee.name}</span> {/* Added employee number */}
                         <span className="text-sm text-gray-500">({matchPercentage}% match)
@@ -581,12 +581,12 @@ const EmployeeScheduleTable: React.FC = () => {
 
                   {/* Preferences/Blocked Cell */}
                    {/* Using dangerouslySetInnerHTML to render formatted HTML string */}
-                  <td className="px-2 py-1 border border-gray-300 w-[150px]" dangerouslySetInnerHTML={{ __html: getPreferenceAndBlockedInfo(employee, timeRanges) }}>
+                  <td style={{width: "150px", minWidth: "150px"}} className="px-2 py-1 border border-gray-300" dangerouslySetInnerHTML={{ __html: getPreferenceAndBlockedInfo(employee, timeRanges) }}>
                      {/* Content rendered by getPreferenceAndBlockedInfo */}
                   </td>
 
                   {/* Total Hours / Weekends Cell */}
-                  <td style={{width: "210px", minWidth: "210px"}} className="px-2 py-1 border border-gray-300">
+                  <td style={{width: "150px", minWidth: "150px"}} className="px-2 py-1 border border-gray-300">
                       {/* Using dangerouslySetInnerHTML for colored hours */}
                       <div dangerouslySetInnerHTML={{ __html: formatBiweeklyHours(hoursData, minBiweeklyHours) }}></div>
                       <div style={{
