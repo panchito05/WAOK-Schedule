@@ -551,11 +551,8 @@ const EmployeeScheduleTable: React.FC = () => {
   
   // Función para mostrar los empleados para una fecha específica
   const showEmployeesForDate = (date: Date) => {
-    // Crear una copia de la fecha para evitar problemas de referencia
-    const dateCopy = new Date(date.getTime());
-    setCurrentModalDate(dateCopy);
+    setCurrentModalDate(date);
     setEmployeesModalOpen(true);
-    console.log(`Showing employees for date: ${dateCopy.toISOString().split('T')[0]}`);
   };
   
   // Función para mostrar el personal específico de un turno en una fecha
@@ -675,11 +672,7 @@ const EmployeeScheduleTable: React.FC = () => {
 
   const { rules } = useRules();
 
-  // Guardamos el estado en localStorage para persistir después de recargar la página
-  const [isScheduleTableHidden, setIsScheduleTableHidden] = useState(() => {
-    const savedState = localStorage.getItem('employeeScheduleTableHidden');
-    return savedState ? JSON.parse(savedState) : false;
-  });
+  const [isScheduleTableHidden, setIsScheduleTableHidden] = useState(false);
   const [overtimeModal, setOvertimeModal] = useState<{
     isOpen: boolean;
     shift: { startTime: string; endTime: string } | null;
@@ -711,13 +704,8 @@ const EmployeeScheduleTable: React.FC = () => {
         <div className="space-x-2">
           {/* Toggle button for the table */}
           <button
-             id="toggle-employee-schedule-table"
-             className={`px-4 py-2 rounded transition-colors ${isScheduleTableHidden ? 'bg-[#ffd700] text-black' : 'bg-white text-[#19b08d] hover:bg-gray-100'}`}
-             onClick={() => {
-               const newState = !isScheduleTableHidden;
-               setIsScheduleTableHidden(newState);
-               localStorage.setItem('employeeScheduleTableHidden', JSON.stringify(newState));
-             }}
+             className={`px-4 py-2 rounded transition-colors ${isScheduleTableHidden ? 'bg-yellow-500 text-black' : 'bg-white text-[#19b08d] hover:bg-gray-100'}`}
+             onClick={() => setIsScheduleTableHidden(!isScheduleTableHidden)}
              data-en-show="Show Employee Schedule Table" data-en-hide="Hide Employee Schedule Table"
              data-es-show="Mostrar Tabla Horario Empleados" data-es-hide="Ocultar Tabla Horario Empleados"
           >
@@ -734,22 +722,20 @@ const EmployeeScheduleTable: React.FC = () => {
         </div>
       </div>
 
-      {/* Message shown when table is hidden */}
-      {isScheduleTableHidden && (
-        <div className="bg-[#ffd700] border border-gray-300 rounded-lg p-4 mb-6 text-center">
-          <p className="text-lg font-bold text-black" data-en="Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again" data-es="La Tabla de Horario de Empleados está oculta. Presiona 'Mostrar Tabla Horario Empleados' para hacerla visible de nuevo">
-            Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again
-          </p>
-        </div>
-      )}
-      
       {/* Table Container with Scroll */}
       <div className={`border rounded-lg overflow-x-auto employee-schedule-table-container ${isScheduleTableHidden ? 'hidden' : ''}`}>
         {/* Table */}
         <table className="w-full border-collapse employee-schedule-table">
           {/* Table Header */}
           <thead className={`bg-gray-200 ${isScheduleTableHidden ? 'table-header-hidden' : ''}`}>
-              {/* Este mensaje dentro de la tabla ya no es necesario porque tenemos uno fuera */}
+              {/* Hidden message row - rendered dynamically in JS, simplified here */}
+              {isScheduleTableHidden && (
+                  <tr>
+                       <th colSpan={4 + dateRange.length} className="bg-yellow-500 text-black text-center py-2">
+                            <span data-en="Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again" data-es="La Tabla de Horario de Empleados está oculta. Presiona 'Mostrar Tabla Horario Empleados' para hacerla visible de nuevo">Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again</span>
+                       </th>
+                   </tr>
+              )}
              {!isScheduleTableHidden && (
                  <tr>
                     {/* Static Headers */}
@@ -1164,9 +1150,9 @@ const EmployeeScheduleTable: React.FC = () => {
                  const dateString = currentModalDate.toISOString().split('T')[0];
                  const dayOfWeek = daysOfWeek[currentModalDate.getUTCDay()];
                  
-                 // Filtrar empleados programados para esta fecha específica
+                 // Filtrar empleados programados para esta fecha
                  const scheduledEmployees = employees.filter(employee => {
-                   // 1. Verificar si está de permiso ese día
+                   // Verificar si está de leave
                    const isOnLeave = employee.leave?.some(l => {
                      const leaveStart = new Date(l.startDate + 'T00:00:00Z');
                      const leaveEnd = new Date(l.endDate + 'T00:00:00Z');
@@ -1174,18 +1160,16 @@ const EmployeeScheduleTable: React.FC = () => {
                      return current >= leaveStart && current <= leaveEnd;
                    });
                    
-                   if (isOnLeave) return true; // Incluir empleados de permiso
+                   if (isOnLeave) return true; // Está de leave, incluirlo
                    
-                   // 2. Verificar turnos asignados manualmente para esa fecha específica
                    const manualShift = employee.manualShifts?.[dateString];
-                   if (manualShift && manualShift !== 'day-off') return true;
-                   
-                   // 3. Verificar turnos fijos para ese día de la semana
                    const fixedShift = employee.fixedShifts?.[dayOfWeek]?.[0];
+                   
+                   // Verificar si tiene un turno asignado
+                   if (manualShift && manualShift !== 'day-off') return true;
                    if (!manualShift && fixedShift && fixedShift !== 'day-off') return true;
                    
-                   // 4. Este empleado no está programado para este día
-                   return false;
+                   return false; // No tiene turno asignado
                  });
                  
                  if (scheduledEmployees.length === 0) {
