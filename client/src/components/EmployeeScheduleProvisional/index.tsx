@@ -1443,9 +1443,9 @@ const EmployeeScheduleTable: React.FC = () => {
                      // Si coincide por ID
                      if (effectiveShift === currentShiftForModal.id) return true;
                      
-                     // Para el caso especial "3:00 AM - 11:"
+                     // Para el caso especial turno 2 (3PM - 11PM)
                      if (currentShiftForModal.id === 'shift_2' && 
-                         (effectiveShift === "3:00 AM - 11:" || effectiveShift === "3:00 AM - 11:0")) {
+                         (effectiveShift === "3:00 PM - 11:" || effectiveShift === "3:00 PM - 11:00")) {
                        return true;
                      }
                      
