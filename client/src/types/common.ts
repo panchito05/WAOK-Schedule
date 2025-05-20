@@ -1,70 +1,57 @@
-/**
- * Definiciones de tipos compartidos para toda la aplicación
- * Este archivo centraliza todas las interfaces para evitar inconsistencias
- */
+// Definición de tipos compartidos en la aplicación
 
-/**
- * Definición de una entrada de horas extra para un turno
- */
+// Interfaz para representar datos de horas extra en turnos
 export interface ShiftOvertime {
   date: string;
   quantity: number;
   isActive: boolean;
 }
 
-/**
- * Definición completa de un turno de trabajo
- */
+// Interfaz para representar un turno
 export interface ShiftRow {
-  id: string; // ID obligatorio para identificación única
+  id: string;
   startTime: string;
   endTime: string;
   duration: string;
   lunchBreakDeduction: number;
-  isOvertimeActive: boolean; // Ahora requerido, no opcional
-  overtimeEntries: ShiftOvertime[]; // Ahora requerido, no opcional
-  // Propiedades adicionales usadas en EmployeeScheduleProvisional
-  start?: string; 
-  end?: string;
-  lunchBreak?: number;
-  nurseCounts?: { [dayOfWeek: string]: number };
+  isOvertimeActive: boolean;
+  overtimeEntries: ShiftOvertime[];
 }
 
-/**
- * Definición de un empleado con todos sus atributos
- */
+// Interfaz para un empleado
 export interface Employee {
   id: string;
   name: string;
   email: string;
   phone: string;
   hireDate: string;
-  // Propiedades para asignación de turnos
-  fixedShifts: { [day: string]: string[] };
-  maxConsecutiveShifts: number;
   shiftPreferences: (number | null)[];
-  leave: { id: string; startDate: string; endDate: string; leaveType: string; hoursPerDay: number }[];
   blockedShifts: { [shiftId: string]: string[] };
   notes: {
     confidential: string;
     aiRules: string;
   };
-  // Propiedades usadas en EmployeeScheduleProvisional
-  uniqueId?: string;
-  preferences?: (number | null)[];
-  unavailableShifts?: { [shiftIndex: number]: number[] };
-  selected?: boolean;
-  maxConsecutiveShiftsForThisSpecificEmployee?: number;
-  manualShifts?: { [date: string]: string | 'day-off' };
+  // Campos opcionales que pueden no estar presentes en todos los empleados
+  leave?: { 
+    id: string; 
+    startDate: string; 
+    endDate: string; 
+    leaveType: string; 
+    hoursPerDay: number 
+  }[];
+  fixedShifts?: { [day: string]: string[] };
+  manualShifts?: { [date: string]: string[] };
   autoDaysOff?: string[];
-  lockedShifts?: { [date: string]: string };
-  columnComments?: string;
+  maxConsecutiveShifts?: number;
   shiftComments?: { [key: string]: string };
+  columnComments?: { [key: string]: string };
+  selected?: boolean;
+  uniqueId?: string;
+  preferences?: number[];
+  unavailableShifts?: string[];
 }
 
-/**
- * Definición de reglas para la programación de turnos
- */
+// Interfaz para reglas de programación
 export interface Rules {
   startDate: string;
   endDate: string;
@@ -76,25 +63,14 @@ export interface Rules {
   writtenRule2: string;
   minHoursPerWeek: string;
   minHoursPerTwoWeeks: string;
-  // Compatibilidad con otras definiciones
-  maxConsecutiveShiftsForAllEmployees?: string;
-  daysOffAfterMaxConsecutiveShift?: string;
-  weekendsOffPerMonth?: string;
-  minHoursWeek?: string;
-  minHoursBiweekly?: string;
-  minBiweeklyHours?: string;
 }
 
-/**
- * Definición para prioridades de turnos
- */
+// Interfaz para prioridades de turnos
 export interface ShiftPriorities {
   [day: string]: { [shiftId: string]: boolean };
 }
 
-/**
- * Definición para datos de turnos en el contexto de personal
- */
+// Interfaz para datos de personal por turno
 export interface ShiftData {
   id: number;
   name: string;
@@ -103,18 +79,14 @@ export interface ShiftData {
   idealNumber: number;
 }
 
-/**
- * Definición para reglas especiales
- */
+// Interfaz para reglas especiales
 export interface SpecialRules {
   employeeSelections?: {
     [buttonId: string]: string[];
   }
 }
 
-/**
- * Definición completa de una lista de empleados
- */
+// Interfaz para una lista de empleados
 export interface EmployeeList {
   id: string;
   name: string;
