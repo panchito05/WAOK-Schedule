@@ -2,34 +2,29 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar as CalendarIcon, Users } from 'lucide-react'; // Renombrar para evitar conflicto
 import { useRules } from '../../context/RulesContext';
 import { useEmployeeLists } from '../../context/EmployeeListsContext';
-import { useShiftContext, ShiftRow } from '../../context/ShiftContext';
+import { useShiftContext } from '../../context/ShiftContext';
 import { usePersonnelData } from '../../context/PersonnelDataContext';
 import { useSelectedEmployees } from '../../context/SelectedEmployeesContext';
 import OvertimeModal from '../OvertimeModal';
-import { Employee as EmployeeType, Shift as ShiftType, ShiftOvertime, RulesState } from '../../types/common';
-import { convertTo12Hour, formatDate as formatDateUtil, formatDateHTML as formatDateHtmlUtil } from '../../lib/utils';
 
-// --- Definición de Tipos de Datos Internos ---
+// --- Definición de Tipos de Datos (Simulando la estructura del JS) ---
 
-// Extiende el tipo Shift con propiedades específicas de este componente
-interface Shift extends Partial<ShiftType> {
+// Estructura simplificada de un Turno (Shift)
+interface Shift {
   id: string;
   start: string; // HH:mm
   end: string;   // HH:mm
-  startTime?: string; // HH:MM AM/PM
-  endTime?: string;   // HH:MM AM/PM
   duration: string; // e.g., "8h 0m"
   lunchBreak: number; // minutes
   nurseCounts: { [dayOfWeek: string]: number }; // e.g., { "Monday": 5, "Tuesday": 6 }
   shiftComments?: string;
-  // Propiedades de Overtime
-  isOvertimeActive?: boolean;
+  // Propiedades de Overtime (simuladas)
   isOvertimeActiveForShift?: boolean;
   disableOvertime?: boolean;
-  overtimeEntries?: ShiftOvertime[];
+  overtimeEntries?: { date: string; isActive: boolean; quantity: number }[];
 }
 
-// Define el tipo Employee específico para este componente
+// Estructura simplificada de un Empleado
 interface Employee {
   id: string; // Employee ID
   uniqueId: string; // Unique ID used internally
@@ -47,22 +42,20 @@ interface Employee {
   autoDaysOff?: string[]; // Array of YYYY-MM-DD strings
   lockedShifts?: { [date: string]: string }; // { YYYY-MM-DD: shiftId }
   columnComments?: string; // Comment for the summary column
-  shiftComments?: { [key: string]: string }; // Comments for shifts
-  blockedShifts?: { [shiftId: string]: string[] }; // Para compatibilidad con otras partes
 }
 
-// Estructura de Reglas Generales compatible con RulesState
-interface Rules extends Partial<RulesState> {
+// Estructura de Reglas Generales
+interface Rules {
   startDate: string; // YYYY-MM-DD
   endDate: string;   // YYYY-MM-DD
   maxConsecutiveShiftsForAllEmployees: string; // Stored as string from select
   daysOffAfterMaxConsecutiveShift: string; // Stored as string from select
-  weekendsOffPerMonth: string; // Stored as string from select (alias de minWeekendsOffPerMonth)
+  weekendsOffPerMonth: string; // Stored as string from select
   minRestHoursBetweenShifts: string; // Stored as string from select
   writtenRule1: string;
   writtenRule2: string;
-  minHoursWeek: string; // Stored as string from input (alias de minHoursPerWeek)
-  minHoursBiweekly: string; // Stored as string from input (alias de minHoursPerTwoWeeks)
+  minHoursWeek: string; // Stored as string from input
+  minHoursBiweekly: string; // Stored as string from input
 }
 
 
@@ -84,18 +77,51 @@ function calculateShiftDuration(start: string, end: string, lunchBreak: number =
   return `${hours}h ${minutes}m`;
 }
 
-// Función convertTo12Hour eliminada - ahora importada desde utils.ts
+function convertTo12Hour(time: string | undefined): string {
+  if (!time) return 'Not set';
+  
+  // Check if time already includes AM/PM
+  if (time.includes('AM') || time.includes('PM')) {
+    return time;
+  }
+  
+  const [hour, minute] = time.split(':');
+  const hourNum = parseInt(hour);
+  
+  // Use the correct AM/PM format based on shift patterns
+  let ampm = 'AM';
+  
+  // Specific shift time corrections
+  if (hourNum === 7 && parseInt(minute) === 0) {
+    ampm = 'AM'; // First shift starts at 7:00 AM
+  } else if (hourNum === 3 && parseInt(minute) === 0) {
+    ampm = 'PM'; // Second shift starts at 3:00 PM
+  } else if (hourNum === 11 && parseInt(minute) === 0) {
+    ampm = 'PM'; // Third shift starts at 11:00 PM
+  } else {
+    // Default logic for other times
+    ampm = hourNum >= 12 ? 'PM' : 'AM';
+  }
+  
+  const hour12 = hourNum % 12 || 12;
+  return `${hour12}:${minute} ${ampm}`;
+}
 
-// Renombramos la función formatDate local para evitar conflictos
-function formatDateLocal(date: Date): string {
-    // Usando UTC para consistencia
+function formatDate(date: Date): string {
+    // Adaptado para mostrar solo Día/Mes/Año y Día de la semana
+    // Usando UTC para simular el comportamiento original
     const options: Intl.DateTimeFormatOptions = { timeZone: 'UTC' };
     const day = date.getUTCDate();
     const month = date.toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' });
     const year = date.getUTCFullYear();
     const weekday = date.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
 
-    return `${day} / ${month} / ${year} (${weekday})`;
+    return `
+        <div style="text-align: center;">
+            <div>${day} / ${month} / ${year}</div>
+            <div>${weekday}</div>
+        </div>
+    `;
 }
 
 // Función para formatear la fecha de manera legible para el título del modal

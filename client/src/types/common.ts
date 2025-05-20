@@ -37,7 +37,7 @@ export interface Employee {
   uniqueId?: string;
   selected?: boolean;
   preferences?: (number | null)[];
-  unavailableShifts?: { [shiftIndex: number]: number[] } | number[];
+  unavailableShifts?: number[];
   fixedShifts?: { [day: string]: string[] };
   maxConsecutiveShifts?: number;
   leave?: {
@@ -57,8 +57,6 @@ export interface Employee {
     confidential: string;
     aiRules: string;
   };
-  commentOrRules?: string;
-  note?: string;
 }
 
 // Interfaces para reglas
@@ -73,7 +71,6 @@ export interface RulesState {
   writtenRule2: string;
   minHoursPerWeek: string;
   minHoursPerTwoWeeks: string;
-  // Alias para compatibilidad
   minBiweeklyHours?: string;
   weekendsOffPerMonth?: string;
 }
