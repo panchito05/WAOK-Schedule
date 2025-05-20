@@ -10,8 +10,8 @@ import {
   EmployeeList 
 } from '../types/common';
 
-// Clave para localStorage
-const STORE_KEY = 'employeeLists';
+// Clave para localStorage - usamos una clave diferente para no interferir con el almacenamiento existente
+const STORE_KEY = 'employeeLists_v2';
 
 interface StoreContextType {
   // Funciones para listas de empleados

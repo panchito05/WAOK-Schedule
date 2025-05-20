@@ -1,17 +1,18 @@
-import { StrictMode } from 'react';
+import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
-import { StoreProvider } from './context/StoreContext';
-import { ShiftProvider } from './context/ShiftContextRefactored';
-import { RulesProvider } from './context/RulesContextRefactored';
-import { PersonnelDataProvider } from './context/PersonnelDataContextRefactored';
-import { ShiftPrioritiesProvider } from './context/ShiftPrioritiesContextRefactored';
+import { EmployeeListsProvider } from './context/EmployeeListsContext';
+import { ShiftProvider } from './context/ShiftContext';
+import { RulesProvider } from './context/RulesContext';
+import { PersonnelDataProvider } from './context/PersonnelDataContext';
+import { ShiftPrioritiesProvider } from './context/ShiftPrioritiesContext';
 import { SelectedEmployeesProvider } from './context/SelectedEmployeesContext';
 
+// Usamos la estructura original de contextos para mantener la aplicación funcionando
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <StoreProvider>
+    <EmployeeListsProvider>
       <ShiftProvider>
         <RulesProvider>
           <PersonnelDataProvider>
@@ -23,6 +24,6 @@ createRoot(document.getElementById('root')!).render(
           </PersonnelDataProvider>
         </RulesProvider>
       </ShiftProvider>
-    </StoreProvider>
+    </EmployeeListsProvider>
   </StrictMode>
 );

@@ -16,6 +16,12 @@ export interface ShiftRow {
   lunchBreakDeduction: number;
   isOvertimeActive: boolean;
   overtimeEntries: ShiftOvertime[];
+  // Campos adicionales para compatibilidad con componentes existentes
+  start?: string;
+  end?: string;
+  lunchBreak?: number;
+  nurseCounts?: { [role: string]: number };
+  shiftComments?: string;
 }
 
 // Interfaz para un empleado
