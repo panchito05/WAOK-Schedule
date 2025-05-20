@@ -422,7 +422,7 @@ const EmployeeScheduleTable: React.FC = () => {
   const { shiftData } = usePersonnelData();
   // Usar el contexto de selección de empleados
   const { selectedEmployeeIds } = useSelectedEmployees();
-  
+
   // Use memo to prevent unnecessary rerenders of employees data
   // Filtramos los empleados para mostrar solo los seleccionados
   const employees = useMemo(() => {
@@ -700,12 +700,12 @@ const EmployeeScheduleTable: React.FC = () => {
                                          readOnly // Make checkbox read-only for static demo
                                          title="Check This Box To Fix The Shift For The Chosen Day As An Employee Request, Ensuring It Can't Be Changed By Mistake Unless You Uncheck It."
                                      />
-                                     
+
                                      {/* Segundo botón: Comment Icon */}
                                      <span className="comment-icon text-sm cursor-help" title="Any Comment Written Here Is Visible To Both The Supervisor And The Employee In The Work Schedule.">
                                           📝
                                      </span>
-                                     
+
                                      {/* Tercer botón: Swap Shift */}
                                      <button
                                          className="change-shift-btn text-sm focus:outline-none"
@@ -713,11 +713,11 @@ const EmployeeScheduleTable: React.FC = () => {
                                      >
                                          🔄
                                      </button>
-                                     
+
                                      {/* Cuarto botón: espacio reservado para un futuro botón */}
                                      <span className="w-4"></span>
                                  </div>
-                                 
+
                                  {/* Área para mostrar comentarios si existen */}
                                  {employee.shiftComments?.[dateString] && (
                                      <div className="w-full">
