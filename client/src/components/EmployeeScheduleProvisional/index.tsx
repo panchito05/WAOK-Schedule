@@ -672,7 +672,11 @@ const EmployeeScheduleTable: React.FC = () => {
 
   const { rules } = useRules();
 
-  const [isScheduleTableHidden, setIsScheduleTableHidden] = useState(false);
+  // Guardamos el estado en localStorage para persistir después de recargar la página
+  const [isScheduleTableHidden, setIsScheduleTableHidden] = useState(() => {
+    const savedState = localStorage.getItem('employeeScheduleTableHidden');
+    return savedState ? JSON.parse(savedState) : false;
+  });
   const [overtimeModal, setOvertimeModal] = useState<{
     isOpen: boolean;
     shift: { startTime: string; endTime: string } | null;
@@ -704,8 +708,13 @@ const EmployeeScheduleTable: React.FC = () => {
         <div className="space-x-2">
           {/* Toggle button for the table */}
           <button
-             className={`px-4 py-2 rounded transition-colors ${isScheduleTableHidden ? 'bg-yellow-500 text-black' : 'bg-white text-[#19b08d] hover:bg-gray-100'}`}
-             onClick={() => setIsScheduleTableHidden(!isScheduleTableHidden)}
+             id="toggle-employee-schedule-table"
+             className={`px-4 py-2 rounded transition-colors ${isScheduleTableHidden ? 'bg-[#ffd700] text-black' : 'bg-white text-[#19b08d] hover:bg-gray-100'}`}
+             onClick={() => {
+               const newState = !isScheduleTableHidden;
+               setIsScheduleTableHidden(newState);
+               localStorage.setItem('employeeScheduleTableHidden', JSON.stringify(newState));
+             }}
              data-en-show="Show Employee Schedule Table" data-en-hide="Hide Employee Schedule Table"
              data-es-show="Mostrar Tabla Horario Empleados" data-es-hide="Ocultar Tabla Horario Empleados"
           >
@@ -722,20 +731,22 @@ const EmployeeScheduleTable: React.FC = () => {
         </div>
       </div>
 
+      {/* Message shown when table is hidden */}
+      {isScheduleTableHidden && (
+        <div className="bg-[#ffd700] border border-gray-300 rounded-lg p-4 mb-6 text-center">
+          <p className="text-lg font-bold text-black" data-en="Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again" data-es="La Tabla de Horario de Empleados está oculta. Presiona 'Mostrar Tabla Horario Empleados' para hacerla visible de nuevo">
+            Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again
+          </p>
+        </div>
+      )}
+      
       {/* Table Container with Scroll */}
       <div className={`border rounded-lg overflow-x-auto employee-schedule-table-container ${isScheduleTableHidden ? 'hidden' : ''}`}>
         {/* Table */}
         <table className="w-full border-collapse employee-schedule-table">
           {/* Table Header */}
           <thead className={`bg-gray-200 ${isScheduleTableHidden ? 'table-header-hidden' : ''}`}>
-              {/* Hidden message row - rendered dynamically in JS, simplified here */}
-              {isScheduleTableHidden && (
-                  <tr>
-                       <th colSpan={4 + dateRange.length} className="bg-yellow-500 text-black text-center py-2">
-                            <span data-en="Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again" data-es="La Tabla de Horario de Empleados está oculta. Presiona 'Mostrar Tabla Horario Empleados' para hacerla visible de nuevo">Employee Schedule Table is hidden. Press 'Show Employee Schedule Table' button to make it visible again</span>
-                       </th>
-                   </tr>
-              )}
+              {/* Este mensaje dentro de la tabla ya no es necesario porque tenemos uno fuera */}
              {!isScheduleTableHidden && (
                  <tr>
                     {/* Static Headers */}

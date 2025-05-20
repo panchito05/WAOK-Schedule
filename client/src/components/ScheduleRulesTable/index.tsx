@@ -50,7 +50,7 @@ const formatPreferences = (preferences: (number | null)[], shifts: ShiftRow[]) =
     .join(', ');
 };
 
-const formatFixedShifts = (fixedShifts: { [day: string]: string[] }, shifts: ShiftRow[]) => {
+const formatFixedShifts = (fixedShifts: { [day: string]: string[] } | undefined, shifts: ShiftRow[]) => {
   if (!fixedShifts || Object.keys(fixedShifts).length === 0) return 'None';
   return Object.entries(fixedShifts)
     .filter(([_, shiftIds]) => shiftIds && shiftIds.length > 0)
@@ -66,7 +66,7 @@ const formatFixedShifts = (fixedShifts: { [day: string]: string[] }, shifts: Shi
     .join(', ');
 };
 
-const formatLeaves = (leaves: { startDate: string; endDate: string; leaveType: string }[]) => {
+const formatLeaves = (leaves: { startDate: string; endDate: string; leaveType: string; hoursPerDay: number }[] | undefined) => {
   if (!leaves || leaves.length === 0) return 'No leaves';
   return leaves
     .map(leave => {
@@ -91,14 +91,21 @@ const ScheduleRulesTable: React.FC = () => {
   const { getCurrentList } = useEmployeeLists();
   const { selectedEmployeeIds } = useSelectedEmployees();
   const [isTableHidden, setIsTableHidden] = React.useState(false);
-  const [isTableBodyHidden, setIsTableBodyHidden] = React.useState(false);
+  
+  // Guardamos el estado en localStorage para persistir después de recargar la página
+  const [isTableBodyHidden, setIsTableBodyHidden] = React.useState(() => {
+    const savedState = localStorage.getItem('scheduleRulesTableHidden');
+    return savedState ? JSON.parse(savedState) : false;
+  });
   
   // Referencias a elementos del DOM para manipulación directa
   const rulesTableRef = React.useRef<HTMLDivElement>(null);
 
   // Función para alternar la visibilidad del cuerpo de la tabla
   const toggleTableBody = () => {
-    setIsTableBodyHidden(!isTableBodyHidden);
+    const newState = !isTableBodyHidden;
+    setIsTableBodyHidden(newState);
+    localStorage.setItem('scheduleRulesTableHidden', JSON.stringify(newState));
   };
   
   // Efecto para aplicar los estilos CSS cuando cambia el estado de la tabla
@@ -149,7 +156,7 @@ const ScheduleRulesTable: React.FC = () => {
         <button 
           id="toggle-schedule-rules-table"
           onClick={toggleTableBody}
-          className={`px-4 py-2 rounded transition-colors ${isTableBodyHidden ? 'bg-yellow-500 text-black table-hidden-button' : 'bg-white text-[#19b08d] hover:bg-gray-100'}`}
+          className={`px-4 py-2 rounded transition-colors ${isTableBodyHidden ? 'bg-[#ffd700] text-black table-hidden-button' : 'bg-white text-[#19b08d] hover:bg-gray-100'}`}
           data-es-show="Mostrar Tabla de Reglas de Horario"
           data-es-hide="Ocultar Tabla de Reglas de Horario"
         >
@@ -157,195 +164,182 @@ const ScheduleRulesTable: React.FC = () => {
         </button>
       </div>
 
-      {/* General Rules Table */}
-      <div id="rules-display" className="overflow-hidden schedule-rules-section" ref={rulesTableRef}>
-        <table id="rules-table" className="w-full border-collapse">
-          <thead className={isTableBodyHidden ? 'table-header-hidden' : ''}>
-            <tr>
-              <th className="border px-4 py-2 bg-gray-50 text-left">Category</th>
-              <th className="border px-4 py-2 bg-gray-50 text-left">Details</th>
-              {isTableBodyHidden && (
-                <th colSpan={2} className="bg-yellow-500 text-black text-center py-2">
-                  <span className="table-hidden-message">
-                    Schedule Rules Table is hidden. Press 'Show Schedule Rules Table' button to make it visible again
-                  </span>
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody style={{ display: isTableBodyHidden ? 'none' : 'table-row-group' }}>
-            <tr>
-              <td className="border px-4 py-2">Start Date</td>
-              <td className="border px-4 py-2">
-                {rules.startDate}
-              </td>
-            </tr>
-            <tr>
-              <td className="border px-4 py-2">End Date</td>
-              <td className="border px-4 py-2">
-                {rules.endDate}
-              </td>
-            </tr>
-            <tr>
-              <td className="border px-4 py-2">Maximum consecutive shifts (For All Employees):</td>
-              <td className="border px-4 py-2">
-                {rules.maxConsecutiveShifts}
-              </td>
-            </tr>
-            <tr>
-              <td className="border px-4 py-2">Minimum days off after max consecutive shifts:</td>
-              <td className="border px-4 py-2">
-                {rules.minDaysOffAfterMax}
-              </td>
-            </tr>
-            <tr>
-              <td className="border px-4 py-2">Minimum weekends off per month:</td>
-              <td className="border px-4 py-2">
-                {rules.minWeekendsOffPerMonth}
-              </td>
-            </tr>
-            <tr>
-              <td className="border px-4 py-2">Minimum rest hours between shifts:</td>
-              <td className="border px-4 py-2">
-                {rules.minRestHoursBetweenShifts}
-              </td>
-            </tr>
-            <tr>
-              <td className="border px-4 py-2">Written Rule 1:</td>
-              <td className="border px-4 py-2">
-                {rules.writtenRule1 || 'None'}
-              </td>
-            </tr>
-            <tr>
-              <td className="border px-4 py-2">Written Rule 2:</td>
-              <td className="border px-4 py-2">
-                {rules.writtenRule2 || 'None'}
-              </td>
-            </tr>
-            <tr>
-              <td className="border px-4 py-2">Minimum hours per week:</td>
-              <td className="border px-4 py-2">
-                {rules.minHoursPerWeek}
-              </td>
-            </tr>
-            <tr>
-              <td className="border px-4 py-2">Minimum hours per two weeks:</td>
-              <td className="border px-4 py-2">
-                {rules.minHoursPerTwoWeeks}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      {isTableBodyHidden && (
+        <div className="bg-[#ffd700] border border-gray-300 text-black text-center py-4 px-2 rounded mb-4">
+          <span className="table-hidden-message font-bold">
+            Schedule Rules Table is hidden. Press 'Show Schedule Rules Table' button to make it visible again
+          </span>
+        </div>
+      )}
 
-        {/* Shifts Table */}
-        <table className="w-full border-collapse mt-4">
-          <thead className={isTableBodyHidden ? 'table-header-hidden' : ''}>
-            <tr>
-              <th className="border px-4 py-2 bg-gray-50 text-left">Shift</th>
-              <th className="border px-4 py-2 bg-gray-50 text-center">Sunday</th>
-              <th className="border px-4 py-2 bg-gray-50 text-center">Monday</th>
-              <th className="border px-4 py-2 bg-gray-50 text-center">Tuesday</th>
-              <th className="border px-4 py-2 bg-gray-50 text-center">Wednesday</th>
-              <th className="border px-4 py-2 bg-gray-50 text-center">Thursday</th>
-              <th className="border px-4 py-2 bg-gray-50 text-center">Friday</th>
-              <th className="border px-4 py-2 bg-gray-50 text-center">Saturday</th>
-              {isTableBodyHidden && (
-                <th colSpan={8} className="bg-yellow-500 text-black text-center py-2">
-                  <span className="table-hidden-message">
-                    Schedule Rules Table is hidden. Press 'Show Schedule Rules Table' button to make it visible again
-                  </span>
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody style={{ display: isTableBodyHidden ? 'none' : 'table-row-group' }}>
-            {shifts.map((shift, index) => (
-              <tr key={index}>
+      {/* Todo el contenido de la tabla - Solo visible cuando el cuerpo no está oculto */}
+      {!isTableBodyHidden && (
+        <div 
+          id="rules-display" 
+          className="overflow-hidden schedule-rules-section" 
+          ref={rulesTableRef}
+        >
+          {/* General Rules Table */}
+          <table id="rules-table" className="w-full border-collapse">
+            <thead>
+              <tr>
+                <th className="border px-4 py-2 bg-gray-50 text-left">Category</th>
+                <th className="border px-4 py-2 bg-gray-50 text-left">Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border px-4 py-2">Start Date</td>
                 <td className="border px-4 py-2">
-                  Shift {index + 1}: {shift.startTime} - {shift.endTime}
+                  {rules.startDate}
                 </td>
-                {shiftData[index]?.counts.map((count, dayIndex) => (
-                  <td key={dayIndex} className="border px-4 py-2 text-center">
-                    {count}
+              </tr>
+              <tr>
+                <td className="border px-4 py-2">End Date</td>
+                <td className="border px-4 py-2">
+                  {rules.endDate}
+                </td>
+              </tr>
+              <tr>
+                <td className="border px-4 py-2">Maximum consecutive shifts (For All Employees):</td>
+                <td className="border px-4 py-2">
+                  {rules.maxConsecutiveShifts}
+                </td>
+              </tr>
+              <tr>
+                <td className="border px-4 py-2">Minimum days off after max consecutive shifts:</td>
+                <td className="border px-4 py-2">
+                  {rules.minDaysOffAfterMax}
+                </td>
+              </tr>
+              <tr>
+                <td className="border px-4 py-2">Minimum weekends off per month:</td>
+                <td className="border px-4 py-2">
+                  {rules.minWeekendsOffPerMonth}
+                </td>
+              </tr>
+              <tr>
+                <td className="border px-4 py-2">Minimum rest hours between shifts:</td>
+                <td className="border px-4 py-2">
+                  {rules.minRestHoursBetweenShifts}
+                </td>
+              </tr>
+              <tr>
+                <td className="border px-4 py-2">Written Rule 1:</td>
+                <td className="border px-4 py-2">
+                  {rules.writtenRule1 || 'None'}
+                </td>
+              </tr>
+              <tr>
+                <td className="border px-4 py-2">Written Rule 2:</td>
+                <td className="border px-4 py-2">
+                  {rules.writtenRule2 || 'None'}
+                </td>
+              </tr>
+              <tr>
+                <td className="border px-4 py-2">Minimum hours per week:</td>
+                <td className="border px-4 py-2">
+                  {rules.minHoursPerWeek}
+                </td>
+              </tr>
+              <tr>
+                <td className="border px-4 py-2">Minimum hours per two weeks:</td>
+                <td className="border px-4 py-2">
+                  {rules.minHoursPerTwoWeeks}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          {/* Shifts Table */}
+          <table className="w-full border-collapse mt-4">
+            <thead>
+              <tr>
+                <th className="border px-4 py-2 bg-gray-50 text-left">Shift</th>
+                <th className="border px-4 py-2 bg-gray-50 text-center">Sunday</th>
+                <th className="border px-4 py-2 bg-gray-50 text-center">Monday</th>
+                <th className="border px-4 py-2 bg-gray-50 text-center">Tuesday</th>
+                <th className="border px-4 py-2 bg-gray-50 text-center">Wednesday</th>
+                <th className="border px-4 py-2 bg-gray-50 text-center">Thursday</th>
+                <th className="border px-4 py-2 bg-gray-50 text-center">Friday</th>
+                <th className="border px-4 py-2 bg-gray-50 text-center">Saturday</th>
+              </tr>
+            </thead>
+            <tbody>
+              {shifts.map((shift, index) => (
+                <tr key={index}>
+                  <td className="border px-4 py-2">
+                    Shift {index + 1}: {shift.startTime} - {shift.endTime}
                   </td>
-                )) || Array(7).fill(0).map((_, i) => (
-                  <td key={i} className="border px-4 py-2 text-center">0</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  {shiftData[index]?.counts.map((count, dayIndex) => (
+                    <td key={dayIndex} className="border px-4 py-2 text-center">
+                      {count}
+                    </td>
+                  )) || Array(7).fill(0).map((_, i) => (
+                    <td key={i} className="border px-4 py-2 text-center">0</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-        {/* Shift Priorities Table */}
-        <table className="w-full border-collapse mt-4">
-          <thead className={isTableBodyHidden ? 'table-header-hidden' : ''}>
-            <tr>
-              <th className="border px-4 py-2 bg-gray-50 text-left">Day</th>
-              <th className="border px-4 py-2 bg-gray-50 text-left">Shift Priorities</th>
-              {isTableBodyHidden && (
-                <th colSpan={2} className="bg-yellow-500 text-black text-center py-2">
-                  <span className="table-hidden-message">
-                    Schedule Rules Table is hidden. Press 'Show Schedule Rules Table' button to make it visible again
-                  </span>
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody style={{ display: isTableBodyHidden ? 'none' : 'table-row-group' }}>
-            {Object.entries(priorities).map(([day, dayPriorities]) => (
-              <tr key={day}>
-                <td className="border px-4 py-2">{day}</td>
-                <td className="border px-4 py-2">{getFormattedPriorities(day)}</td>
+          {/* Shift Priorities Table */}
+          <table className="w-full border-collapse mt-4">
+            <thead>
+              <tr>
+                <th className="border px-4 py-2 bg-gray-50 text-left">Day</th>
+                <th className="border px-4 py-2 bg-gray-50 text-left">Shift Priorities</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {Object.entries(priorities).map(([day, dayPriorities]) => (
+                <tr key={day}>
+                  <td className="border px-4 py-2">{day}</td>
+                  <td className="border px-4 py-2">{getFormattedPriorities(day)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-        {/* Employees Table */}
-        <table className="w-full border-collapse mt-4">
-          <thead className={isTableBodyHidden ? 'table-header-hidden' : ''}>
-            <tr>
-              <th className="border px-4 py-2 bg-gray-50 text-left">#</th>
-              <th className="border px-4 py-2 bg-gray-50 text-left">Employee</th>
-              <th className="border px-4 py-2 bg-gray-50 text-left">ID</th>
-              <th className="border px-4 py-2 bg-gray-50 text-left">Hire Date</th>
-              <th className="border px-4 py-2 bg-gray-50 text-left">AI Rules</th>
-              <th className="border px-4 py-2 bg-gray-50 text-left">Max Consecutive Shifts</th>
-              <th className="border px-4 py-2 bg-gray-50 text-left">Shift Preferences</th>
-              <th className="border px-4 py-2 bg-gray-50 text-left">Locked Shift</th>
-              <th className="border px-4 py-2 bg-gray-50 text-left">Fixed/Permanent Shifts</th>
-              <th className="border px-4 py-2 bg-gray-50 text-left">Leaves</th>
-              {isTableBodyHidden && (
-                <th colSpan={10} className="bg-yellow-500 text-black text-center py-2">
-                  <span className="table-hidden-message">
-                    Schedule Rules Table is hidden. Press 'Show Schedule Rules Table' button to make it visible again
-                  </span>
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody style={{ display: isTableBodyHidden ? 'none' : 'table-row-group' }}>
-            {employees.map((employee, index) => (
-              <tr key={index}>
-                <td className="border px-4 py-2">{index + 1}</td>
-                <td className="border px-4 py-2">{employee.name}</td>
-                <td className="border px-4 py-2">{employee.id}</td>
-                <td className="border px-4 py-2">{employee.hireDate}</td>
-                <td className="border px-4 py-2">{employee.notes?.aiRules || 'N/A'}</td>
-                <td className="border px-4 py-2">{employee.maxConsecutiveShifts || rules.maxConsecutiveShifts}</td>
-                <td className="border px-4 py-2">{formatPreferences(employee.shiftPreferences, shifts)}</td>
-                <td className="border px-4 py-2">{Object.entries(employee.blockedShifts || {}).map(([shiftId, days]) => {
-                  const shiftIndex = parseInt(shiftId.split('_')[1]) - 1;
-                  const shift = shifts[shiftIndex];
-                  return shift ? `${shift.startTime}-${shift.endTime} (${days.join(', ')})` : '';
-                }).filter(Boolean).join(', ') || 'None'}</td>
-                <td className="border px-4 py-2">{formatFixedShifts(employee.fixedShifts, shifts)}</td>
-                <td className="border px-4 py-2">{formatLeaves(employee.leave)}</td>
+          {/* Employees Table */}
+          <table className="w-full border-collapse mt-4">
+            <thead>
+              <tr>
+                <th className="border px-4 py-2 bg-gray-50 text-left">#</th>
+                <th className="border px-4 py-2 bg-gray-50 text-left">Employee</th>
+                <th className="border px-4 py-2 bg-gray-50 text-left">ID</th>
+                <th className="border px-4 py-2 bg-gray-50 text-left">Hire Date</th>
+                <th className="border px-4 py-2 bg-gray-50 text-left">AI Rules</th>
+                <th className="border px-4 py-2 bg-gray-50 text-left">Max Consecutive Shifts</th>
+                <th className="border px-4 py-2 bg-gray-50 text-left">Shift Preferences</th>
+                <th className="border px-4 py-2 bg-gray-50 text-left">Locked Shift</th>
+                <th className="border px-4 py-2 bg-gray-50 text-left">Fixed/Permanent Shifts</th>
+                <th className="border px-4 py-2 bg-gray-50 text-left">Leaves</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {employees.map((employee, index) => (
+                <tr key={index}>
+                  <td className="border px-4 py-2">{index + 1}</td>
+                  <td className="border px-4 py-2">{employee.name}</td>
+                  <td className="border px-4 py-2">{employee.id}</td>
+                  <td className="border px-4 py-2">{employee.hireDate}</td>
+                  <td className="border px-4 py-2">{employee.notes?.aiRules || 'N/A'}</td>
+                  <td className="border px-4 py-2">{employee.maxConsecutiveShifts || rules.maxConsecutiveShifts}</td>
+                  <td className="border px-4 py-2">{formatPreferences(employee.shiftPreferences, shifts)}</td>
+                  <td className="border px-4 py-2">{Object.entries(employee.blockedShifts || {}).map(([shiftId, days]) => {
+                    const shiftIndex = parseInt(shiftId.split('_')[1]) - 1;
+                    const shift = shifts[shiftIndex];
+                    return shift ? `${shift.startTime}-${shift.endTime} (${days.join(', ')})` : '';
+                  }).filter(Boolean).join(', ') || 'None'}</td>
+                  <td className="border px-4 py-2">{formatFixedShifts(employee.fixedShifts, shifts)}</td>
+                  <td className="border px-4 py-2">{formatLeaves(employee.leave)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };
