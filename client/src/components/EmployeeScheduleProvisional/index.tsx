@@ -551,8 +551,11 @@ const EmployeeScheduleTable: React.FC = () => {
   
   // Función para mostrar los empleados para una fecha específica
   const showEmployeesForDate = (date: Date) => {
-    setCurrentModalDate(date);
+    // Crear una copia de la fecha para evitar problemas de referencia
+    const dateCopy = new Date(date.getTime());
+    setCurrentModalDate(dateCopy);
     setEmployeesModalOpen(true);
+    console.log(`Showing employees for date: ${dateCopy.toISOString().split('T')[0]}`);
   };
   
   // Función para mostrar el personal específico de un turno en una fecha
@@ -1161,9 +1164,9 @@ const EmployeeScheduleTable: React.FC = () => {
                  const dateString = currentModalDate.toISOString().split('T')[0];
                  const dayOfWeek = daysOfWeek[currentModalDate.getUTCDay()];
                  
-                 // Filtrar empleados programados para esta fecha
+                 // Filtrar empleados programados para esta fecha específica
                  const scheduledEmployees = employees.filter(employee => {
-                   // Verificar si está de leave
+                   // 1. Verificar si está de permiso ese día
                    const isOnLeave = employee.leave?.some(l => {
                      const leaveStart = new Date(l.startDate + 'T00:00:00Z');
                      const leaveEnd = new Date(l.endDate + 'T00:00:00Z');
@@ -1171,16 +1174,18 @@ const EmployeeScheduleTable: React.FC = () => {
                      return current >= leaveStart && current <= leaveEnd;
                    });
                    
-                   if (isOnLeave) return true; // Está de leave, incluirlo
+                   if (isOnLeave) return true; // Incluir empleados de permiso
                    
+                   // 2. Verificar turnos asignados manualmente para esa fecha específica
                    const manualShift = employee.manualShifts?.[dateString];
-                   const fixedShift = employee.fixedShifts?.[dayOfWeek]?.[0];
-                   
-                   // Verificar si tiene un turno asignado
                    if (manualShift && manualShift !== 'day-off') return true;
+                   
+                   // 3. Verificar turnos fijos para ese día de la semana
+                   const fixedShift = employee.fixedShifts?.[dayOfWeek]?.[0];
                    if (!manualShift && fixedShift && fixedShift !== 'day-off') return true;
                    
-                   return false; // No tiene turno asignado
+                   // 4. Este empleado no está programado para este día
+                   return false;
                  });
                  
                  if (scheduledEmployees.length === 0) {
