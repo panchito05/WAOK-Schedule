@@ -1047,6 +1047,15 @@ const EmployeeScheduleTable: React.FC = () => {
                                         <div className="mt-1 text-sm text-gray-600">
                                             ({idealCount}) Ideal Staff For This Shift
                                         </div>
+                                        
+                                        {/* Botón "Staff for this Shift" */}
+                                        <button 
+                                            className="mt-2 w-full bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
+                                            onClick={() => showStaffForShift(shift, date)}
+                                        >
+                                            <Users className="h-4 w-4" />
+                                            <span>Staff for this Shift</span>
+                                        </button>
 
                                         {/* Available Overtime Display (if > 0) */}
                                          {overtimeCount > 0 && (
@@ -1321,6 +1330,245 @@ const EmployeeScheduleTable: React.FC = () => {
 
        {/* Note: Modals like Block Shift, Priorities, Calendar, Overtime, etc., are not included here */}
        {/* as they are separate UI elements triggered by interactions not replicated in this static structure. */}
+
+       {/* Modal específico para "Staff for this Shift" */}
+       {staffForShiftModalOpen && currentShiftForModal && currentDateForShiftModal && (
+         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+           <div 
+             ref={staffModalRef}
+             className="bg-white rounded-lg shadow-lg p-6 w-[800px] max-w-[95%] max-h-[90vh] overflow-y-auto"
+           >
+             {/* Modal Header */}
+             <div className="flex justify-between items-center mb-4 border-b pb-4">
+               <div className="flex-1">
+                 <h2 className="text-xl font-bold">
+                   Staff for {currentShiftForModal.startTime || convertTo12Hour(currentShiftForModal.start)} - {currentShiftForModal.endTime || convertTo12Hour(currentShiftForModal.end)} on {formatDateForTitle(currentDateForShiftModal)}
+                 </h2>
+               </div>
+               <div className="flex space-x-2 navigation-buttons">
+                 <button 
+                   onClick={showPreviousDayForShift}
+                   className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm"
+                 >
+                   Previous Day
+                 </button>
+                 <button 
+                   onClick={showNextDayForShift}
+                   className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm"
+                 >
+                   Next Day
+                 </button>
+               </div>
+               <button 
+                 onClick={closeStaffForShiftModal}
+                 className="ml-4 text-gray-500 hover:text-gray-700 text-xl font-bold close"
+               >
+                 &times;
+               </button>
+             </div>
+
+             {/* Selector de turnos */}
+             <div className="mb-4">
+               <label className="block text-sm font-medium text-gray-700 mb-1">
+                 Select Shift:
+               </label>
+               <select 
+                 className="w-full border border-gray-300 rounded-md p-2"
+                 value={currentShiftForModal.id || ''}
+                 onChange={(e) => {
+                   const selectedShift = shifts.find(s => s.id === e.target.value);
+                   if (selectedShift) {
+                     setCurrentShiftForModal(selectedShift);
+                   }
+                 }}
+               >
+                 {shifts.map((shift) => (
+                   <option key={shift.id} value={shift.id}>
+                     {shift.startTime || convertTo12Hour(shift.start)} - {shift.endTime || convertTo12Hour(shift.end)}
+                   </option>
+                 ))}
+               </select>
+             </div>
+
+             {/* Botón para ver todos los empleados para este día */}
+             <div className="mb-4">
+               <button 
+                 className="w-full bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600 transition-colors"
+                 onClick={() => {
+                   closeStaffForShiftModal();
+                   showEmployeesForDate(currentDateForShiftModal);
+                 }}
+               >
+                 View All Employees for This Day
+               </button>
+             </div>
+
+             {/* Modal Body */}
+             <div className="modal-body">
+               {(() => {
+                 const dateString = currentDateForShiftModal.toISOString().split('T')[0];
+                 const dayOfWeek = daysOfWeek[currentDateForShiftModal.getUTCDay()];
+                 
+                 // Filtrar empleados programados para esta fecha Y este turno específico
+                 const scheduledEmployeesForShift = employees.filter(employee => {
+                   // Verificar si está de leave
+                   const isOnLeave = employee.leave?.some(l => {
+                     const leaveStart = new Date(l.startDate + 'T00:00:00Z');
+                     const leaveEnd = new Date(l.endDate + 'T00:00:00Z');
+                     const current = new Date(dateString + 'T00:00:00Z');
+                     return current >= leaveStart && current <= leaveEnd;
+                   });
+                   
+                   if (isOnLeave) return false; // No incluir empleados de permiso
+                   
+                   const manualShift = employee.manualShifts?.[dateString];
+                   const fixedShift = employee.fixedShifts?.[dayOfWeek]?.[0];
+                   
+                   // Obtener el turno asignado efectivo (prioridad a manual)
+                   const effectiveShift = manualShift && manualShift !== 'day-off' 
+                     ? manualShift 
+                     : fixedShift && fixedShift !== 'day-off' ? fixedShift : null;
+                   
+                   if (!effectiveShift) return false; // No hay turno asignado
+                   
+                   // Verificar si el turno asignado corresponde al turno actual del modal
+                   const shiftMatches = (() => {
+                     // Si coincide por ID
+                     if (effectiveShift === currentShiftForModal.id) return true;
+                     
+                     // Para el caso especial "3:00 AM - 11:"
+                     if (currentShiftForModal.id === 'shift_2' && 
+                         (effectiveShift === "3:00 AM - 11:" || effectiveShift === "3:00 AM - 11:0")) {
+                       return true;
+                     }
+                     
+                     // Comprobar por formato de hora
+                     const modalShiftTime = `${currentShiftForModal.startTime || convertTo12Hour(currentShiftForModal.start)} - ${currentShiftForModal.endTime || convertTo12Hour(currentShiftForModal.end)}`;
+                     if (effectiveShift === modalShiftTime) return true;
+                     
+                     // Verificar formatos alternativos
+                     if (currentShiftForModal.id === 'shift_1' && 
+                         (effectiveShift.includes("7:00 AM") || effectiveShift.includes("7 AM"))) {
+                       return true;
+                     }
+                     
+                     if (currentShiftForModal.id === 'shift_2' && 
+                         (effectiveShift.includes("3:00 PM") || effectiveShift.includes("3 PM"))) {
+                       return true;
+                     }
+                     
+                     if (currentShiftForModal.id === 'shift_3' && 
+                         (effectiveShift.includes("11:00 PM") || effectiveShift.includes("11 PM"))) {
+                       return true;
+                     }
+                     
+                     return false;
+                   })();
+                   
+                   return shiftMatches;
+                 });
+                 
+                 // Si no hay empleados programados, mostrar mensaje
+                 if (scheduledEmployeesForShift.length === 0) {
+                   // Obtener el número ideal 
+                   let idealCount = 4; // Valor por defecto
+                   
+                   if (currentShiftForModal.nurseCounts && dayOfWeek in currentShiftForModal.nurseCounts) {
+                     idealCount = currentShiftForModal.nurseCounts[dayOfWeek];
+                   }
+                   
+                   return (
+                     <div>
+                       <div className="text-center p-4 bg-gray-100 rounded mb-6">
+                         <p className="text-gray-600">There are no employees scheduled for this shift on this date.</p>
+                       </div>
+                       
+                       <h3 className="text-lg font-semibold mb-3">Shift Information</h3>
+                       <table className="w-full border-collapse">
+                         <thead className="bg-gray-100">
+                           <tr>
+                             <th className="border px-4 py-2 text-left">Shift</th>
+                             <th className="border px-4 py-2 text-left">Ideal Staff per Shift</th>
+                             <th className="border px-4 py-2 text-left">Staff for this Shift</th>
+                           </tr>
+                         </thead>
+                         <tbody>
+                           <tr className="border-b">
+                             <td className="border px-4 py-2">
+                               {currentShiftForModal.startTime || convertTo12Hour(currentShiftForModal.start)} - {currentShiftForModal.endTime || convertTo12Hour(currentShiftForModal.end)}
+                             </td>
+                             <td className="border px-4 py-2">{idealCount}</td>
+                             <td className="border px-4 py-2">0</td>
+                           </tr>
+                         </tbody>
+                       </table>
+                     </div>
+                   );
+                 }
+                 
+                 // Si hay empleados, mostrar la lista y la tabla de información
+                 return (
+                   <div>
+                     <h3 className="text-lg font-semibold mb-3">Scheduled Employees</h3>
+                     <table className="w-full border-collapse mb-6">
+                       <thead className="bg-gray-100">
+                         <tr>
+                           <th className="border px-4 py-2 text-left">Name</th>
+                           <th className="border px-4 py-2 text-left">Shift</th>
+                           <th className="border px-4 py-2 text-left">Comment</th>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         {scheduledEmployeesForShift.map(employee => {
+                           const comment = employee.shiftComments?.[dateString] || '';
+                           
+                           // Determinar la representación del turno
+                           let shiftDisplay = currentShiftForModal.startTime || convertTo12Hour(currentShiftForModal.start);
+                           shiftDisplay += ' - ';
+                           shiftDisplay += currentShiftForModal.endTime || convertTo12Hour(currentShiftForModal.end);
+                           
+                           return (
+                             <tr key={employee.id} className="border-b">
+                               <td className="border px-4 py-2">{employee.name}</td>
+                               <td className="border px-4 py-2">{shiftDisplay}</td>
+                               <td className="border px-4 py-2">{comment}</td>
+                             </tr>
+                           );
+                         })}
+                       </tbody>
+                     </table>
+                     
+                     {/* Tabla de información de turno */}
+                     <h3 className="text-lg font-semibold mb-3">Shift Information</h3>
+                     <table className="w-full border-collapse">
+                       <thead className="bg-gray-100">
+                         <tr>
+                           <th className="border px-4 py-2 text-left">Shift</th>
+                           <th className="border px-4 py-2 text-left">Ideal Staff per Shift</th>
+                           <th className="border px-4 py-2 text-left">Staff for this Shift</th>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         <tr className="border-b">
+                           <td className="border px-4 py-2">
+                             {currentShiftForModal.startTime || convertTo12Hour(currentShiftForModal.start)} - {currentShiftForModal.endTime || convertTo12Hour(currentShiftForModal.end)}
+                           </td>
+                           <td className="border px-4 py-2">
+                             {currentShiftForModal.nurseCounts && dayOfWeek in currentShiftForModal.nurseCounts 
+                               ? currentShiftForModal.nurseCounts[dayOfWeek] 
+                               : 4}
+                           </td>
+                           <td className="border px-4 py-2">{scheduledEmployeesForShift.length}</td>
+                         </tr>
+                       </tbody>
+                     </table>
+                   </div>
+                 );
+               })()}
+             </div>
+           </div>
+         </div>
+       )}
 
     </div>
   );
