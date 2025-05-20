@@ -20,39 +20,44 @@ const TodaysEmployeesModal: React.FC<TodaysEmployeesModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Close modal when clicking outside of it
+    // Agregar event listener para cerrar el modal al hacer clic fuera de él
     const handleClickOutside = (event: MouseEvent) => {
-      if (modalRef.current && event.target instanceof Element && !modalRef.current.contains(event.target)) {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    // Agregar event listener para cerrar el modal con la tecla Escape
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
         onClose();
       }
     };
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      // Prevent scrolling when modal is open
-      document.body.style.overflow = 'hidden';
+      document.addEventListener('keydown', handleEscapeKey);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleEscapeKey);
     };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div 
         ref={modalRef}
-        className="bg-white rounded-lg shadow-xl w-11/12 max-w-4xl max-h-[90vh] flex flex-col"
+        className="relative w-11/12 max-w-4xl max-h-[90vh] bg-white rounded-lg shadow-lg flex flex-col"
       >
-        <div className="modal-header flex justify-between items-center border-b p-4">
+        <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-xl font-bold">{title}</h2>
           
-          {/* Navigation buttons */}
           {(onPreviousDay || onNextDay) && (
-            <div className="navigation-buttons flex space-x-2">
+            <div className="flex space-x-2">
               {onPreviousDay && (
                 <button
                   onClick={onPreviousDay}
@@ -74,20 +79,20 @@ const TodaysEmployeesModal: React.FC<TodaysEmployeesModalProps> = ({
           
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 focus:outline-none close"
+            className="text-gray-500 hover:text-gray-700 text-2xl"
           >
-            ×
+            &times;
           </button>
         </div>
         
-        <div className="modal-body p-4 overflow-y-auto">
+        <div className="p-4 overflow-y-auto">
           {children}
         </div>
         
-        <div className="modal-footer border-t p-4 flex justify-end">
+        <div className="p-4 border-t flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
           >
             Close
           </button>

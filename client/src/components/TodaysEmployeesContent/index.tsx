@@ -103,12 +103,13 @@ const TodaysEmployeesContent: React.FC<TodaysEmployeesContentProps> = ({
     
     return { type: 'none', text: 'No shift assigned' };
   };
-  
+
   return (
-    <div className="todaysEmployees">
+    <div>
       {/* Tabla de empleados programados */}
+      <h3 className="text-xl font-bold mb-4">Scheduled Employees</h3>
       {scheduledEmployees.length > 0 ? (
-        <div className="mb-8">
+        <div className="mb-8 overflow-x-auto">
           <table className="w-full border-collapse">
             <thead className="bg-blue-100">
               <tr>
@@ -143,30 +144,32 @@ const TodaysEmployeesContent: React.FC<TodaysEmployeesContentProps> = ({
       
       {/* Información de turnos */}
       <h3 className="text-xl font-bold mb-4">Shift Information</h3>
-      <table className="w-full border-collapse">
-        <thead className="bg-blue-100">
-          <tr>
-            <th className="px-4 py-2 border text-left">Shift</th>
-            <th className="px-4 py-2 border text-left">Ideal Staff per Shift</th>
-            <th className="px-4 py-2 border text-left">Staff for this Shift</th>
-          </tr>
-        </thead>
-        <tbody>
-          {timeRanges.map((shift) => (
-            <tr key={shift.id} className="hover:bg-gray-50">
-              <td className="px-4 py-2 border">
-                {convertTo12Hour(shift.start)} - {convertTo12Hour(shift.end)}
-              </td>
-              <td className="px-4 py-2 border">
-                {shift.nurseCounts[dayOfWeek] || 0}
-              </td>
-              <td className="px-4 py-2 border">
-                {countScheduledEmployees(shift, date, employees)}
-              </td>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead className="bg-blue-100">
+            <tr>
+              <th className="px-4 py-2 border text-left">Shift</th>
+              <th className="px-4 py-2 border text-left">Ideal Staff</th>
+              <th className="px-4 py-2 border text-left">Scheduled Staff</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {timeRanges.map((shift) => (
+              <tr key={shift.id} className="hover:bg-gray-50">
+                <td className="px-4 py-2 border">
+                  {convertTo12Hour(shift.start)} - {convertTo12Hour(shift.end)}
+                </td>
+                <td className="px-4 py-2 border">
+                  {shift.nurseCounts[dayOfWeek] || 0}
+                </td>
+                <td className="px-4 py-2 border">
+                  {countScheduledEmployees(shift, date, employees)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

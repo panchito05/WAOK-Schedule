@@ -425,23 +425,50 @@ const EmployeeScheduleTable: React.FC = () => {
   // Usar el contexto de selección de empleados
   const { selectedEmployeeIds } = useSelectedEmployees();
   
-  // Estado para el modal de overtime
-  const [overtimeModal, setOvertimeModal] = useState<{
-    isOpen: boolean;
-    shift: { startTime: string; endTime: string; index?: number } | null;
-  }>({
-    isOpen: false,
-    shift: null
-  });
+  // Función para mostrar los empleados de una fecha específica
+  const showEmployeesForDate = (date: Date) => {
+    setEmployeesModalData({
+      isOpen: true,
+      date: new Date(date)
+    });
+  };
   
-  // Estado para el modal de empleados del día
-  const [employeesModalData, setEmployeesModalData] = useState<{
-    isOpen: boolean;
-    date: Date | null;
-  }>({
-    isOpen: false,
-    date: null
-  });
+  // Función para cerrar el modal
+  const closeEmployeesModal = () => {
+    setEmployeesModalData({
+      isOpen: false,
+      date: null
+    });
+  };
+  
+  // Funciones para navegar entre días
+  const goToPreviousDay = () => {
+    if (employeesModalData.date) {
+      const prevDate = new Date(employeesModalData.date);
+      prevDate.setUTCDate(prevDate.getUTCDate() - 1);
+      showEmployeesForDate(prevDate);
+    }
+  };
+  
+  const goToNextDay = () => {
+    if (employeesModalData.date) {
+      const nextDate = new Date(employeesModalData.date);
+      nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+      showEmployeesForDate(nextDate);
+    }
+  };
+  
+  // Función para formatear la fecha de forma legible para el título
+  const formatDateForTitle = (date: Date): string => {
+    const options: Intl.DateTimeFormatOptions = { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      weekday: 'long',
+      timeZone: 'UTC'
+    };
+    return date.toLocaleDateString('en-US', options);
+  };
   
   // Función para mostrar los empleados de una fecha específica
   const showEmployeesForDate = (date: Date) => {
