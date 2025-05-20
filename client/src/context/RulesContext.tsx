@@ -1,25 +1,68 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useState, useContext, ReactNode } from 'react';
+import { useEmployeeLists } from './EmployeeListsContext';
 
-type RulesContextType = {
-  // Define your context state and functions here
-};
+export interface RulesState {
+  startDate: string;
+  endDate: string;
+  maxConsecutiveShifts: string;
+  minDaysOffAfterMax: string;
+  minWeekendsOffPerMonth: string;
+  minRestHoursBetweenShifts: string;
+  writtenRule1: string;
+  writtenRule2: string;
+  minHoursPerWeek: string;
+  minHoursPerTwoWeeks: string;
+}
+
+interface RulesContextType {
+  rules: RulesState;
+  updateRules: (rules: Partial<RulesState>) => void;
+}
 
 const RulesContext = createContext<RulesContextType | undefined>(undefined);
 
-export function useRules() {
-  const context = useContext(RulesContext);
-  if (context === undefined) {
-    throw new Error("useRules must be used within a RulesProvider");
-  }
-  return context;
-}
+// Get current date and one month from now for default dates
+const today = new Date();
+const nextMonth = new Date(today);
+nextMonth.setMonth(today.getMonth() + 1);
 
-export function RulesProvider({ children }: { children: ReactNode }) {
-  // Define your state and functions here
+const formatDate = (date: Date) => {
+  return date.toISOString().split('T')[0];
+};
 
-  const value = {
-    // Provide your state and functions here
+export const RulesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { getCurrentList, updateList } = useEmployeeLists();
+  const currentList = getCurrentList();
+  const rules = currentList?.rules || {
+    startDate: formatDate(today),
+    endDate: formatDate(nextMonth),
+    maxConsecutiveShifts: '5',
+    minDaysOffAfterMax: '2',
+    minWeekendsOffPerMonth: '2',
+    minRestHoursBetweenShifts: '12',
+    writtenRule1: '',
+    writtenRule2: '',
+    minHoursPerWeek: '40',
+    minHoursPerTwoWeeks: '80'
   };
 
-  return <RulesContext.Provider value={value as RulesContextType}>{children}</RulesContext.Provider>;
-}
+  const updateRules = (newRules: Partial<RulesState>) => {
+    if (currentList) {
+      updateList(currentList.id, { rules: { ...rules, ...newRules } });
+    }
+  };
+
+  return (
+    <RulesContext.Provider value={{ rules, updateRules }}>
+      {children}
+    </RulesContext.Provider>
+  );
+};
+
+export const useRules = () => {
+  const context = useContext(RulesContext);
+  if (!context) {
+    throw new Error('useRules must be used within a RulesProvider');
+  }
+  return context;
+};

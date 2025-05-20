@@ -1,44 +1,56 @@
-import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/not-found";
-import { EmployeeListsProvider } from "./context/EmployeeListsContext";
-import { PersonnelDataProvider } from "./context/PersonnelDataContext";
-import { RulesProvider } from "./context/RulesContext";
-import { ShiftProvider } from "./context/ShiftContext";
-import { ShiftPrioritiesProvider } from "./context/ShiftPrioritiesContext";
+import React, { useState } from 'react';
+import Header from './components/Header';
+import { EmployeeListsProvider } from './context/EmployeeListsContext';
+import { RulesProvider } from './context/RulesContext';
+import { ShiftProvider } from './context/ShiftContext';
+import { PersonnelDataProvider } from './context/PersonnelDataContext';
+import { ShiftPrioritiesProvider } from './context/ShiftPrioritiesContext';
+import EmployeeScheduleTable from './components/EmployeeScheduleProvisional';
+import ShiftConfiguration from './components/ShiftConfiguration';
+import ShiftRules from './components/ShiftRulesForAllEmployees';
+import SelectEmployeesForThisCombinationWorkingHours from './components/SelectEmployeesForThisCombinationWorkingHours';
+import AddEmployees from './components/AddEmployees';
+import PersonnelTable from './components/IdealNumberOfPersonnelPerShiftAndDay';
+import ScheduleRulesTable from './components/ScheduleRulesTable';
 
-function Router() {
-  return (
-    <Switch>
-      {/* Add pages below */}
-      {/* <Route path="/" component={Home}/> */}
-      {/* Fallback to 404 */}
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
+export type ActiveView = 'all' | 'schedule' | 'employees' | 'personnel' | 'rules';
 
 function App() {
+  const [activeView, setActiveView] = useState<ActiveView>('all');
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <EmployeeListsProvider>
+    <EmployeeListsProvider>
+      <RulesProvider>
+        <ShiftProvider>
           <PersonnelDataProvider>
-            <RulesProvider>
-              <ShiftProvider>
-                <ShiftPrioritiesProvider>
-                  <Toaster />
-                  <Router />
-                </ShiftPrioritiesProvider>
-              </ShiftProvider>
-            </RulesProvider>
+            <ShiftPrioritiesProvider>
+              <div className="min-h-screen bg-gray-100">
+                <Header onViewChange={setActiveView} />
+                <div className="px-8">
+                  {activeView === 'all' && (
+                    <>
+                      <div className="flex justify-between">
+                        <ShiftConfiguration />
+                        <ShiftRules />
+                      </div>
+                      <SelectEmployeesForThisCombinationWorkingHours />
+                      <AddEmployees />
+                      <PersonnelTable />
+                      <ScheduleRulesTable />
+                      <EmployeeScheduleTable />
+                    </>
+                  )}
+                  {activeView === 'schedule' && <EmployeeScheduleTable />}
+                  {activeView === 'employees' && <AddEmployees />}
+                  {activeView === 'personnel' && <PersonnelTable />}
+                  {activeView === 'rules' && <ScheduleRulesTable />}
+                </div>
+              </div>
+            </ShiftPrioritiesProvider>
           </PersonnelDataProvider>
-        </EmployeeListsProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+        </ShiftProvider>
+      </RulesProvider>
+    </EmployeeListsProvider>
   );
 }
 
