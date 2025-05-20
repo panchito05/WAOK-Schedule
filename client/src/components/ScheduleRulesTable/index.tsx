@@ -79,12 +79,12 @@ const ScheduleRulesTable: React.FC = () => {
   }, [getCurrentList, selectedEmployeeIds]);
 
   return (
-    <div className={`w-full bg-white rounded-lg shadow-lg p-6 mt-8 ${isTableHidden ? 'hidden' : ''}`}>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Schedule Rules Table</h2>
+    <div className={`w-full bg-white rounded-lg shadow-lg p-6 mt-8 font-['Viata'] ${isTableHidden ? 'hidden' : ''}`}>
+      <div className="bg-gradient-to-r from-[#19b08d] to-[#117cee] p-4 rounded-t-lg mb-6 flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-white">Schedule Rules Table</h2>
         <button 
           onClick={() => setIsTableHidden(true)}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+          className="bg-white text-[#19b08d] px-4 py-2 rounded hover:bg-gray-100 transition-colors"
         >
           Hide Schedule Rules Table
         </button>
