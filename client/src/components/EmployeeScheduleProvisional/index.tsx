@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Calendar as CalendarIcon, Users } from 'lucide-react'; // Renombrar para evitar conflicto
 import { useRules } from '../../context/RulesContext';
 import { useEmployeeLists } from '../../context/EmployeeListsContext';
@@ -39,6 +39,7 @@ interface Employee extends CommonEmployee {
   autoDaysOff?: string[]; // Array of YYYY-MM-DD strings
   lockedShifts?: { [date: string]: string }; // { YYYY-MM-DD: shiftId }
   columnComments?: string; // Comment for the summary column
+  blockedShifts?: { [shiftId: string]: { blockedDays: string[]; isActive: boolean } }; // Blocked shifts data
 }
 
 // Estructura específica de Rules para este componente que extiende CommonRules
@@ -80,20 +81,8 @@ function convertTo12Hour(time: string | undefined): string {
   const [hour, minute] = time.split(':');
   const hourNum = parseInt(hour);
   
-  // Use the correct AM/PM format based on shift patterns
-  let ampm = 'AM';
-  
-  // Specific shift time corrections
-  if (hourNum === 7 && parseInt(minute) === 0) {
-    ampm = 'AM'; // First shift starts at 7:00 AM
-  } else if (hourNum === 3 && parseInt(minute) === 0) {
-    ampm = 'PM'; // Second shift starts at 3:00 PM
-  } else if (hourNum === 11 && parseInt(minute) === 0) {
-    ampm = 'PM'; // Third shift starts at 11:00 PM
-  } else {
-    // Default logic for other times
-    ampm = hourNum >= 12 ? 'PM' : 'AM';
-  }
+  // Standard AM/PM logic
+  const ampm = hourNum >= 12 ? 'PM' : 'AM';
   
   const hour12 = hourNum % 12 || 12;
   return `${hour12}:${minute} ${ampm}`;
@@ -183,8 +172,8 @@ function getPreferenceAndBlockedInfo(employee: Employee, shifts: Shift[]): strin
     // Preferred Shifts
     html += '<div class="mb-2">';
     html += '<strong>Preferred:</strong><br>';
-    if (Array.isArray(employee.preferences) && employee.preferences.length > 0) {
-        const preferredShiftIndex = employee.preferences.indexOf(1);
+    if (Array.isArray(employee.shiftPreferences) && employee.shiftPreferences.length > 0) {
+        const preferredShiftIndex = employee.shiftPreferences.indexOf(1);
         if (preferredShiftIndex !== -1 && shifts[preferredShiftIndex]) {
             const shift = shifts[preferredShiftIndex];
             html += `${shift.startTime} - ${shift.endTime}`;
@@ -198,25 +187,55 @@ function getPreferenceAndBlockedInfo(employee: Employee, shifts: Shift[]): strin
 
     // Blocked Shifts
     html += '<div>';
-    html += '<strong>Blocked:</strong><br>';
-    if (employee.blockedShifts && Object.keys(employee.blockedShifts).length > 0) {
-        const blockedEntries = Object.entries(employee.blockedShifts)
-            .map(([shiftId, days]) => {
-                const shiftIndex = parseInt(shiftId.split('_')[1]) - 1;
-                const shift = shifts[shiftIndex];
-                if (!shift || !days.length) return null;
-                const dayNames = days.map(day => day.substr(0, 3)).join(', ');
-                return `${shift.startTime} - ${shift.endTime} (${dayNames})`;
-            })
-            .filter(Boolean);
-        html += blockedEntries.length ? blockedEntries.join('<br>') : 'None';
-    } else {
-        html += 'None';
-    }
+    html += '<strong>Blocked:</strong> ';
+    
+    const blockedShiftsText = formatBlockedShifts(employee.blockedShifts, shifts);
+    html += blockedShiftsText;
+    html += '<br>';
     html += '</div>';
 
     html += '</div>';
     return html;
+}
+
+// Helper function to format blocked shifts (similar to ScheduleRulesTable implementation)
+function formatBlockedShifts(blockedShifts: { [shiftId: string]: { blockedDays: string[]; isActive: boolean } } | undefined, shifts: Shift[]): string {
+    if (!blockedShifts || Object.keys(blockedShifts).length === 0) return 'None';
+    
+    const activeBlockedShifts = Object.entries(blockedShifts)
+        .filter(([_, shiftData]) => shiftData.isActive && shiftData.blockedDays.length > 0);
+    
+    if (activeBlockedShifts.length === 0) return 'None';
+    
+    // Mapeo de días en inglés a español
+    const dayTranslations: { [key: string]: string } = {
+        'monday': 'Mon',
+        'tuesday': 'Tue', 
+        'wednesday': 'Wed',
+        'thursday': 'Thu',
+        'friday': 'Fri',
+        'saturday': 'Sat',
+        'sunday': 'Sun',
+        'all': 'All Days'
+    };
+    
+    return activeBlockedShifts
+        .map(([shiftId, shiftData]) => {
+            // Buscar el turno por su ID
+            const shift = shifts.find(s => s.id === shiftId);
+            const shiftName = shift ? `${shift.startTime} - ${shift.endTime}` : 'Unknown Shift';
+            
+            if (shiftData.blockedDays.includes('all')) {
+                return `${shiftName} (All Days)`;
+            } else {
+                // Traducir los días y formatearlos
+                const translatedDays = shiftData.blockedDays
+                    .map(day => dayTranslations[day.toLowerCase()] || day)
+                    .join(', ');
+                return `${shiftName} (${translatedDays})`;
+            }
+        })
+        .join(', ');
 }
 
 function calculateShiftHours(start: string, end: string, lunchBreak: number = 0): number {
@@ -373,23 +392,16 @@ function countScheduledEmployees(shift: Shift, date: Date, allEmployees: Employe
     const dateString = date.toISOString().split('T')[0]; // UTC date string YYYY-MM-DD
     const dayOfWeek = daysOfWeek[date.getUTCDay()]; // Día de la semana (Monday, Tuesday, etc.)
     
-    // Definimos los horarios de cada turno
-    const SHIFT_1_TIME = "7:00 AM - 3:00 PM";
-    const SHIFT_2_TIME = "3:00 PM - 11:00 PM";
-    const SHIFT_3_TIME = "11:00 PM - 7:00 AM";
+    // Los horarios de turnos ahora se obtienen dinámicamente desde la configuración del usuario
     
-    // Obtenemos el índice del turno actual (1, 2 o 3)
-    let currentShiftIndex = 0;
-    if (shift.id && shift.id.startsWith('shift_')) {
-        currentShiftIndex = parseInt(shift.id.replace('shift_', ''), 10);
-    } else if (shift.startTime) {
-        if (shift.startTime.includes("7:00 AM")) currentShiftIndex = 1;
-        else if (shift.startTime.includes("3:00 PM")) currentShiftIndex = 2;
-        else if (shift.startTime.includes("11:00 PM")) currentShiftIndex = 3;
+    // Determinar el ID del turno actual - solo turnos creados por el usuario
+    let currentShiftId = null;
+    if (shift.id) {
+        currentShiftId = shift.id;
     }
     
-    // Si no podemos determinar el índice, no podemos contar
-    if (currentShiftIndex === 0) return 0;
+    // Si no podemos determinar el ID del turno, no podemos contar
+    if (!currentShiftId) return 0;
     
     // Contador de empleados para este turno
     let count = 0;
@@ -413,35 +425,8 @@ function countScheduledEmployees(shift: Shift, date: Date, allEmployees: Employe
         if (manualShift) {
             if (manualShift === 'day-off') return; // No contar día libre
             
-            // Como la tabla puede tener diferentes formatos para el mismo turno,
-            // determinamos a qué turno corresponde
-            let shiftNum = 0;
-            
-            // Por ID (shift_1, shift_2, etc.)
-            if (manualShift.startsWith('shift_')) {
-                shiftNum = parseInt(manualShift.replace('shift_', ''), 10);
-            }
-            // Por formato de tiempo mostrado en el UI
-            else if (manualShift.includes("7:00 AM") || manualShift.includes("7 AM") || 
-                     manualShift.startsWith("7:00 AM")) {
-                shiftNum = 1;
-            }
-            else if (manualShift.includes("3:00 PM") || manualShift.includes("3 PM") || 
-                     manualShift.startsWith("3:00 PM")) {
-                shiftNum = 2;
-            }
-            else if (manualShift.includes("3:00 PM") || // Los casos especiales
-                     manualShift === "3:00 PM - 11:" || 
-                     manualShift.startsWith("3:00 PM")) {
-                shiftNum = 2; // Este es el segundo turno (3:00 PM - 11:00 PM) con formato extraño
-            }
-            else if (manualShift.includes("11:00 PM") || manualShift.includes("11 PM") || 
-                     manualShift.startsWith("11:00 PM")) {
-                shiftNum = 3;
-            }
-            
-            // Si el turno determinado es el mismo que estamos buscando, incrementar contador
-            if (shiftNum === currentShiftIndex) {
+            // Solo considerar turnos con ID válido y comparar directamente
+            if (manualShift === currentShiftId) {
                 count++;
             }
         }
@@ -450,32 +435,8 @@ function countScheduledEmployees(shift: Shift, date: Date, allEmployees: Employe
             const fixedShift = employee.fixedShifts?.[dayOfWeek]?.[0];
             if (!fixedShift || fixedShift === 'day-off') return; // No hay turno o es día libre
             
-            // Determinamos qué turno es usando el mismo método que antes
-            let shiftNum = 0;
-            
-            if (fixedShift.startsWith('shift_')) {
-                shiftNum = parseInt(fixedShift.replace('shift_', ''), 10);
-            }
-            else if (fixedShift.includes("7:00 AM") || fixedShift.includes("7 AM") || 
-                     fixedShift.startsWith("7:00 AM")) {
-                shiftNum = 1;
-            }
-            else if (fixedShift.includes("3:00 PM") || fixedShift.includes("3 PM") || 
-                     fixedShift.startsWith("3:00 PM")) {
-                shiftNum = 2;
-            }
-            else if (fixedShift.includes("3:00 PM") || // Los casos especiales
-                     fixedShift === "3:00 PM - 11:" || 
-                     fixedShift.startsWith("3:00 PM")) {
-                shiftNum = 2; // Este es el segundo turno (3:00 PM - 11:00 PM) con formato extraño
-            }
-            else if (fixedShift.includes("11:00 PM") || fixedShift.includes("11 PM") || 
-                     fixedShift.startsWith("11:00 PM")) {
-                shiftNum = 3;
-            }
-            
-            // Si el turno determinado es el mismo que estamos buscando, incrementar contador
-            if (shiftNum === currentShiftIndex) {
+            // Solo considerar turnos con ID válido y comparar directamente
+            if (fixedShift === currentShiftId) {
                 count++;
             }
         }
@@ -532,12 +493,116 @@ function violatesMinRestTime(employee: Employee, dateString: string, newShiftId:
 
 const EmployeeScheduleTable: React.FC = () => {
   // --- Simulación de datos y estado inicial ---
-  const { getCurrentList, updateList } = useEmployeeLists(); // Added updateList here
+  const { getCurrentList, updateList, refreshTrigger } = useEmployeeLists(); // Added updateList here
   const { shifts } = useShiftContext();
   const { shiftData } = usePersonnelData();
   // Usar el contexto de selección de empleados
   const { selectedEmployeeIds } = useSelectedEmployees();
   
+  // Estados para el redimensionamiento de columnas
+  const [columnWidths, setColumnWidths] = useState({
+    employees: 218,
+    preferences: 218,
+    totalHours: 319,
+    dates: 174,
+    summary: 290
+  });
+  
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeColumn, setResizeColumn] = useState<string | null>(null);
+  const [startX, setStartX] = useState(0);
+  const [startWidth, setStartWidth] = useState(0);
+  
+  // Cargar anchos guardados del localStorage al montar el componente
+  useEffect(() => {
+    const savedWidths = localStorage.getItem('employeeScheduleColumnWidths');
+    if (savedWidths) {
+      try {
+        const parsedWidths = JSON.parse(savedWidths);
+        setColumnWidths(prev => ({ ...prev, ...parsedWidths }));
+      } catch (error) {
+        console.error('Error parsing saved column widths:', error);
+      }
+    }
+  }, []);
+  
+  // Guardar anchos en localStorage cuando cambien
+  useEffect(() => {
+    localStorage.setItem('employeeScheduleColumnWidths', JSON.stringify(columnWidths));
+  }, [columnWidths]);
+  
+  // Función para iniciar el redimensionamiento
+  const startResize = (column: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+    setResizeColumn(column);
+    setStartX(e.clientX);
+    // Asegurar que siempre tomamos el ancho actual exacto de la columna
+    const currentWidth = columnWidths[column as keyof typeof columnWidths];
+    setStartWidth(currentWidth);
+  };
+  
+  // Función para manejar el movimiento del mouse durante el redimensionamiento
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isResizing || !resizeColumn) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const deltaX = e.clientX - startX;
+    const newWidth = Math.max(100, startWidth + deltaX); // Ancho mínimo de 100px
+    
+    // Solo actualizar la columna específica que se está redimensionando
+    setColumnWidths(prev => {
+      // Verificar que la columna existe antes de actualizar
+      if (resizeColumn && resizeColumn in prev) {
+        return {
+          ...prev,
+          [resizeColumn]: newWidth
+        };
+      }
+      return prev;
+    });
+  }, [isResizing, resizeColumn, startX, startWidth]);
+  
+  // Función para finalizar el redimensionamiento
+  const stopResize = useCallback(() => {
+    if (isResizing) {
+      // Guardar inmediatamente en localStorage cuando se termine de redimensionar
+      setColumnWidths(currentWidths => {
+        localStorage.setItem('employeeScheduleColumnWidths', JSON.stringify(currentWidths));
+        return currentWidths;
+      });
+    }
+    setIsResizing(false);
+    setResizeColumn(null);
+    setStartX(0);
+    setStartWidth(0);
+  }, [isResizing]);
+  
+  // Agregar event listeners para el redimensionamiento
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove, { passive: false });
+      document.addEventListener('mouseup', stopResize, { passive: false });
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    } else {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', stopResize);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', stopResize);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing, handleMouseMove, stopResize]);
+
   // Estados para el modal de empleados por día
   const [employeesModalOpen, setEmployeesModalOpen] = useState(false);
   const [currentModalDate, setCurrentModalDate] = useState<Date | null>(null);
@@ -641,7 +706,7 @@ const EmployeeScheduleTable: React.FC = () => {
     const allEmployees = currentList?.employees || [];
     // Solo mostramos los empleados que estén seleccionados
     return allEmployees.filter(employee => selectedEmployeeIds.includes(employee.id));
-  }, [getCurrentList, selectedEmployeeIds]);
+  }, [getCurrentList, selectedEmployeeIds, refreshTrigger]);
 
   // We're removing this useEffect that causes an infinite update cycle
   // The employees are already managed by the parent context,
@@ -649,7 +714,7 @@ const EmployeeScheduleTable: React.FC = () => {
 
   // Convert shifts to the format expected by the component
   const timeRanges = useMemo(() => shifts.map((shift, index) => ({
-    id: `shift_${index + 1}`,
+    id: `uid_${Math.random().toString(36).substr(2, 15)}`,
     start: shift.startTime.split(' ')[0],
     end: shift.endTime.split(' ')[0],
     startTime: shift.startTime, // Guardamos el tiempo completo con AM/PM
@@ -743,16 +808,49 @@ const EmployeeScheduleTable: React.FC = () => {
       {/* Table Container with Scroll */}
       <div className={`border rounded-lg overflow-x-auto employee-schedule-table-container ${isScheduleTableHidden ? 'hidden' : ''}`}>
         {/* Table */}
-        <table className="w-full border-collapse employee-schedule-table">
+        <table className="w-full border-collapse employee-schedule-table" style={{ tableLayout: 'fixed', minWidth: '1200px' }}>
           {/* Table Header */}
           <thead className={`bg-gray-200 ${isScheduleTableHidden ? 'table-header-hidden' : ''}`}>
               {/* Este mensaje dentro de la tabla ya no es necesario porque tenemos uno fuera */}
              {!isScheduleTableHidden && (
                  <tr>
                     {/* Static Headers */}
-                    <th className="px-2 py-1 text-left border border-gray-300 w-[218px]" data-en="Employees" data-es="Empleados">Employees</th> {/* Width increased by 45% */}
-                    <th className="px-2 py-1 text-left border border-gray-300 w-[218px]" data-en="Shift: Preferences or Locked" data-es="Turno: Preferencias o Bloqueado">Shift: Preferences or Locked</th> {/* Width increased by 45% */}
-                    <th className="px-2 py-1 text-left border border-gray-300 w-[319px]" data-en="Total Shifts / Hours" data-es="Total Turnos / Horas">Total Shifts / Hours</th> {/* Width increased by 45% */}
+                    <th 
+                      className="px-2 py-1 text-left border border-gray-300 relative" 
+                      style={{ width: `${columnWidths.employees}px` }}
+                      data-en="Employees" 
+                      data-es="Empleados"
+                    >
+                      Employees
+                      <div 
+                        className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 hover:opacity-50"
+                        onMouseDown={(e) => startResize('employees', e)}
+                      />
+                    </th>
+                    <th 
+                      className="px-2 py-1 text-left border border-gray-300 relative" 
+                      style={{ width: `${columnWidths.preferences}px` }}
+                      data-en="Shift: Preferences or Blocked" 
+                      data-es="Turno: Preferencias o Bloqueado"
+                    >
+                      Shift: Preferences or Blocked
+                      <div 
+                        className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 hover:opacity-50"
+                        onMouseDown={(e) => startResize('preferences', e)}
+                      />
+                    </th>
+                    <th 
+                      className="px-2 py-1 text-left border border-gray-300 relative" 
+                      style={{ width: `${columnWidths.totalHours}px` }}
+                      data-en="Total Shifts / Hours" 
+                      data-es="Total Turnos / Horas"
+                    >
+                      Total Shifts / Hours
+                      <div 
+                        className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 hover:opacity-50"
+                        onMouseDown={(e) => startResize('totalHours', e)}
+                      />
+                    </th>
 
                     {/* Dynamic Date Headers */}
                     {dateRange.map((date) => {
@@ -761,7 +859,8 @@ const EmployeeScheduleTable: React.FC = () => {
                         return (
                             <th
                                 key={dateString}
-                                className={`px-2 py-1 text-center border border-gray-300 w-[174px] ${isSunday ? 'bg-gray-100' : ''}`} // Width increased by 45%
+                                className={`px-2 py-1 text-center border border-gray-300 relative ${isSunday ? 'bg-gray-100' : ''}`}
+                                style={{ width: `${columnWidths.dates}px` }}
                             >
                                 {/* Using dangerouslySetInnerHTML to render formatted date HTML */}
                                 <div dangerouslySetInnerHTML={{ __html: formatDate(date) }}></div>
@@ -776,7 +875,18 @@ const EmployeeScheduleTable: React.FC = () => {
                         );
                     })}
                     {/* Summary Header */}
-                     <th className="px-2 py-1 text-left border border-gray-300 w-[290px]" data-en="Summary and/or Considerations for this Schedule" data-es="Resumen y/o Consideraciones para este Horario">Summary and/or Considerations for this Schedule</th> {/* Width increased by 45% */}
+                     <th 
+                       className="px-2 py-1 text-left border border-gray-300 relative" 
+                       style={{ width: `${columnWidths.summary}px` }}
+                       data-en="Summary and/or Considerations for this Schedule" 
+                       data-es="Resumen y/o Consideraciones para este Horario"
+                     >
+                       Summary and/or Considerations for this Schedule
+                       <div 
+                         className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-500 hover:opacity-50"
+                         onMouseDown={(e) => startResize('summary', e)}
+                       />
+                     </th>
                  </tr>
              )}
           </thead>
@@ -795,7 +905,7 @@ const EmployeeScheduleTable: React.FC = () => {
               return (
                 <tr key={employee.uniqueId} className="border-b border-gray-300 align-top"> {/* Added align-top */}
                   {/* Employee Info Cell */}
-                  <td className="px-2 py-1 border border-gray-300 w-[218px]"> {/* Width increased by 45% */}
+                  <td className="px-2 py-1 border border-gray-300" style={{ width: `${columnWidths.employees}px` }}>
                     <div className="flex flex-col"> {/* Use flex-col for stacking */}
                         <span>{index + 1}. {employee.name}</span> {/* Added employee number */}
                         <span className="text-sm text-gray-500">({matchPercentage}% match)
@@ -808,12 +918,12 @@ const EmployeeScheduleTable: React.FC = () => {
 
                   {/* Preferences/Blocked Cell */}
                    {/* Using dangerouslySetInnerHTML to render formatted HTML string */}
-                  <td className="px-2 py-1 border border-gray-300 w-[218px]" dangerouslySetInnerHTML={{ __html: getPreferenceAndBlockedInfo(employee, timeRanges) }}>
+                  <td className="px-2 py-1 border border-gray-300" style={{ width: `${columnWidths.preferences}px` }} dangerouslySetInnerHTML={{ __html: getPreferenceAndBlockedInfo(employee, shifts) }}>
                      {/* Content rendered by getPreferenceAndBlockedInfo */}
                   </td>
 
                   {/* Total Hours / Weekends Cell */}
-                  <td className="px-2 py-1 border border-gray-300 w-[319px]">
+                  <td className="px-2 py-1 border border-gray-300" style={{ width: `${columnWidths.totalHours}px` }}>
                       {/* Using dangerouslySetInnerHTML for colored hours */}
                       <div dangerouslySetInnerHTML={{ __html: formatBiweeklyHours(hoursData, minBiweeklyHours) }}></div>
                       <div style={{
@@ -856,10 +966,10 @@ const EmployeeScheduleTable: React.FC = () => {
                     return (
                       <td
                          key={dateString}
-                         className={`px-1 py-1 border border-gray-300 w-[174px] ${isSunday ? 'bg-gray-100' : ''}
+                         className={`px-1 py-1 border border-gray-300 ${isSunday ? 'bg-gray-100' : ''}
                            ${exceedsMax || violatesMinRest ? 'bg-yellow-300' : ''} // Highlight if rules violated (placeholder)
                          `}
-                         style={{ position: 'relative' }} // Needed for absolute positioning of swap button
+                         style={{ position: 'relative', width: `${columnWidths.dates}px` }} // Needed for absolute positioning of swap button
                       >
                            {isOnLeave ? (
                                // Render leave info if on leave
@@ -959,7 +1069,7 @@ const EmployeeScheduleTable: React.FC = () => {
                     );
                   })}
                   {/* Summary Comment Cell */}
-                   <td className="px-2 py-1 border border-gray-300 w-[200px]">
+                   <td className="px-2 py-1 border border-gray-300" style={{ width: `${columnWidths.totalHours}px` }}>
                       {/* Use textarea matching JS output, pre-filled with employee.columnComments */}
                        <textarea
                            className="comment-textarea w-full h-[60px] border border-gray-300 resize-none p-1 text-sm overflow-hidden"
@@ -980,11 +1090,11 @@ const EmployeeScheduleTable: React.FC = () => {
                 Total Employees by Shifts
               </td>
               {dateRange.map((date) => (
-                <td key={date.toISOString().split('T')[0]} className="px-2 py-1 border border-gray-300 w-[174px]">
+                <td key={date.toISOString().split('T')[0]} className="px-2 py-1 border border-gray-300" style={{ width: `${columnWidths.dates}px` }}>
                   {/* Content is empty in the original JS output for this row */}
                 </td>
               ))}
-               <td className="px-2 py-1 border border-gray-300 w-[200px]">
+               <td className="px-2 py-1 border border-gray-300" style={{ width: `${columnWidths.totalHours}px` }}>
                    {/* Empty cell for the summary column */}
                </td>
             </tr>
@@ -1003,7 +1113,7 @@ const EmployeeScheduleTable: React.FC = () => {
                 return (
                     <tr key={shift.id} className="border-b border-gray-300 align-top"> {/* Added align-top */}
                          {/* Shift Info Cell */}
-                         <td className="px-2 py-1 border border-gray-300 w-[150px]">
+                         <td className="px-2 py-1 border border-gray-300" style={{ width: `${columnWidths.employees}px` }}>
                              <div className="flex flex-col">
                                  <span>{convertTo12Hour(shift.start)} - {convertTo12Hour(shift.end)}</span>
                                   {/* Overtime Button with Available Count */}
@@ -1033,12 +1143,12 @@ const EmployeeScheduleTable: React.FC = () => {
                          </td>
 
                          {/* Preference Count Cell */}
-                         <td className="px-2 py-1 border border-gray-300 text-center w-[218px]"> {/* Width increased by 45% */}
+                         <td className="px-2 py-1 border border-gray-300 text-center" style={{ width: `${columnWidths.preferences}px` }}> {/* Width increased by 45% */}
                              Pref: {preferenceCount}
                          </td>
 
                          {/* Preference Percentage Cell */}
-                         <td className="px-2 py-1 border border-gray-300 text-center w-[218px]"> {/* Width increased by 45% */}
+                         <td className="px-2 py-1 border border-gray-300 text-center" style={{ width: `${columnWidths.totalHours}px` }}> {/* Width increased by 45% */}
                              {preferencePercentage}%
                          </td>
 
@@ -1055,7 +1165,8 @@ const EmployeeScheduleTable: React.FC = () => {
                             return (
                                 <td
                                     key={dateString}
-                                    className={`px-2 py-1 border border-gray-300 text-center w-[174px] ${isSunday ? 'bg-gray-100' : ''}`}
+                                    className={`px-2 py-1 border border-gray-300 text-center ${isSunday ? 'bg-gray-100' : ''}`}
+                                    style={{ width: `${columnWidths.dates}px` }}
                                 >
                                     <div className="flex flex-col items-center">
                                         {/* Scheduled Count with Staff button */}
@@ -1089,7 +1200,7 @@ const EmployeeScheduleTable: React.FC = () => {
                             );
                          })}
                          {/* Summary Comment Cell */}
-                         <td className="px-2 py-1 border border-gray-300 w-[290px]">
+                         <td className="px-2 py-1 border border-gray-300" style={{ width: `${columnWidths.summary}px` }}>
                               {/* Use textarea matching JS output, pre-filled with shift.shiftComments */}
                              <textarea
                                 className="comment-textarea w-full h-[60px] border border-gray-300 resize-none p-1 text-sm overflow-hidden"
@@ -1242,17 +1353,9 @@ const EmployeeScheduleTable: React.FC = () => {
                                    shiftInfo = `${shiftById.startTime} - ${shiftById.endTime}`;
                                  }
                                } 
-                               // Si no lo encontramos por ID, buscamos por índice (si es 'shift_1', buscamos index 0)
-                               else if (manualShift.startsWith('shift_')) {
-                                 const shiftIndex = parseInt(manualShift.replace('shift_', '')) - 1;
-                                 if (shiftIndex >= 0 && shiftIndex < shifts.length) {
-                                   const foundShift = shifts[shiftIndex];
-                                   if (foundShift.startTime && foundShift.endTime) {
-                                     shiftInfo = `${foundShift.startTime} - ${foundShift.endTime}`;
-                                   } else if (foundShift.start && foundShift.end) {
-                                     shiftInfo = `${convertTo12Hour(foundShift.start)} - ${convertTo12Hour(foundShift.end)}`;
-                                   }
-                                 }
+                               // Si no se encuentra por ID, mostrar el ID del turno
+                               else {
+                                 shiftInfo = manualShift;
                                }
                              }
                            } else if (fixedShift) {
@@ -1272,18 +1375,10 @@ const EmployeeScheduleTable: React.FC = () => {
                                    shiftInfo = `${shiftById.startTime} - ${shiftById.endTime}`;
                                  }
                                } 
-                               // Si no lo encontramos por ID, buscamos por índice (si es 'shift_1', buscamos index 0)
-                               else if (fixedShift.startsWith('shift_')) {
-                                 const shiftIndex = parseInt(fixedShift.replace('shift_', '')) - 1;
-                                 if (shiftIndex >= 0 && shiftIndex < shifts.length) {
-                                   const foundShift = shifts[shiftIndex];
-                                   if (foundShift.startTime && foundShift.endTime) {
-                                     shiftInfo = `${foundShift.startTime} - ${foundShift.endTime}`;
-                                   } else if (foundShift.start && foundShift.end) {
-                                     shiftInfo = `${convertTo12Hour(foundShift.start)} - ${convertTo12Hour(foundShift.end)}`;
-                                   }
-                                 }
-                               }
+                               // Si no se encuentra por ID, mostrar el ID del turno
+                                else {
+                                  shiftInfo = fixedShift;
+                                }
                              }
                            }
                            
@@ -1469,29 +1564,16 @@ const EmployeeScheduleTable: React.FC = () => {
                      // Si coincide por ID
                      if (effectiveShift === currentShiftForModal.id) return true;
                      
-                     // Para el caso especial turno 2 (3PM - 11PM)
-                     if (currentShiftForModal.id === 'shift_2' && 
-                         (effectiveShift === "3:00 PM - 11:" || effectiveShift === "3:00 PM - 11:00")) {
-                       return true;
-                     }
-                     
                      // Comprobar por formato de hora
                      const modalShiftTime = `${currentShiftForModal.startTime || convertTo12Hour(currentShiftForModal.start)} - ${currentShiftForModal.endTime || convertTo12Hour(currentShiftForModal.end)}`;
                      if (effectiveShift === modalShiftTime) return true;
                      
-                     // Verificar formatos alternativos
-                     if (currentShiftForModal.id === 'shift_1' && 
-                         (effectiveShift.includes("7:00 AM") || effectiveShift.includes("7 AM"))) {
-                       return true;
-                     }
+                     // Verificar si el turno efectivo contiene los horarios del turno actual
+                     const startTime = currentShiftForModal.startTime || convertTo12Hour(currentShiftForModal.start);
+                     const endTime = currentShiftForModal.endTime || convertTo12Hour(currentShiftForModal.end);
                      
-                     if (currentShiftForModal.id === 'shift_2' && 
-                         (effectiveShift.includes("3:00 PM") || effectiveShift.includes("3 PM"))) {
-                       return true;
-                     }
-                     
-                     if (currentShiftForModal.id === 'shift_3' && 
-                         (effectiveShift.includes("11:00 PM") || effectiveShift.includes("11 PM"))) {
+                     // Comparar si el effectiveShift contiene el tiempo de inicio del turno actual
+                     if (startTime && effectiveShift.includes(startTime)) {
                        return true;
                      }
                      

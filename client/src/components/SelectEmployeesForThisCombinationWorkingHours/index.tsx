@@ -19,7 +19,7 @@ interface EmployeeSelection {
 
 const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
   const { shifts } = useShiftContext();
-  const { getCurrentList, updateList } = useEmployeeLists();
+  const { getCurrentList, updateList, refreshTrigger } = useEmployeeLists();
   
   // Usar un valor inicial por defecto para evitar llamar a getCurrentList durante la inicialización
   const [columns, setColumns] = useState<Column[]>([
@@ -58,6 +58,32 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
     // Marcar como inicializado
     initialized.current = true;
   }, []);
+
+  // useEffect para actualizar las columnas cuando cambie la lista (refreshTrigger)
+  useEffect(() => {
+    if (!initialized.current) return;
+    
+    const currentList = getCurrentList();
+    if (!currentList) return;
+    
+    // Cargar datos de columnas desde localStorage para la nueva lista
+    try {
+      const storedColumnsJSON = localStorage.getItem(`shiftColumns_${currentList.id}`);
+      if (storedColumnsJSON) {
+        const parsedColumns = JSON.parse(storedColumnsJSON);
+        setColumns(parsedColumns);
+      } else {
+        // Si no hay datos guardados para esta lista, usar valores por defecto
+        setColumns([
+          { topShift: { shiftId: '', count: 0 }, bottomShift: { shiftId: '', count: 0 } },
+          { topShift: { shiftId: '', count: 0 }, bottomShift: { shiftId: '', count: 0 } },
+          { topShift: { shiftId: '', count: 0 }, bottomShift: { shiftId: '', count: 0 } }
+        ]);
+      }
+    } catch (e) {
+      console.error('Error parsing stored columns:', e);
+    }
+  }, [refreshTrigger, getCurrentList]);
   
   // Close modal when clicking outside
   useEffect(() => {
@@ -141,11 +167,9 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
   const getShiftDuration = (shiftId: string): string => {
     if (!shiftId) return "N/A";
     
-    const shiftIndex = parseInt(shiftId.replace('shift_', '')) - 1;
-    if (shiftIndex >= 0 && shiftIndex < shifts.length) {
-      return shifts[shiftIndex].duration || "N/A";
-    }
-    return "N/A";
+    // Buscar el turno por ID directo
+    const shift = shifts.find(s => s.id === shiftId);
+    return shift?.duration || "N/A";
   };
   
   // Función para convertir la duración del turno de formato "8h 0m" a horas decimales
@@ -318,7 +342,7 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
                 >
                   <option value="">Select Shift</option>
                   {shifts.map((shift, index) => {
-                    const shiftId = `shift_${index + 1}`;
+                    const shiftId = `uid_${Math.random().toString(36).substr(2, 15)}`;
                     const isDisabled = column.bottomShift.shiftId === shiftId;
                     return (
                       <option 
@@ -354,7 +378,7 @@ const SelectEmployeesForThisCombinationWorkingHours: React.FC = () => {
                 >
                   <option value="">Select Shift</option>
                   {shifts.map((shift, index) => {
-                    const shiftId = `shift_${index + 1}`;
+                    const shiftId = `uid_${Math.random().toString(36).substr(2, 15)}`;
                     const isDisabled = column.topShift.shiftId === shiftId;
                     return (
                       <option 

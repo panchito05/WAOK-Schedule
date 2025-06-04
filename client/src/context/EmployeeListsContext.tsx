@@ -7,7 +7,6 @@ interface Employee {
   phone: string;
   hireDate: string;
   shiftPreferences: (number | null)[];
-  blockedShifts: { [shiftId: string]: string[] };
   notes: {
     confidential: string;
     aiRules: string;
@@ -66,6 +65,7 @@ interface EmployeeList {
 interface EmployeeListsContextType {
   lists: EmployeeList[];
   currentListId: string | null;
+  refreshTrigger: number;
   addList: (name: string) => void;
   removeList: (id: string) => void;
   updateList: (id: string, data: Partial<EmployeeList>) => void;
@@ -76,6 +76,8 @@ interface EmployeeListsContextType {
 const EmployeeListsContext = createContext<EmployeeListsContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'employeeLists';
+
+// Turnos por defecto eliminados - el usuario debe crear sus propios turnos
 
 // Get current date and one month from now for default dates
 const today = new Date();
@@ -94,11 +96,7 @@ export const EmployeeListsProvider: React.FC<{ children: ReactNode }> = ({ child
       return parsed.lists;
     }
     // Create default list if none exists
-    const defaultShifts = [
-      { startTime: "07:00 AM", endTime: "03:00 PM", duration: "8h 0m", lunchBreakDeduction: 0 },
-      { startTime: "03:00 PM", endTime: "11:00 PM", duration: "8h 0m", lunchBreakDeduction: 0 },
-      { startTime: "11:00 PM", endTime: "07:00 AM", duration: "8h 0m", lunchBreakDeduction: 0 }
-    ];
+    const defaultShifts: ShiftRow[] = []; // Sin turnos por defecto
 
     return [{
       id: 'default',
@@ -131,16 +129,64 @@ export const EmployeeListsProvider: React.FC<{ children: ReactNode }> = ({ child
     return 'default';
   });
 
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
+
   // Save to localStorage whenever lists or currentListId changes
   React.useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ lists, currentListId }));
   }, [lists, currentListId]);
 
   const addList = (name: string) => {
-    const defaultShifts = [
-      { startTime: "07:00 AM", endTime: "03:00 PM", duration: "8h 0m", lunchBreakDeduction: 0 },
-      { startTime: "03:00 PM", endTime: "11:00 PM", duration: "8h 0m", lunchBreakDeduction: 0 },
-      { startTime: "11:00 PM", endTime: "07:00 AM", duration: "8h 0m", lunchBreakDeduction: 0 }
+    // Generación automática de los 3 turnos con IDs únicos y horarios fijos
+    const defaultShifts: ShiftRow[] = [
+      {
+        id: crypto.randomUUID(),
+        startTime: '7:00 AM',
+        endTime: '3:00 PM',
+        duration: '8:00',
+        lunchBreakDeduction: 0,
+        isOvertimeActive: false,
+        overtimeEntries: [],
+        start: '7:00 AM',
+        end: '3:00 PM',
+        lunchBreak: 0,
+        nurseCounts: {},
+        shiftComments: 'Turno matutino 7 AM - 3 PM',
+        name: 'TURNO DE DÍA',
+        color: ''
+      },
+      {
+        id: crypto.randomUUID(),
+        startTime: '3:00 PM',
+        endTime: '11:00 PM',
+        duration: '8:00',
+        lunchBreakDeduction: 0,
+        isOvertimeActive: false,
+        overtimeEntries: [],
+        start: '3:00 PM',
+        end: '11:00 PM',
+        lunchBreak: 0,
+        nurseCounts: {},
+        shiftComments: 'Turno vespertino 3 PM - 11 PM',
+        name: 'TURNO DE TARDE',
+        color: ''
+      },
+      {
+        id: crypto.randomUUID(),
+        startTime: '11:00 PM',
+        endTime: '7:00 AM',
+        duration: '8:00',
+        lunchBreakDeduction: 0,
+        isOvertimeActive: false,
+        overtimeEntries: [],
+        start: '11:00 PM',
+        end: '7:00 AM',
+        lunchBreak: 0,
+        nurseCounts: {},
+        shiftComments: 'Turno nocturno 11 PM - 7 AM',
+        name: 'TURNO DE NOCHE',
+        color: ''
+      }
     ];
 
     const newList: EmployeeList = {
@@ -181,6 +227,8 @@ export const EmployeeListsProvider: React.FC<{ children: ReactNode }> = ({ child
         ? { ...list, ...data }
         : list
     ));
+    // Incrementar el refreshTrigger para notificar cambios a los componentes
+    setRefreshTrigger(prev => prev + 1);
   };
 
   const getCurrentList = () => {
@@ -191,6 +239,7 @@ export const EmployeeListsProvider: React.FC<{ children: ReactNode }> = ({ child
     <EmployeeListsContext.Provider value={{
       lists,
       currentListId,
+      refreshTrigger,
       addList,
       removeList,
       updateList,

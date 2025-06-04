@@ -1,5 +1,4 @@
 import { pgTable, text, serial, integer, boolean } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const users = pgTable("users", {
@@ -8,9 +7,9 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const insertUserSchema = z.object({
+  username: z.string().min(1, "Username is required").min(3, "Username must be at least 3 characters long"),
+  password: z.string().min(1, "Password is required").min(6, "Password must be at least 6 characters long"),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

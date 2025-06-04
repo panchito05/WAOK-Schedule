@@ -41,7 +41,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       // Asegurarnos que todos los campos obligatorios estén presentes
       const newShift: ShiftRow = {
         ...shift,
-        id: shift.id || `shift_${currentList.shifts.length + 1}`,
+        id: shift.id || `uid_${Math.random().toString(36).substr(2, 15)}`,
         isOvertimeActive: shift.isOvertimeActive || false,
         overtimeEntries: shift.overtimeEntries || []
       };
@@ -57,7 +57,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       // Asegurarnos que mantenemos todas las propiedades requeridas
       newShifts[index] = {
         ...shift,
-        id: shift.id || newShifts[index].id || `shift_${index + 1}`,
+        id: shift.id || newShifts[index].id || `uid_${Math.random().toString(36).substr(2, 15)}`,
         isOvertimeActive: shift.isOvertimeActive || newShifts[index].isOvertimeActive || false,
         overtimeEntries: shift.overtimeEntries || newShifts[index].overtimeEntries || []
       };
@@ -81,7 +81,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (currentList) {
       const newShifts = currentList.shifts.map(shift => ({
         ...shift,
-        id: shift.id || `shift_${Math.random().toString(36).substr(2, 9)}`,
+        id: shift.id || `uid_${Math.random().toString(36).substr(2, 15)}`,
         isOvertimeActive: !isGlobalOvertimeActive,
         overtimeEntries: shift.overtimeEntries || []
       }));
@@ -97,7 +97,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       // Aseguramos que todas las propiedades requeridas estén presentes
       newShifts[index] = {
         ...newShifts[index],
-        id: newShifts[index].id || `shift_${index + 1}`,
+        id: newShifts[index].id || `uid_${Math.random().toString(36).substr(2, 15)}`,
         isOvertimeActive: active,
         overtimeEntries: newShifts[index].overtimeEntries || []
       };
@@ -115,7 +115,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       // Crear una copia del turno para no modificar el original directamente
       const updatedShift: ShiftRow = {
         ...shift,
-        id: shift.id || `shift_${shiftIndex + 1}`,
+        id: shift.id || `uid_${Math.random().toString(36).substr(2, 15)}`,
         isOvertimeActive: shift.isOvertimeActive || false,
         overtimeEntries: shift.overtimeEntries ? [...shift.overtimeEntries] : []
       };

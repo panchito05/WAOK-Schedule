@@ -52,21 +52,90 @@ const formatTime = (time: string): string => {
   });
 };
 
+// Función para convertir de formato 12h a 24h
+const convertTo24Hour = (time12h: string): string => {
+  if (!time12h.includes('AM') && !time12h.includes('PM')) {
+    return time12h; // Ya está en formato 24h
+  }
+  
+  const [time, period] = time12h.split(' ');
+  let [hours, minutes] = time.split(':');
+  
+  if (period === 'PM' && hours !== '12') {
+    hours = (parseInt(hours) + 12).toString();
+  } else if (period === 'AM' && hours === '12') {
+    hours = '00';
+  }
+  
+  return `${hours.padStart(2, '0')}:${minutes}`;
+};
+
+// Función para convertir de formato 24h a 12h
+const convertTo12Hour = (time24h: string): string => {
+  if (time24h.includes('AM') || time24h.includes('PM')) {
+    return time24h; // Ya está en formato 12h
+  }
+  
+  const [hours, minutes] = time24h.split(':');
+  const hour24 = parseInt(hours);
+  
+  if (hour24 === 0) {
+    return `12:${minutes} AM`;
+  } else if (hour24 < 12) {
+    return `${hour24}:${minutes} AM`;
+  } else if (hour24 === 12) {
+    return `12:${minutes} PM`;
+  } else {
+    return `${hour24 - 12}:${minutes} PM`;
+  }
+};
+
+// Función para mostrar el tiempo en el formato seleccionado
+const displayTime = (time: string, is24Hour: boolean): string => {
+  return is24Hour ? convertTo24Hour(time) : convertTo12Hour(time);
+};
+
+// Paleta de colores predefinida (15 colores)
+const COLOR_PALETTE = [
+    '#3B82F6', // Azul
+    '#EF4444', // Rojo
+    '#10B981', // Verde esmeralda
+    '#F59E0B', // Amarillo
+    '#8B5CF6', // Púrpura
+    '#F97316', // Naranja
+    '#06B6D4', // Cian
+    '#EC4899', // Rosa
+    '#6366F1', // Índigo
+    '#14B8A6', // Teal
+    '#F43F5E', // Rosa intenso
+    '#A855F7', // Violeta
+    '#22C55E', // Verde lima
+    '#0EA5E9', // Azul cielo
+    '#8B5A3C', // Marrón
+    '#64748B', // Azul gris
+    '#1F2937'  // Gris antracita
+  ];
+
 const ShiftConfiguration: React.FC = () => {
   const { shifts, addShift, updateShift, deleteShift } = useShiftContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingShiftIndex, setEditingShiftIndex] = useState<number | null>(null);
   const [isPrioritiesModalOpen, setIsPrioritiesModalOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{ show: boolean; index: number }>({ show: false, index: -1 });
+  const [is24HourFormat, setIs24HourFormat] = useState(false);
   const [newShift, setNewShift] = useState({
     startTime: '',
     endTime: '',
-    lunchBreakDeduction: 0
+    lunchBreakDeduction: 0,
+    name: '',
+    color: ''
   });
   const [editingShift, setEditingShift] = useState({
     startTime: '',
     endTime: '',
-    lunchBreakDeduction: 0
+    lunchBreakDeduction: 0,
+    name: '',
+    color: ''
   });
 
   useEffect(() => {
@@ -79,7 +148,9 @@ const ShiftConfiguration: React.FC = () => {
     setEditingShift({
       startTime: shift.startTime,
       endTime: shift.endTime,
-      lunchBreakDeduction: shift.lunchBreakDeduction
+      lunchBreakDeduction: shift.lunchBreakDeduction,
+      name: shift.name || '',
+      color: shift.color || ''
     });
     setEditingShiftIndex(index);
   };
@@ -91,7 +162,9 @@ const ShiftConfiguration: React.FC = () => {
       endTime: editingShift.endTime,
       duration,
       lunchBreakDeduction: editingShift.lunchBreakDeduction,
-      id: shifts[index].id || `shift_${index + 1}`,
+      name: editingShift.name,
+      color: editingShift.color,
+      id: shifts[index].id || `uid_${Math.random().toString(36).substr(2, 15)}`,
       isOvertimeActive: shifts[index].isOvertimeActive,
       overtimeEntries: shifts[index].overtimeEntries
     });
@@ -103,7 +176,9 @@ const ShiftConfiguration: React.FC = () => {
     setEditingShift({
       startTime: '',
       endTime: '',
-      lunchBreakDeduction: 0
+      lunchBreakDeduction: 0,
+      name: '',
+      color: ''
     });
   };
 
@@ -127,7 +202,7 @@ const ShiftConfiguration: React.FC = () => {
     const duration = calculateDuration(newShift.startTime, newShift.endTime, newShift.lunchBreakDeduction);
 
     const newShiftRow: ShiftRow = {
-      id: `shift_${shifts.length + 1}`,
+      id: `uid_${Math.random().toString(36).substr(2, 15)}`,
       startTime: formattedStartTime,
       endTime: formattedEndTime,
       duration,
@@ -175,22 +250,27 @@ const ShiftConfiguration: React.FC = () => {
           </thead>
           <tbody>
             {Array.isArray(shifts) && shifts.map((shift, index) => (
-              <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-100'}>
+              <React.Fragment key={index}>
+                <tr className={index % 2 === 0 ? 'bg-white' : 'bg-gray-100'}>
                 <td className="px-4 py-3">
                   {editingShiftIndex === index ? (
                     <input
                       type="time"
-                      value={editingShift.startTime.split(' ')[0]}
-                      onChange={(e) => setEditingShift(prev => ({
-                        ...prev,
-                        startTime: `${e.target.value} ${editingShift.startTime.split(' ')[1] || 'AM'}`
-                      }))}
+                      value={convertTo24Hour(editingShift.startTime)}
+                      onChange={(e) => {
+                        const time24 = e.target.value;
+                        const time12 = convertTo12Hour(time24);
+                        setEditingShift(prev => ({
+                          ...prev,
+                          startTime: is24HourFormat ? time24 : time12
+                        }));
+                      }}
                       className="w-full border border-gray-300 rounded px-2 py-1"
                     />
                   ) : (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 whitespace-nowrap">
                       <Clock className="h-4 w-4 text-gray-500" />
-                      {shift.startTime}
+                      {displayTime(shift.startTime, is24HourFormat)}
                     </div>
                   )}
                 </td>
@@ -198,17 +278,21 @@ const ShiftConfiguration: React.FC = () => {
                   {editingShiftIndex === index ? (
                     <input
                       type="time"
-                      value={editingShift.endTime.split(' ')[0]}
-                      onChange={(e) => setEditingShift(prev => ({
-                        ...prev,
-                        endTime: `${e.target.value} ${editingShift.endTime.split(' ')[1] || 'PM'}`
-                      }))}
+                      value={convertTo24Hour(editingShift.endTime)}
+                      onChange={(e) => {
+                        const time24 = e.target.value;
+                        const time12 = convertTo12Hour(time24);
+                        setEditingShift(prev => ({
+                          ...prev,
+                          endTime: is24HourFormat ? time24 : time12
+                        }));
+                      }}
                       className="w-full border border-gray-300 rounded px-2 py-1"
                     />
                   ) : (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 whitespace-nowrap">
                       <Clock className="h-4 w-4 text-gray-500" />
-                      {shift.endTime}
+                      {displayTime(shift.endTime, is24HourFormat)}
                     </div>
                   )}
                 </td>
@@ -241,6 +325,13 @@ const ShiftConfiguration: React.FC = () => {
                     {editingShiftIndex === index ? (
                       <>
                         <button
+                          onClick={() => setIs24HourFormat(!is24HourFormat)}
+                          className="bg-purple-500 text-white px-2 py-1 rounded hover:bg-purple-600 transition-colors text-xs"
+                          title={`Cambiar a formato ${is24HourFormat ? '12' : '24'} horas`}
+                        >
+                          {is24HourFormat ? '12h' : '24h'}
+                        </button>
+                        <button
                           onClick={() => handleSaveEdit(index)}
                           className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition-colors"
                         >
@@ -271,8 +362,65 @@ const ShiftConfiguration: React.FC = () => {
                     )}
                   </div>
                 </td>
-              </tr>
-            ))}
+                </tr>
+                {/* Fila adicional para campos de nombre y color cuando está en modo edición */}
+                {editingShiftIndex === index && (
+                  <tr className="bg-blue-50">
+                  <td className="px-4 py-3" colSpan={2}>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Nombre del Turno:</label>
+                      <input
+                        type="text"
+                        value={editingShift.name}
+                        onChange={(e) => setEditingShift(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="ej. TURNO DE DIA"
+                        className="w-full border border-gray-300 rounded px-3 py-2"
+                      />
+                    </div>
+                  </td>
+                  <td className="px-4 py-3" colSpan={3}>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">Color del Turno:</label>
+                      <div className="flex flex-wrap gap-2">
+                        {/* Opción Sin Color */}
+                        <button
+                          onClick={() => setEditingShift(prev => ({ ...prev, color: '' }))}
+                          className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 flex items-center justify-center ${
+                            editingShift.color === '' ? 'border-gray-800 ring-2 ring-gray-400' : 'border-gray-300'
+                          }`}
+                          style={{ backgroundColor: '#f9fafb' }}
+                          title="Sin Color"
+                        >
+                          <span className="text-xs text-gray-500">∅</span>
+                        </button>
+                        {COLOR_PALETTE.map((color) => (
+                          <button
+                            key={color}
+                            onClick={() => setEditingShift(prev => ({ ...prev, color }))}
+                            className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${
+                              editingShift.color === color ? 'border-gray-800 ring-2 ring-gray-400' : 'border-gray-300'
+                            }`}
+                            style={{ backgroundColor: color }}
+                            title={color}
+                          />
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-sm text-gray-600">Seleccionado:</span>
+                        <div 
+                          className="w-6 h-6 rounded border border-gray-300 flex items-center justify-center"
+                          style={{ backgroundColor: editingShift.color || '#f9fafb' }}
+                        >
+                          {!editingShift.color && <span className="text-xs text-gray-500">∅</span>}
+                        </div>
+                        <span className="text-sm font-mono text-gray-500">{editingShift.color || 'Sin Color'}</span>
+                      </div>
+                    </div>
+                  </td>
+                  </tr>
+                 )}
+               </React.Fragment>
+             ))}
           </tbody>
         </table>
       </div>
@@ -363,6 +511,61 @@ const ShiftConfiguration: React.FC = () => {
                   onChange={(e) => setNewShift({ ...newShift, lunchBreakDeduction: parseInt(e.target.value) || 0 })}
                   className="w-full border border-gray-300 rounded px-3 py-2"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre del Turno
+                </label>
+                <input
+                  type="text"
+                  value={newShift.name}
+                  onChange={(e) => setNewShift({ ...newShift, name: e.target.value })}
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                  placeholder="ej. TURNO DE DÍA"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Color del Turno
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {/* Opción Sin Color */}
+                  <button
+                    type="button"
+                    onClick={() => setNewShift(prev => ({ ...prev, color: '' }))}
+                    className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 flex items-center justify-center ${
+                      newShift.color === '' ? 'border-gray-800 ring-2 ring-gray-400' : 'border-gray-300'
+                    }`}
+                    style={{ backgroundColor: '#f9fafb' }}
+                    title="Sin Color"
+                  >
+                    <span className="text-xs text-gray-500">∅</span>
+                  </button>
+                  {COLOR_PALETTE.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setNewShift(prev => ({ ...prev, color }))}
+                      className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${
+                        newShift.color === color ? 'border-gray-800 ring-2 ring-gray-400' : 'border-gray-300'
+                      }`}
+                      style={{ backgroundColor: color }}
+                      title={color}
+                    />
+                  ))}
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-sm text-gray-600">Seleccionado:</span>
+                  <div 
+                    className="w-6 h-6 rounded border border-gray-300 flex items-center justify-center"
+                    style={{ backgroundColor: newShift.color || '#f9fafb' }}
+                  >
+                    {!newShift.color && <span className="text-xs text-gray-500">∅</span>}
+                  </div>
+                  <span className="text-sm font-mono text-gray-500">{newShift.color || 'Sin Color'}</span>
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 mt-6">

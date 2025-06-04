@@ -23,12 +23,19 @@ interface Employee {
   maxConsecutiveShifts: number;
   shiftPreferences: (number | null)[];
   leave: { id: string; startDate: string; endDate: string; leaveType: string; hoursPerDay: number }[];
-  blockedShifts: { [shiftId: string]: string[] };
   notes: {
     confidential: string;
     aiRules: string;
   };
+  blockedShifts?: { 
+    [shiftId: string]: {
+      blockedDays: string[];
+      isActive: boolean;
+    }
+  };
 }
+
+// CompleteModalData interface removed
 
 // Mantener el componente EditableField sin cambios, ya está funcional.
 interface EditableFieldProps {
@@ -105,30 +112,32 @@ const EditableField: React.FC<EditableFieldProps> = ({ value, onChange, classNam
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           onClick={(e) => e.stopPropagation()}
-          className={`w-full border border-gray-300 rounded px-3 py-1 min-w-0 ${className}`}
+          className={`w-full border border-gray-300 rounded px-3 py-1 min-w-0 min-h-[32px] bg-white ${className}`}
         />
       ) : (
-        <div className="flex items-center hover:bg-gray-50 rounded px-2 py-1 w-full border border-gray-200">
-          <span className="flex-1">{value}</span>
+        <div className="flex items-center hover:bg-gray-50 rounded px-2 py-1 w-full border border-gray-200 min-h-[32px] bg-white">
+          <span className="flex-1">{value || '\u00A0'}</span>
         </div>
       )}
       {showConfirm && (
-        <div className="absolute z-10 top-0 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg p-3">
+        <div className="absolute z-10 top-0 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg p-5 min-w-[400px] w-full">
           <div className={`transition-opacity duration-150 ${isClosing ? 'opacity-0' : 'opacity-100'}`}>
-            <p className="text-sm mb-3">¿Desea editar este campo?</p>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={(e) => { e.stopPropagation(); handleCancel(); }}
-                className="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); handleConfirm(); }}
-                className="px-2 py-1 text-sm bg-green-500 text-white hover:bg-green-600 rounded"
-              >
-                Aceptar
-              </button>
+            <div className="flex flex-row items-center justify-between gap-6 whitespace-nowrap">
+              <span className="text-sm flex-shrink-0">¿Desea editar este campo?</span>
+              <div className="flex flex-row gap-3 flex-shrink-0">
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleCancel(); }}
+                  className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded whitespace-nowrap"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleConfirm(); }}
+                  className="px-4 py-2 text-sm bg-green-500 text-white hover:bg-green-600 rounded whitespace-nowrap"
+                >
+                  Aceptar
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -138,15 +147,7 @@ const EditableField: React.FC<EditableFieldProps> = ({ value, onChange, classNam
 };
 
 
-interface BlockShiftModalState {
-  isOpen: boolean;
-  shift: {
-    id: string;
-    startTime: string;
-    endTime: string;
-  } | null;
-  employeeIndex: number | null;
-}
+
 
 interface NewEmployeeForm {
   id: string;
@@ -158,8 +159,33 @@ interface NewEmployeeForm {
 
 const AddEmployees: React.FC = () => {
   const { shifts } = useShiftContext(); 
-  const { getCurrentList, updateList } = useEmployeeLists();
+  const { getCurrentList, updateList, refreshTrigger } = useEmployeeLists();
   const { rules } = useRules();
+  
+  // Estado para controlar la visibilidad de la tabla (igual que ScheduleRulesTable)
+  const [isTableBodyHidden, setIsTableBodyHidden] = useState(() => {
+    const savedState = localStorage.getItem('employeesTableHidden');
+    return savedState ? JSON.parse(savedState) : false;
+  });
+  
+  // Función para alternar la visibilidad
+  const toggleTableBody = () => {
+    const newState = !isTableBodyHidden;
+    setIsTableBodyHidden(newState);
+    localStorage.setItem('employeesTableHidden', JSON.stringify(newState));
+  };
+  
+  // useEffect para estilos dinámicos (igual que ScheduleRulesTable)
+  useEffect(() => {
+    const addEmployeesTableElement = document.querySelector('.add-employees-table');
+    if (addEmployeesTableElement) {
+      if (isTableBodyHidden) {
+        addEmployeesTableElement.classList.add('table-hidden');
+      } else {
+        addEmployeesTableElement.classList.remove('table-hidden');
+      }
+    }
+  }, [isTableBodyHidden]);
 
   // Eliminar llamada a getCurrentList de aquí - es parte del problema
   // Definimos un estado local para rastrear el empleado list cargado
@@ -193,11 +219,39 @@ const AddEmployees: React.FC = () => {
     phone: ''
   });
 
-  const [modalState, setModalState] = useState<BlockShiftModalState>({
+  // Block shift modal state
+  const [blockShiftModalState, setBlockShiftModalState] = useState<{
+    isOpen: boolean;
+    employeeIndex: number | null;
+    employeeName: string;
+    shiftId: string;
+    shiftTime: string;
+    currentBlockedDays: string[];
+  }>({
     isOpen: false,
-    shift: null,
-    employeeIndex: null
+    employeeIndex: null,
+    employeeName: '',
+    shiftId: '',
+    shiftTime: '',
+    currentBlockedDays: []
   });
+
+  // Estado independiente para el checkbox maestro
+  const [masterCheckboxState, setMasterCheckboxState] = useState(true);
+
+  // Función personalizada para manejar el checkbox maestro
+  const handleMasterCheckboxChange = () => {
+    if (masterCheckboxState) {
+      // Si está marcado, deseleccionar todos y desmarcar el maestro
+      setSelectedEmployeeIds([]);
+      setMasterCheckboxState(false);
+    } else {
+      // Si no está marcado, seleccionar todos y marcar el maestro
+      const allEmployeeIds = employees.map(emp => emp.id);
+      setSelectedEmployeeIds(allEmployeeIds);
+      setMasterCheckboxState(true);
+    }
+  };
 
   // Usamos useEffect una sola vez para cargar los datos iniciales
   useEffect(() => {
@@ -208,9 +262,57 @@ const AddEmployees: React.FC = () => {
         setLocalEmployees(list.employees || []);
         setIsLoading(false);
         setEmployeeStateLoaded(true);
+        
+        // Seleccionar todos los empleados por defecto cuando se carga la lista por primera vez
+        if (list.employees && list.employees.length > 0) {
+          const allEmployeeIds = list.employees.map(emp => emp.id);
+          setSelectedEmployeeIds(allEmployeeIds);
+          setMasterCheckboxState(true);
+        } else {
+          setMasterCheckboxState(false);
+        }
       }
     }
-  }, [getCurrentList, employeeStateLoaded]);
+  }, [getCurrentList, employeeStateLoaded, setSelectedEmployeeIds]);
+
+  // useEffect para actualizar automáticamente cuando cambie la lista (refreshTrigger)
+  useEffect(() => {
+    if (employeeStateLoaded) {
+      const list = getCurrentList();
+      if (list) {
+        const previousEmployeeIds = localEmployees.map(emp => emp.id).sort().join(',');
+        const newEmployeeIds = (list.employees || []).map(emp => emp.id).sort().join(',');
+        
+        // Solo actualizar si la lista de empleados realmente cambió
+        if (previousEmployeeIds !== newEmployeeIds) {
+          setLocalEmployeeList(list);
+          setLocalEmployees(list.employees || []);
+          
+          // Solo auto-seleccionar cuando la lista de empleados cambió realmente
+          if (list.employees && list.employees.length > 0) {
+            const allEmployeeIds = list.employees.map(emp => emp.id);
+            setSelectedEmployeeIds(allEmployeeIds);
+            setMasterCheckboxState(true);
+          } else {
+            // Si no hay empleados, limpiar la selección
+            setSelectedEmployeeIds([]);
+            setMasterCheckboxState(false);
+          }
+        } else {
+          // Si la lista es la misma, solo actualizar los datos sin cambiar la selección
+          setLocalEmployeeList(list);
+          setLocalEmployees(list.employees || []);
+        }
+      }
+    }
+  }, [refreshTrigger, getCurrentList, employeeStateLoaded, setSelectedEmployeeIds, localEmployees]);
+  
+  // useEffect para sincronizar el estado del checkbox maestro cuando todos los empleados son deseleccionados manualmente
+  useEffect(() => {
+    if (localEmployees.length > 0 && selectedEmployeeIds.length === 0) {
+      setMasterCheckboxState(false);
+    }
+  }, [selectedEmployeeIds, localEmployees.length]);
   
   // Acceso directo para el código que necesita estas variables
   const currentEmployeeList = localEmployeeList;
@@ -255,9 +357,9 @@ const AddEmployees: React.FC = () => {
       // Default values for the new employee, consistent with Employee interface
       fixedShifts: {},
       maxConsecutiveShifts: parseInt(rules.maxConsecutiveShifts) || 5, // Use global rules
-      shiftPreferences: Array(shifts.length).fill(null), // Initialize with correct size
+      shiftPreferences: Array(shifts && shifts.length > 0 ? shifts.length : 3).fill(null), // Initialize with correct size (use 3 default shifts if none exist)
       leave: [],
-      blockedShifts: {},
+      // blockedShifts: {}, // REMOVED: Block shift functionality eliminated
       notes: {
         confidential: '',
         aiRules: ''
@@ -294,12 +396,26 @@ const AddEmployees: React.FC = () => {
   // Keep the updateEmployeeProperty function - it uses shallow copies which is standard for object updates
   const updateEmployeeProperty = (employeeIndex: number, property: keyof Employee, value: any) => {
     if (currentEmployeeList) {
+      console.log('🔧 [ARCHITECT-AI DEBUG] updateEmployeeProperty called:', {
+        employeeIndex,
+        property,
+        value,
+        employee: employees[employeeIndex]?.name,
+        currentListId: currentEmployeeList.id
+      });
+      
       const updatedEmployees = employees.map((emp, idx) => 
         idx === employeeIndex ? { ...emp, [property]: value } : emp
       );
+      
+      console.log('🔧 [ARCHITECT-AI DEBUG] Employee after update:', updatedEmployees[employeeIndex]);
+      console.log('🔧 [ARCHITECT-AI DEBUG] About to call updateList with:', { listId: currentEmployeeList.id, employees: updatedEmployees });
+      
        // You might consider a deep copy here too if issues persist with inline editing,
        // but standard practice often uses shallow copies for property updates.
       updateList(currentEmployeeList.id, { employees: updatedEmployees });
+      
+      console.log('🔧 [ARCHITECT-AI DEBUG] updateEmployeeProperty completed successfully');
     }
   };
 
@@ -326,37 +442,44 @@ const AddEmployees: React.FC = () => {
    // If deep copy is needed for these updates too based on your diagnosis,
    // you would apply similar JSON.parse(JSON.stringify(...)) before updateList calls.
 
-  const handleBlockClick = (employeeIndex: number, shift: { id: string; startTime: string; endTime: string }) => {
-    setModalState({
-      isOpen: true,
-      shift,
-      employeeIndex
-    });
-  };
-
-  const handleSaveBlockedDays = (days: string[]) => {
-    if (modalState.employeeIndex === null || !modalState.shift || !currentEmployeeList) return;
-
-    const employeeIndex = modalState.employeeIndex;
-    const shiftId = modalState.shift.id;
-
-    const updatedEmployees = employees.map((emp, idx) => {
-      if (idx === employeeIndex) {
-        const newBlockedShifts = { ...emp.blockedShifts };
-        if (days.length === 0) {
-          delete newBlockedShifts[shiftId];
-        } else {
-          newBlockedShifts[shiftId] = days;
+  // Función para guardar los días bloqueados
+  const handleSaveBlockedShift = (employeeIndex: number, shiftId: string, blockedDays: string[]) => {
+    if (currentEmployeeList) {
+      console.log('🔧 [ARCHITECT-AI DEBUG] handleSaveBlockedShift called with:', { employeeIndex, shiftId, blockedDays });
+      
+      const employee = employees[employeeIndex];
+      const currentBlockedShifts = employee.blockedShifts || {};
+      
+      // Si no hay días seleccionados, desactivar el bloqueo
+      const isActive = blockedDays.length > 0;
+      
+      const updatedBlockedShifts = {
+        ...currentBlockedShifts,
+        [shiftId]: {
+          blockedDays: blockedDays,
+          isActive: isActive
         }
-        return { ...emp, blockedShifts: newBlockedShifts };
-      }
-      return emp;
-    });
-    // Deep copy here if needed for blocked shifts updates too
-    // const updatedEmployeesDeepCopy = JSON.parse(JSON.stringify(updatedEmployees));
-    // updateList(currentEmployeeList.id, { employees: updatedEmployeesDeepCopy });
-    updateList(currentEmployeeList.id, { employees: updatedEmployees }); // Standard shallow update
-  };
+      };
+      
+      const updatedEmployees = employees.map((emp, idx) => 
+        idx === employeeIndex ? { ...emp, blockedShifts: updatedBlockedShifts } : emp
+      );
+      
+      updateList(currentEmployeeList.id, { employees: updatedEmployees });
+      
+      // Cerrar el modal
+      setBlockShiftModalState({
+        isOpen: false,
+        employeeIndex: null,
+        employeeName: '',
+        shiftId: '',
+        shiftTime: '',
+        currentBlockedDays: []
+      });
+      
+      console.log('🔧 [ARCHITECT-AI DEBUG] Block shift saved successfully');
+     }
+   };
 
   const handlePreferencesChange = (employeeIndex: number, newPreferences: (number | null)[]) => {
     // Deep copy here if needed for preferences updates too
@@ -409,19 +532,34 @@ const AddEmployees: React.FC = () => {
 
 
   return (
-    <div className="w-full bg-white rounded-lg shadow-lg p-6 mt-8 font-['Viata']">
-      <div className="bg-gradient-to-r from-[#19b08d] to-[#117cee] p-4 rounded-t-lg mb-6">
-        <h2 className="text-2xl font-bold text-white text-center">Add Employees</h2>
-      </div>
-      
-      <div className="flex justify-between items-center mb-6">
-        <div></div> {/* Espacio vacío para mantener el justify-between */}
-        <button className="text-gray-600 hover:text-gray-800">
-          Hide Employees Table
+    <div className="w-full bg-white rounded-lg shadow-lg p-6 mt-8 font-['Viata'] add-employees-table">
+      <div className="bg-gradient-to-r from-[#19b08d] to-[#117cee] p-4 rounded-t-lg mb-6 flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-white text-center flex-1">Add Employees</h2>
+        <button 
+          onClick={toggleTableBody}
+          className={`px-4 py-2 rounded transition-colors ${
+            isTableBodyHidden 
+              ? 'bg-yellow-500 text-black table-hidden-button' 
+              : 'bg-white text-[#19b08d] hover:bg-gray-100'
+          }`}
+        >
+          {isTableBodyHidden ? 'Show Employees Table' : 'Hide Employees Table'}
         </button>
       </div>
 
-      <div className="space-y-4 mb-8">
+      {/* Mensaje cuando la tabla está oculta */}
+      {isTableBodyHidden && (
+        <div className="bg-yellow-100 border rounded-lg p-4 mb-6 text-center">
+          <p className="text-lg font-bold">
+            Employees Table is hidden. Press 'Show Employees Table' button to make it visible again
+          </p>
+        </div>
+      )}
+
+      {/* Contenido principal - solo visible cuando no está oculta */}
+      {!isTableBodyHidden && (
+        <>
+          <div className="space-y-4 mb-8">
         {formError && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex items-center gap-2">
             <AlertCircle className="h-5 w-5" />
@@ -531,16 +669,13 @@ const AddEmployees: React.FC = () => {
                 <input 
                   type="checkbox" 
                   className="rounded border-gray-300" 
-                  checked={selectedEmployeeIds.length === employees.length && employees.length > 0}
-                  onChange={(e) => {
-                    // Ignoramos el evento y simplemente llamamos a toggleAllEmployees con el array de IDs
-                    toggleAllEmployees(employees.map(emp => emp.id))
-                  }}
+                  checked={masterCheckboxState}
+                  onChange={handleMasterCheckboxChange}
                 />
               </th>
               <th className="w-1/4 px-4 py-3 text-left border-r border-gray-300">NAME & USER ID</th>
               <th className="w-1/4 px-4 py-3 text-left border-r border-gray-300">SHIFT PREFERENCES</th>
-              <th className="w-[12%] px-4 py-3 text-left border-r border-gray-300">LOCKED SHIFT</th>
+              <th className="w-[12%] px-4 py-3 text-left border-r border-gray-300">BLOCKED SHIFT</th>
               <th className="w-1/4 px-4 py-3 text-left border-r border-gray-300">NOTES</th>
               <th className="px-4 py-3 text-left">ACTIONS</th>
             </tr>
@@ -633,37 +768,88 @@ const AddEmployees: React.FC = () => {
                   </div>
                 </td>
                 <td className="w-[12%] px-4 py-3 border-r border-gray-300">
-                   <div className="space-y-2">
-                    {shifts.map((shift, shiftIndex) => {
-                       // Use shift.id if available from context, fallback to index if needed for old data
-                       const shiftId = shift.id || `shift_${shiftIndex + 1}`;
-                      const blockedDays = employee.blockedShifts?.[shiftId] || [];
-                      const isBlocked = blockedDays.length > 0;
-                      const shiftInfo = {
-                         id: shiftId, // Pass a consistent ID to the modal
-                        startTime: shift.startTime,
-                        endTime: shift.endTime
-                      };
-
-                      return (
-                        <button
-                           key={shiftId} // Use the consistent ID for the key
-                          onClick={() => handleBlockClick(index, shiftInfo)}
-                          className={`w-full px-3 py-1.5 rounded text-sm font-semibold transition-colors ${
-                            isBlocked 
-                              ? 'bg-red-500 text-white hover:opacity-90' 
-                              : 'bg-blue-500 text-white hover:bg-blue-600'
-                          }`}
-                        >
-                          Block Shift {shiftIndex + 1}: {shift.startTime} - {shift.endTime}
-                          {isBlocked && (
-                            <span className="block text-xs mt-1">
-                              Blocked: {blockedDays.join(', ')}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
+                   <div className="w-full space-y-2">
+                    {shifts && shifts.length > 0 ? (
+                      // Mostrar turnos existentes con funcionalidad de bloqueo - ALINEADOS con PreferenceManager
+                      shifts.map((shift, shiftIndex) => {
+                        const shiftId = shift.id || `uid_${Math.random().toString(36).substr(2, 15)}`;
+                        const isBlocked = employee.blockedShifts?.[shiftId]?.isActive || false;
+                        const blockedDays = employee.blockedShifts?.[shiftId]?.blockedDays || [];
+                        
+                        // Crear tooltip informativo
+                        const getTooltipText = () => {
+                          if (!isBlocked) {
+                            return `Click para bloquear turno: ${shift.startTime} - ${shift.endTime}`;
+                          }
+                          
+                          if (blockedDays.includes('all')) {
+                            return `🔒 TURNO BLOQUEADO: ${shift.startTime} - ${shift.endTime}\nTodos los días bloqueados\nClick para editar`;
+                          }
+                          
+                          if (blockedDays.length > 0) {
+                            const dayNames = {
+                              'monday': 'Lunes',
+                              'tuesday': 'Martes', 
+                              'wednesday': 'Miércoles',
+                              'thursday': 'Jueves',
+                              'friday': 'Viernes',
+                              'saturday': 'Sábado',
+                              'sunday': 'Domingo'
+                            };
+                            const blockedDayNames = blockedDays.map(day => dayNames[day] || day).join(', ');
+                            return `🔒 TURNO BLOQUEADO: ${shift.startTime} - ${shift.endTime}\nDías bloqueados: ${blockedDayNames}\nClick para editar`;
+                          }
+                          
+                          return `🔒 TURNO BLOQUEADO: ${shift.startTime} - ${shift.endTime}\nClick para editar`;
+                        };
+                        
+                        return (
+                          <div key={shiftId} className="flex items-center gap-2 bg-gray-100 p-2 rounded border border-gray-200">
+                            <button
+                              onClick={() => {
+                                setBlockShiftModalState({
+                                  isOpen: true,
+                                  employeeIndex: index,
+                                  employeeName: employee.name,
+                                  shiftId: shiftId,
+                                  shiftTime: `${shift.startTime} - ${shift.endTime}`,
+                                  currentBlockedDays: blockedDays
+                                });
+                              }}
+                              className={`w-full px-3 py-1 rounded text-sm font-semibold transition-colors ${
+                                isBlocked 
+                                  ? 'bg-[#19b08d] hover:bg-[#148a73] text-white' 
+                                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+                              }`}
+                              title={getTooltipText()}
+                            >
+                              {isBlocked ? (
+                                <span className="flex items-center justify-center gap-1">
+                                  🔒 Blocked {shiftIndex + 1}
+                                </span>
+                              ) : (
+                                `Block Shift ${shiftIndex + 1}`
+                              )}
+                            </button>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      // Mensaje cuando no hay turnos creados
+                      <div className="text-center py-4">
+                        <div className="text-sm text-gray-600 mb-2">
+                          ⚠️ No hay turnos disponibles
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Crea turnos en Configuración para poder asignar y bloquear turnos.
+                        </div>
+                      </div>
+                    )}
+                    {(!shifts || shifts.length === 0) && (
+                      <div className="text-xs text-gray-500 mt-2 p-2 bg-orange-50 rounded border border-orange-200">
+                        ⚙️ Sin turnos configurados. Ve a Configuración para crear turnos personalizados.
+                      </div>
+                    )}
                   </div>
                 </td>
                 <td className="w-1/4 px-4 py-3 border-r border-gray-300">
@@ -724,15 +910,31 @@ const AddEmployees: React.FC = () => {
           </tbody>
         </table>
       </div>
+        </>
+      )}
 
-      {/* Modales */}
-      <BlockShiftModal
-        isOpen={modalState.isOpen}
-        onClose={() => setModalState({ isOpen: false, shift: null, employeeIndex: null })}
-        employeeName={modalState.employeeIndex !== null && employees[modalState.employeeIndex] ? employees[modalState.employeeIndex].name : 'Employee'}
-        shift={modalState.shift!}
-        onSave={handleSaveBlockedDays}
-      />
+      {/* BlockShiftModal component */}
+      {blockShiftModalState.isOpen && (
+        <BlockShiftModal
+          isOpen={blockShiftModalState.isOpen}
+          onClose={() => setBlockShiftModalState({
+            isOpen: false,
+            employeeIndex: null,
+            employeeName: '',
+            shiftId: '',
+            shiftTime: '',
+            currentBlockedDays: []
+          })}
+          employeeName={blockShiftModalState.employeeName}
+          shiftTime={blockShiftModalState.shiftTime}
+          currentBlockedDays={blockShiftModalState.currentBlockedDays}
+          onSave={(blockedDays) => {
+            if (blockShiftModalState.employeeIndex !== null) {
+              handleSaveBlockedShift(blockShiftModalState.employeeIndex, blockShiftModalState.shiftId, blockedDays);
+            }
+          }}
+        />
+      )}
       <DatePickerModal
         isOpen={isDatePickerOpen}
         onClose={() => setIsDatePickerOpen(false)}

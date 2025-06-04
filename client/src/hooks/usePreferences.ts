@@ -16,29 +16,27 @@ export const usePreferences = (initialPreferences: (number | null)[]) => {
   };
 
   const updatePreference = (index: number, newValue: number | null) => {
-    setState(current => {
-      const newPreferences = [...current.preferences];
-      const oldValue = newPreferences[index];
+    const newPreferences = [...state.preferences];
+    const oldValue = newPreferences[index];
 
-      // Remove old value from used preferences if it exists
-      const newUsedPreferences = oldValue !== null 
-        ? current.usedPreferences.filter(p => p !== oldValue)
-        : [...current.usedPreferences];
+    // Remove old value from used preferences if it exists
+    const newUsedPreferences = oldValue !== null 
+      ? state.usedPreferences.filter(p => p !== oldValue)
+      : [...state.usedPreferences];
 
-      // Add new value to used preferences if it's not null
-      if (newValue !== null) {
-        newUsedPreferences.push(newValue);
-      }
+    // Add new value to used preferences if it's not null
+    if (newValue !== null) {
+      newUsedPreferences.push(newValue);
+    }
 
-      newPreferences[index] = newValue;
+    newPreferences[index] = newValue;
 
-      return {
-        preferences: newPreferences,
-        usedPreferences: newUsedPreferences
-      };
+    setState({
+      preferences: newPreferences,
+      usedPreferences: newUsedPreferences
     });
 
-    return state.preferences;
+    return newPreferences;
   };
 
   return {

@@ -21,7 +21,7 @@ interface OvertimeModalProps {
 const OvertimeModal: React.FC<OvertimeModalProps> = ({ isOpen, onClose, shift }) => {
   const { toggleGlobalOvertime, toggleShiftOvertime, shifts, isGlobalOvertimeActive, setShiftOvertimeForDate } = useShiftContext();
   const { rules } = useRules();
-  const { getCurrentList } = useEmployeeLists();
+  const { getCurrentList, refreshTrigger } = useEmployeeLists();
   const { shiftData } = usePersonnelData();
   const [showConfirm, setShowConfirm] = React.useState(false);
   const [showShiftConfirm, setShowShiftConfirm] = React.useState(false);
@@ -59,7 +59,7 @@ const OvertimeModal: React.FC<OvertimeModalProps> = ({ isOpen, onClose, shift })
         if (!isOnLeave) {
           const manualShift = employee.manualShifts?.[selectedDate];
           const fixedShift = employee.fixedShifts?.[dayOfWeek]?.[0];
-          const shiftId = `shift_${shift.index + 1}`;
+          const shiftId = `uid_${Math.random().toString(36).substr(2, 15)}`;
 
           if (manualShift === shiftId || (!manualShift && fixedShift === shiftId)) {
             count++;

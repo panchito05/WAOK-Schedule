@@ -1,0 +1,92 @@
+<\!DOCTYPE html>
+<html>
+<head>
+<style>
+.checkbox-container {
+  position: relative;
+  padding-left: 25px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  user-select: none;
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  height: 18px;
+  width: 18px;
+  background-color: #fff;
+  border: 2px solid #ddd;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+
+.checkbox-container:hover input ~ .checkmark {
+  border-color: #007bff;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.checkbox-container .checkmark:after {
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.label-text {
+  color: #333;
+  font-size: 0.95rem;
+}
+</style>
+</head>
+<body>
+<h2>Test Checkboxes</h2>
+<label class="checkbox-container">
+  <input type="checkbox" />
+  <span class="checkmark"></span>
+  <span class="label-text">Lunes</span>
+</label>
+<label class="checkbox-container">
+  <input type="checkbox" />
+  <span class="checkmark"></span>
+  <span class="label-text">Martes</span>
+</label>
+<script>
+document.querySelectorAll('.checkbox-container input').forEach(input => {
+  input.addEventListener('change', function() {
+    console.log('Checkbox clicked:', this.checked);
+  });
+});
+</script>
+</body>
+</html>

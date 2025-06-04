@@ -16,6 +16,8 @@ export interface ShiftRow {
   lunchBreakDeduction: number;
   isOvertimeActive: boolean;
   overtimeEntries: ShiftOvertime[];
+  name?: string; // Nombre personalizado del turno (ej. "TURNO DE DIA")
+  color?: string; // Color del turno en formato hex (ej. "#FF5733")
   // Campos adicionales para compatibilidad con componentes existentes
   start?: string;
   end?: string;
@@ -32,7 +34,6 @@ export interface Employee {
   phone: string;
   hireDate: string;
   shiftPreferences: (number | null)[];
-  blockedShifts: { [shiftId: string]: string[] };
   notes: {
     confidential: string;
     aiRules: string;
@@ -54,6 +55,12 @@ export interface Employee {
   selected?: boolean;
   uniqueId?: string;
   preferences?: number[];
+  blockedShifts?: { 
+    [shiftId: string]: {
+      blockedDays: string[]; // ['monday', 'tuesday', etc.] o ['all'] o [] (sin bloqueos)
+      isActive: boolean;
+    }
+  };
   unavailableShifts?: string[];
 }
 

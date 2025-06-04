@@ -6,7 +6,8 @@ import { useShiftPriorities } from '../../context/ShiftPrioritiesContext';
 import { useEmployeeLists } from '../../context/EmployeeListsContext';
 import { useSelectedEmployees } from '../../context/SelectedEmployeesContext';
 import { Calendar } from 'lucide-react';
-import { ShiftRow } from '../../context/ShiftContext'; 
+import { ShiftRow } from '../../context/ShiftContext';
+import { findShiftById, formatShiftTime } from '../../utils/shiftUtils'; 
 
 // Estilos CSS adicionales para la funcionalidad de ocultar/mostrar la tabla
 const styles = {
@@ -58,9 +59,8 @@ const formatFixedShifts = (fixedShifts: { [day: string]: string[] } | undefined,
       shiftIds[0] === 'day-off' 
         ? `${day}: Day Off`
         : `${day}: ${(() => {
-            const shiftIndex = parseInt(shiftIds[0].split('_')[1]) - 1;
-            const shift = shifts[shiftIndex];
-            return shift ? `${shift.startTime}-${shift.endTime}` : 'Unknown';
+            const shift = findShiftById(shiftIds[0], shifts);
+            return shift ? formatShiftTime(shift) : 'Unknown';
           })()}`
     )
     .join(', ');
@@ -83,12 +83,51 @@ const formatLeaves = (leaves: { startDate: string; endDate: string; leaveType: s
     .join(', ');
 };
 
+const formatBlockedShifts = (blockedShifts: { [shiftId: string]: { blockedDays: string[]; isActive: boolean } } | undefined, shifts: ShiftRow[]) => {
+  if (!blockedShifts || Object.keys(blockedShifts).length === 0) return 'None';
+  
+  const activeBlockedShifts = Object.entries(blockedShifts)
+    .filter(([_, shiftData]) => shiftData.isActive && shiftData.blockedDays.length > 0);
+  
+  if (activeBlockedShifts.length === 0) return 'None';
+  
+  // Mapeo de días en inglés a español
+  const dayTranslations: { [key: string]: string } = {
+    'monday': 'Mon',
+    'tuesday': 'Tue', 
+    'wednesday': 'Wed',
+    'thursday': 'Thu',
+    'friday': 'Fri',
+    'saturday': 'Sat',
+    'sunday': 'Sun',
+    'all': 'All Days'
+  };
+  
+  return activeBlockedShifts
+    .map(([shiftId, shiftData]) => {
+      // Buscar el turno por su ID
+      const shift = shifts.find(s => s.id === shiftId);
+      const shiftName = shift ? `${shift.startTime} - ${shift.endTime}` : 'Unknown Shift';
+      
+      if (shiftData.blockedDays.includes('all')) {
+        return `${shiftName} (All Days)`;
+      } else {
+        // Traducir los días y formatearlos
+        const translatedDays = shiftData.blockedDays
+          .map(day => dayTranslations[day.toLowerCase()] || day)
+          .join(', ');
+        return `${shiftName} (${translatedDays})`;
+      }
+    })
+    .join(', ');
+};
+
 const ScheduleRulesTable: React.FC = () => {
   const { shifts } = useShiftContext();
   const { rules } = useRules();
   const { shiftData } = usePersonnelData();
   const { getFormattedPriorities, priorities } = useShiftPriorities();
-  const { getCurrentList } = useEmployeeLists();
+  const { getCurrentList, refreshTrigger } = useEmployeeLists();
   const { selectedEmployeeIds } = useSelectedEmployees();
   const [isTableHidden, setIsTableHidden] = React.useState(false);
   
@@ -147,7 +186,7 @@ const ScheduleRulesTable: React.FC = () => {
     const allEmployees = currentList?.employees || [];
     // Solo mostramos los empleados que estén seleccionados
     return allEmployees.filter(employee => selectedEmployeeIds.includes(employee.id));
-  }, [getCurrentList, selectedEmployeeIds]);
+  }, [getCurrentList, selectedEmployeeIds, refreshTrigger]);
 
   return (
     <div className={`w-full bg-white rounded-lg shadow-lg p-6 mt-8 font-['Viata'] ${isTableHidden ? 'hidden' : ''}`}>
@@ -312,7 +351,7 @@ const ScheduleRulesTable: React.FC = () => {
                 <th className="border px-4 py-2 bg-gray-50 text-left">AI Rules</th>
                 <th className="border px-4 py-2 bg-gray-50 text-left">Max Consecutive Shifts</th>
                 <th className="border px-4 py-2 bg-gray-50 text-left">Shift Preferences</th>
-                <th className="border px-4 py-2 bg-gray-50 text-left">Locked Shift</th>
+                <th className="border px-4 py-2 bg-gray-50 text-left">Blocked Shift</th>
                 <th className="border px-4 py-2 bg-gray-50 text-left">Fixed/Permanent Shifts</th>
                 <th className="border px-4 py-2 bg-gray-50 text-left">Leaves</th>
               </tr>
@@ -327,11 +366,7 @@ const ScheduleRulesTable: React.FC = () => {
                   <td className="border px-4 py-2">{employee.notes?.aiRules || 'N/A'}</td>
                   <td className="border px-4 py-2">{employee.maxConsecutiveShifts || rules.maxConsecutiveShifts}</td>
                   <td className="border px-4 py-2">{formatPreferences(employee.shiftPreferences, shifts)}</td>
-                  <td className="border px-4 py-2">{Object.entries(employee.blockedShifts || {}).map(([shiftId, days]) => {
-                    const shiftIndex = parseInt(shiftId.split('_')[1]) - 1;
-                    const shift = shifts[shiftIndex];
-                    return shift ? `${shift.startTime}-${shift.endTime} (${days.join(', ')})` : '';
-                  }).filter(Boolean).join(', ') || 'None'}</td>
+                  <td className="border px-4 py-2">{formatBlockedShifts(employee.blockedShifts, shifts)}</td>
                   <td className="border px-4 py-2">{formatFixedShifts(employee.fixedShifts, shifts)}</td>
                   <td className="border px-4 py-2">{formatLeaves(employee.leave)}</td>
                 </tr>

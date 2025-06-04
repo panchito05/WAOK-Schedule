@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { useEmployeeLists } from './EmployeeListsContext';
 
 export interface ShiftData {
@@ -31,9 +31,17 @@ export const PersonnelDataProvider: React.FC<{ children: ReactNode }> = ({ child
   
   const { getCurrentList, updateList } = employeeListsContext;
   
+  // Estado local para forzar re-renderización cuando cambie la lista
+  const [, forceUpdate] = useState({});
+  
   // Usar el operador opcional para evitar errores si getCurrentList es undefined
   const currentList = getCurrentList?.();
   const shiftData = currentList?.shiftData || [];
+  
+  // useEffect para detectar cambios en la lista actual y forzar actualización
+  useEffect(() => {
+    forceUpdate({});
+  }, [currentList?.id]);
 
   const setShiftData = (newShiftData: ShiftData[]) => {
     if (currentList) {

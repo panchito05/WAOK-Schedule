@@ -11,7 +11,7 @@ import {
 } from '../types/common';
 
 // Clave para localStorage - usamos una clave diferente para no interferir con el almacenamiento existente
-const STORE_KEY = 'employeeLists_v2';
+const STORE_KEY = 'employeeLists'; // ✅ UNIFICADA: Misma clave que EmployeeListsContext
 
 interface StoreContextType {
   // Funciones para listas de empleados
@@ -37,6 +37,9 @@ const StoreContext = createContext<StoreContextType | undefined>(undefined);
 // Función auxiliar para generar IDs únicos
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
+// Función para generar IDs de turnos con formato aleatorio
+const generateShiftId = () => `uid_${Math.random().toString(36).substr(2, 15)}`;
+
 // Función auxiliar para formatear fechas
 const formatDate = (date: Date) => {
   const year = date.getFullYear();
@@ -45,36 +48,10 @@ const formatDate = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
-// Valores por defecto para una nueva lista
-const getDefaultShifts = (): ShiftRow[] => [
-  { 
-    id: 'shift_1', 
-    startTime: '07:00 AM', 
-    endTime: '03:00 PM', 
-    duration: '8h 0m', 
-    lunchBreakDeduction: 0, 
-    isOvertimeActive: false, 
-    overtimeEntries: [] 
-  },
-  { 
-    id: 'shift_2', 
-    startTime: '03:00 PM', 
-    endTime: '11:00 PM', 
-    duration: '8h 0m', 
-    lunchBreakDeduction: 0, 
-    isOvertimeActive: false, 
-    overtimeEntries: [] 
-  },
-  { 
-    id: 'shift_3', 
-    startTime: '11:00 PM', 
-    endTime: '07:00 AM', 
-    duration: '8h 0m', 
-    lunchBreakDeduction: 0, 
-    isOvertimeActive: false, 
-    overtimeEntries: [] 
-  }
-];
+// Turnos por defecto eliminados - el usuario debe crear sus propios turnos
+const getDefaultShifts = (): ShiftRow[] => {
+  return [];
+};
 
 const getDefaultRules = (): Rules => {
   const today = new Date();
@@ -131,7 +108,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       id: newId,
       name,
       employees: [],
-      shifts: getDefaultShifts(),
+      shifts: [], // Sin turnos por defecto - el usuario debe crear los suyos
       rules: getDefaultRules(),
       priorities: {},
       shiftData: [],

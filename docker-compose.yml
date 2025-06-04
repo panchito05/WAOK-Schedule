@@ -1,0 +1,121 @@
+# WAOK-Schedule - Docker Compose para desarrollo completo
+version: '3.8'
+
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: waok-postgres
+    environment:
+      POSTGRES_USER: waok_user
+      POSTGRES_PASSWORD: waok_pass_2024
+      POSTGRES_DB: waok_schedule
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U waok_user -d waok_schedule"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - waok-network
+
+  # Aplicación WAOK-Schedule
+  waok-app:
+    build:
+      context: .
+      target: development
+    container_name: waok-schedule
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - DATABASE_URL=postgresql://waok_user:waok_pass_2024@postgres:5432/waok_schedule
+      - SESSION_SECRET=docker-compose-secret-2024
+      - REPL_ID=docker-compose-dev
+      - VITE_APP_TITLE=WAOK Schedule - Docker Dev
+      - VITE_API_BASE_URL=http://localhost:5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - waok_logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - waok-network
+    command: >
+      sh -c "
+        echo 'Esperando base de datos...' &&
+        sleep 10 &&
+        echo 'Ejecutando migraciones...' &&
+        npm run db:push &&
+        echo 'Iniciando servidor...' &&
+        npm run dev:win
+      "
+
+  # Redis para caché (opcional)
+  redis:
+    image: redis:7-alpine
+    container_name: waok-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - waok-network
+    command: redis-server --appendonly yes --requirepass waok_redis_2024
+
+  # pgAdmin para administración de BD (opcional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: waok-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@waok.local
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - waok-network
+    profiles:
+      - admin
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+  waok_logs:
+    driver: local
+
+networks:
+  waok-network:
+    driver: bridge
+    name: waok-network

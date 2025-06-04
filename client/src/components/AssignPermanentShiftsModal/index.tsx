@@ -63,7 +63,7 @@ const AssignPermanentShiftsModal: React.FC<AssignPermanentShiftsModalProps> = ({
                 <option value="">Select shift or day off</option>
                 <option value="day-off">Day Off</option>
                 {shifts.map((shift, index) => (
-                  <option key={index} value={`shift_${index + 1}`}>
+                  <option key={index} value={`uid_${Math.random().toString(36).substr(2, 15)}`}>
                     {shift.startTime} - {shift.endTime}
                   </option>
                 ))}
