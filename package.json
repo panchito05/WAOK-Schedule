@@ -46,7 +46,12 @@
     "status": "node scripts/quick-health.js",
     "verify-system": "node verificacion-final.js",
     "auto-fix": "node auto-fix-critical.js",
-    "repair": "node auto-fix-critical.js --force"
+    "repair": "node auto-fix-critical.js --force",
+    "test:performance": "npm run test:k6 && npm run test:lighthouse",
+    "test:k6": "k6 run performance/k6/load-test.js",
+    "test:lighthouse": "lhci autorun",
+    "test:security": "node security/security-tests.js",
+    "test:all": "npm run test && npm run test:performance && npm run test:security"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -150,7 +155,13 @@
     "tsx": "^4.19.4",
     "typescript": "^5.6.3",
     "vite": "^5.4.19",
-    "vitest": "^1.1.3"
+    "vitest": "^1.1.3",
+    "@lhci/cli": "^0.12.0",
+    "lighthouse": "^11.4.0",
+    "k6": "^0.51.0",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "audit-ci": "^6.6.1"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
