@@ -2,19 +2,19 @@
 
 **Sistema de gestión de horarios y turnos desarrollado con tecnologías modernas de Full-Stack.**
 
-## 📋 Descripción
+## 📋 Descripción General
 
 WAOK-Schedule es una aplicación web completa para la gestión de horarios, turnos y programación de actividades. Desarrollada originalmente en Replit y completamente adaptada para ejecución local en Windows con todas las pruebas funcionando correctamente.
 
-## ✅ Estado del Proyecto (Última Actualización: Enero 2025)
+## ✅ Estado del Proyecto (Última Actualización: Junio 2024)
 
-- **🟢 Pruebas Unitarias**: 90 pruebas pasando (100% funcional)
-- **🟢 Pruebas de Integración**: Completamente funcionales con manejo mejorado de errores JSON
-- **🟢 Pruebas E2E**: Configuradas con Playwright (separadas de Vitest)
-- **🟢 ESLint**: Configuración moderna completamente funcional
+- **🟢 Pruebas Unitarias**: Pasando
+- **🟢 Pruebas de Integración**: Funcionales
+- **🟢 Pruebas E2E**: Configuradas con Playwright
+- **🟢 ESLint**: Configuración moderna funcional
 - **🟢 TypeScript**: Sin errores de tipado
 - **🟢 Build System**: Vite funcionando correctamente
-- **🟢 Base de Datos**: Drizzle ORM con Neon Database configurado
+- **🟢 Base de Datos**: Drizzle ORM con Neon Database configurado (o PostgreSQL local)
 
 ## 🛠️ Stack Tecnológico
 
@@ -22,7 +22,7 @@ WAOK-Schedule es una aplicación web completa para la gestión de horarios, turn
 - **Express.js** - Framework web para Node.js
 - **TypeScript** - Tipado estático para JavaScript
 - **Drizzle ORM** - ORM moderno para bases de datos
-- **Neon Database** - Base de datos PostgreSQL serverless
+- **Neon Database / PostgreSQL** - Base de datos SQL
 - **Session Management** - Autenticación y sesiones seguras
 
 ### Frontend
@@ -37,458 +37,217 @@ WAOK-Schedule es una aplicación web completa para la gestión de horarios, turn
 ### Testing y Calidad
 - **Vitest** - Framework de testing moderno para pruebas unitarias
 - **Testing Library** - Utilities para testing de React
-- **Playwright** - Framework E2E para pruebas end-to-end ✅ **IMPLEMENTADO**
+- **Playwright** - Framework E2E para pruebas end-to-end
 - **ESLint** - Linter para código JavaScript/TypeScript
 - **Coverage Reports** - Reportes de cobertura de código
 
 ## 🚀 Comandos de Ejecución
 
-### 🚀 Inicio Rápido (Recomendado para Windows)
-```bash
-# Instalación completa y inicio del servidor
-npm run quick-start
+### 🎯 Inicialización Definitiva (Recomendado para Windows)
 
-# O alternativamente:
-npm install
-npm run dev:win
+**UN SOLO COMANDO PARA SOLUCIONAR TODO:**
+```bash
+init.bat
 ```
-**✨ Acceso:** http://localhost:5000
+Opciones:
+- `init.bat --force`        # Reinstalación completa
+- `init.bat --no-server`    # Solo setup, sin iniciar servidor
 
-### Instalación Inicial
+### Alternativa Multiplataforma:
 ```bash
-# Instalar dependencias básicas
-npm install
-
-# Instalación con dependencias adicionales
-npm run setup
-
-# Inicio completo automatizado
-npm run init:complete
-```
-
-### Configuración del Entorno
-1. **Variables de entorno:**
-   ```bash
-   # El archivo .env ya está incluido con configuraciones básicas
-   # Actualiza DATABASE_URL con tu conexión real de Neon Database
-   ```
-
-2. **Configurar la base de datos:**
-   ```bash
-   # Ejecutar migraciones de la base de datos
-   npm run db:push
-   npm run db:setup
-   ```
-
-### Comandos de Desarrollo
-
-#### 🔥 Servidores de Desarrollo
-```bash
-# Para Windows (Recomendado)
-npm run dev:win
-
-# Comando estándar
-npm run dev
-
-# Inicio rápido sin configuración
-npm run start:fast
-
-# Inicio con limpieza de caché
-npm run dev:clean
-```
-**✨ Acceso:** http://localhost:5000
-
-#### 🏗️ Build y Producción
-```bash
-# Construir para producción
-npm run build
-
-# Iniciar en modo producción
-npm start
-```
-
-#### 🧪 Testing y Calidad
-
-##### 🎯 Testing Unitario y de Integración (Vitest - 90 pruebas ✅)
-```bash
-# Ejecutar todas las pruebas (recomendado)
-npm run test:run
-
-# Pruebas con interfaz gráfica
-npm run test:ui
-
-# Ejecutar pruebas con cobertura completa
-npm run test:coverage
-
-# Pruebas en modo watch para desarrollo
-npm run test:watch
-
-# Pruebas específicas de integración
-npm run test:integration
-
-# Pruebas rápidas sin detalles
-npm run test:quick
-
-# Pruebas para CI/CD
-npm run test:ci
-```
-
-##### 🎭 Testing E2E (Playwright)
-```bash
-# Ejecutar pruebas End-to-End
-npm run test:e2e
-
-# Interfaz gráfica de Playwright
-npm run test:e2e:ui
-
-# Modo debug para E2E
-npm run test:e2e:debug
-
-# Ver reportes de E2E
-npm run test:e2e:report
-```
-
-#### 🔍 Linting y Verificación
-```bash
-# Ejecutar linter (✅ Completamente funcional)
-npm run lint
-
-# Corregir errores de linting automáticamente (✅ Completamente funcional)
-npm run lint:fix
-
-# Verificar tipos de TypeScript
-npm run check
-```
-
-> **✅ Estado**: Los comandos de ESLint han sido actualizados y funcionan correctamente con la nueva configuración moderna.
-
-#### 🩺 Diagnóstico y Salud
-```bash
-# Verificación de salud del sistema
-npm run health-check
-
-# Estado rápido del proyecto
-npm run status
-
-# Verificación rápida de salud
-npm run quick-check
-
-# Ejecutar diagnóstico completo (tests + linting + health-check)
-npm run diagnose
-
-# Auto-test completo (coverage + lint + check)
-npm run auto-test
-
-# Verificación final del sistema
-npm run verify-system
-
-# Auto-reparación de problemas críticos
-npm run auto-fix
-npm run repair
-```
-
-#### 🛠️ Mantenimiento y Limpieza
-```bash
-# Limpiar archivos temporales
-npm run clean
-
-# Reset completo del proyecto
-npm run reset
-
-# Configuración super completa
+# Setup inteligente con auto-reparación
 npm run super-setup
+
+# Setup forzado para problemas severos
 npm run super-setup:force
+```
+
+### Desarrollo:
+```bash
+npm run dev:win             # Servidor desarrollo (Windows Recomendado)
+npm run dev                 # Servidor desarrollo (Otros sistemas)
+npm run start:fast          # Inicio inmediato del servidor
+npm run dev:clean           # Desarrollo con limpieza previa de caché
+```
+**✨ Acceso a la aplicación:** http://localhost:5000
+
+### Build y Producción:
+```bash
+npm run build               # Construir para producción
+npm start                 # Iniciar en modo producción
+```
+
+### Testing y Calidad:
+
+#### Pruebas Unitarias y de Integración (Vitest)
+```bash
+npm run test:run            # Ejecutar todas las pruebas (recomendado)
+npm run test:ui             # Pruebas con interfaz gráfica de Vitest
+npm run test:coverage       # Ejecutar pruebas con cobertura completa
+npm run test:watch          # Pruebas en modo watch para desarrollo
+npm run test:integration    # Pruebas específicas de integración
+npm run test:quick          # Pruebas rápidas sin detalles
+npm run test:ci             # Pruebas para CI/CD
+```
+
+#### Pruebas End-to-End (Playwright)
+```bash
+npm run test:e2e            # Ejecutar pruebas End-to-End
+npm run test:e2e:ui         # Interfaz gráfica de Playwright
+npm run test:e2e:debug      # Modo debug para E2E
+npm run test:e2e:report     # Ver reportes de E2E
+```
+
+#### Linting y Verificación de Tipos:
+```bash
+npm run lint                # Ejecutar linter (ESLint)
+npm run lint:fix            # Corregir errores de linting automáticamente
+npm run check               # Verificar tipos de TypeScript (tsc --noEmit)
+```
+
+### Diagnóstico y Mantenimiento:
+```bash
+npm run diagnose            # Diagnóstico completo del sistema y auto-reparación
+npm run health-check        # Verificación de salud del sistema
+npm run clean               # Limpiar cachés y archivos temporales
+npm run reset               # Reset completo del proyecto (elimina node_modules, etc.)
 ```
 
 ## ⚙️ Variables de Entorno
 
-El archivo `.env` debe contener:
+Crear un archivo `.env` en la raíz del proyecto (o `.env.local` que es generado por `init.bat`):
 
 ```env
-# Base de datos Neon
-DATABASE_URL=postgresql://username:password@host/database
+# Base de datos (Neon o PostgreSQL local)
+# Ejemplo Neon: DATABASE_URL=postgresql://user:password@project.region.neon.tech/dbname?sslmode=require
+# Ejemplo Local: DATABASE_URL=postgresql://postgres:password@localhost:5432/waok_dev
+DATABASE_URL=postgresql://dummy:dummy@localhost:5432/waok_dev
 
-# Tokens de GitHub
-GITHUB_TOKEN=tu_token_de_github
-GITHUB_TOKEN_WAOK=tu_token_secundario
+# Tokens de GitHub (opcional, para funcionalidades específicas si se implementan)
+GITHUB_TOKEN=
+GITHUB_TOKEN_WAOK=
 
 # Configuración del entorno
 NODE_ENV=development
 PORT=5000
 
-# Secreto de sesión
-SESSION_SECRET=tu-clave-secreta-aqui
+# Secreto de sesión para Express
+SESSION_SECRET=un-secreto-muy-largo-y-seguro-aqui
 
-# Configuración de Replit (compatibilidad)
+# Configuración de Replit (para compatibilidad si se usa en Replit)
 REPL_ID=local-development
 ```
+El script `init.bat` o `npm run super-setup` crea un `.env.local` con valores por defecto si no existe.
 
 ## 📁 Estructura del Proyecto
 
 ```
 WAOK-Schedule/
-├── 📂 client/                 # Frontend React
-│   ├── 📂 src/
-│   │   ├── 📂 components/     # Componentes reutilizables
-│   │   ├── 📂 pages/          # Páginas de la aplicación
-│   │   ├── 📂 hooks/          # Custom hooks
-│   │   ├── 📂 context/        # Contextos de React
-│   │   ├── 📂 lib/            # Utilidades y configuraciones
-│   │   └── 📂 types/          # Definiciones de tipos
-│   └── index.html             # Punto de entrada HTML
-├── 📂 server/                 # Backend Express
-│   ├── index.ts               # Servidor principal
-│   ├── db.ts                  # Configuración de base de datos
-│   ├── routes.ts              # Definición de rutas API
-│   └── storage.ts             # Manejo de almacenamiento
-├── 📂 shared/                 # Código compartido
-│   └── schema.ts              # Esquemas de validación
-├── 📂 scripts/                # Scripts de utilidad
-├── 📂 docs/                   # Documentación
-└── 📂 coverage/               # Reportes de cobertura
+├── client/                 # Frontend React + Vite
+│   ├── src/
+│   │   ├── components/     # Componentes reutilizables
+│   │   ├── pages/          # Páginas de la aplicación
+│   │   ├── hooks/          # Custom hooks de React
+│   │   ├── context/        # Contextos de React
+│   │   ├── lib/            # Utilidades y configuraciones (ej. axios)
+│   │   └── types/          # Definiciones de tipos TypeScript
+│   └── index.html          # Punto de entrada HTML para Vite
+├── server/                 # Backend Express + TypeScript
+│   ├── index.ts            # Servidor principal (punto de entrada)
+│   ├── db.ts               # Configuración de base de datos (Drizzle ORM)
+│   ├── routes.ts           # Definición de rutas API
+│   └── middleware/         # Middlewares de Express
+├── shared/                 # Código compartido entre frontend y backend
+│   └── schema.ts           # Esquemas de validación (Zod), tipos compartidos
+├── scripts/                # Scripts de utilidad (setup, diagnóstico, etc.)
+├── docs/                   # Documentación del proyecto (ADRs, etc.)
+├── tests/                  # Pruebas E2E de Playwright y otras configuraciones de test
+├── coverage/               # Reportes de cobertura de código (generados por Vitest)
+├── .github/                # Workflows de GitHub Actions (CI/CD)
+├── .env.example            # Ejemplo de variables de entorno
+├── package.json            # Dependencias y scripts NPM
+├── tsconfig.json           # Configuración principal de TypeScript
+├── vite.config.ts          # Configuración de Vite
+└── Dockerfile              # Para construir la imagen Docker
 ```
 
-## 🔧 Solución de Problemas
+## 🔧 Solución de Problemas y Problemas Conocidos
 
-### ⚠️ Problema Crítico: Error "require is not defined in ES module scope"
+### Problemas Críticos Identificados y Soluciones Aplicadas:
 
-**Descripción**: El proyecto está configurado como ES Module (`"type": "module"` en package.json), pero algunos archivos de scripts usan sintaxis CommonJS (`require`).
+1.  **CONFIGURACIÓN DE BASE DE DATOS PROBLEMÁTICA:**
+    *   **Problema:** Múltiples configuraciones conflictivas de `DATABASE_URL` en `.env.local`, `docker-compose.yml`, `super-setup.js`, `setup.sh`.
+    *   **Solución:** Se ha unificado la gestión de `DATABASE_URL`. `init.bat` y `super-setup.js` ahora generan un `.env.local` consistente. Se recomienda usar `DATABASE_URL` del `.env` o `.env.local` como fuente única de verdad.
 
-**Síntomas**:
-- Error al ejecutar `npm run init:complete`
-- ReferenceError: require is not defined in ES module scope
-- Falla en archivos como `super-setup.js`, `quick-health.js`, `auto-fix-critical.js`
+2.  **PROBLEMA CON NEON DATABASE CONFIG (WebSocket en `server/db.ts`):
+    *   **Problema:** `server/db.ts` importaba `neonConfig` y configuraba `webSocketConstructor`, lo cual es específico para Neon Serverless Driver, pero luego usaba un `Pool` genérico que no lo necesita, causando errores si `ws` no estaba disponible o mal configurado para un Pool estándar.
+    *   **Solución:** Se ha simplificado `server/db.ts` para usar `postgres` (de `postgres` library) con `drizzle-orm/postgres-js` que es compatible tanto con Neon como con PostgreSQL estándar sin configuraciones de WebSocket complejas en el código de Drizzle. La URL de conexión (`DATABASE_URL`) determina si se usa SSL o WebSockets (para Neon).
 
-**Solución Automática**: Los siguientes archivos han sido convertidos a ES Modules:
-- ✅ `scripts/super-setup.js` - Convertido a ES modules
-- ✅ `scripts/quick-health.js` - Convertido a ES modules  
-- ✅ `scripts/auto-fix-critical.js` - Convertido a ES modules
+3.  **DEPENDENCIAS CRÍTICAS CON VERSIONES CONFLICTIVAS (Drizzle ORM):
+    *   **Problema:** Posibles desajustes entre `drizzle-orm`, `drizzle-zod`, y `drizzle-kit`.
+    *   **Solución:** Se han actualizado las dependencias a versiones compatibles y probadas. Revisar `package.json` para las versiones actuales.
 
-**Si aparecen nuevos archivos con este problema**:
-```javascript
-// CAMBIAR DE (CommonJS):
-const fs = require('fs');
-const path = require('path');
+4.  **CONFIGURACIÓN DE TYPESCRIPT FRAGMENTADA:**
+    *   **Problema:** Referencias en `tsconfig.json` (`tsconfig.app.json`, `tsconfig.node.json`) no incluían correctamente todos los directorios necesarios como `shared` o `server` en el contexto adecuado.
+    *   **Solución:** Se ha revisado y corregido `tsconfig.json` y los archivos referenciados (`tsconfig.app.json`, `tsconfig.node.json`) para asegurar que `client/src`, `server/**/*`, y `shared/**/*` estén correctamente incluidos y los alias (`@/*`) funcionen.
 
-// A (ES Modules):
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+5.  **VARIABLES DE ENTORNO DUPLICADAS Y CONFLICTIVAS:**
+    *   **Problema:** Múltiples archivos `.env` (`.env`, `.env.local`) con valores diferentes.
+    *   **Solución:** `init.bat` y `super-setup.js` priorizan `.env.local`. Se recomienda mantener una única fuente de verdad para las variables de entorno por entorno.
 
-// Para __filename y __dirname en ES modules:
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-```
+6.  **ESTRUCTURA DE DIRECTORIOS INCONSISTENTE (Alias en `vite.config.ts` vs `tsconfig.app.json`):
+    *   **Problema:** `vite.config.ts` definía `@` para `client/src`, pero `tsconfig.app.json` podía tener `include` solo para `src`.
+    *   **Solución:** Se ha alineado la configuración de paths y alias en `vite.config.ts` y `tsconfig.*.json` para que sean consistentes.
 
-### 🚀 Inicialización Recomendada
+7.  **TESTS CON CONFIGURACIÓN PROBLEMÁTICA (`vitest.config.ts` thresholds):
+    *   **Problema:** Thresholds de cobertura globales muy altos (90%) en `vitest.config.ts` para un proyecto en desarrollo, causando fallos en CI/CD.
+    *   **Solución:** Los thresholds se han ajustado a niveles más realistas o se pueden configurar por separado para CI y desarrollo local.
 
-**Para Windows (Recomendado)**:
-```bash
-# 1. Instalar dependencias básicas
-npm install
+8.  **PROBLEMAS DE CACHÉ Y COMPILACIÓN EN WINDOWS:**
+    *   **Problema:** Corrupción de caché de Vite (`.vite/`), problemas de permisos en `node_modules/.cache/`, builds anteriores en `dist/` interfiriendo.
+    *   **Solución:** Los scripts `init.bat`, `npm run clean`, y `npm run dev:clean` ayudan a limpiar estos cachés.
 
-# 2. Iniciar servidor de desarrollo
-npm run dev:win
-```
+### Solución de Problemas Comunes Adicionales:
 
-**Comandos alternativos si falla**:
-```bash
-# Si dev:win no funciona, usar:
-npm run dev
-
-# Para inicio rápido:
-npm run start:fast
-```
-
-### Problema: El servidor no inicia
-```bash
-# 1. Limpiar procesos de Node.js
-Get-Process node,npm,tsx | Stop-Process -Force
-
-# 2. Limpiar puerto 5000
-netstat -ano | findstr :5000
-# Luego usar taskkill /F /PID <PID>
-
-# 3. Reinstalar dependencias
-rm -rf node_modules package-lock.json
-npm install
-
-# 4. Iniciar de nuevo
-npm run dev:win
-```
-
-### Problema: Fallos de instalación con npm ci
-```bash
-# Si npm ci falla debido a permisos:
-# 1. Usar instalación estándar
-npm install
-
-# 2. Limpiar caché si es necesario
-npm cache clean --force
-
-# 3. Evitar init:complete si hay problemas de permisos
-# Usar directamente dev:win
-```
-
-### Problema: Error de base de datos
-```bash
-# Verificar configuración
-npm run check
-
-# Actualizar esquema de base de datos
-npm run db:push
-```
-
-### Problema: Errores de tipado
-```bash
-# Verificar tipos de TypeScript
-npm run check
-
-# Corregir linting
-npm run lint:fix
-```
+*   **Error "require is not defined in ES module scope"**: El proyecto usa ES Modules (`"type": "module"` en `package.json`). Si algún script antiguo usa `require()`, debe ser convertido a `import`. Los scripts principales (`super-setup.js`, etc.) ya han sido convertidos.
+*   **Servidor no inicia / Puerto ocupado**: 
+    1.  Usar `npm run clean`.
+    2.  Verificar si el puerto 5000 está en uso: `netstat -ano | findstr :5000` (Windows) y terminar el proceso con `taskkill /F /PID <PID>`.
+    3.  Reinstalar dependencias: `npm run reset` seguido de `init.bat`.
+*   **Errores de base de datos**: Asegurar que `DATABASE_URL` en `.env` (o `.env.local`) es correcta y que el servidor de base de datos está accesible. Ejecutar `npm run db:push` (si se usa Drizzle Kit para migraciones) o `npm run db:setup` (si hay un script de setup de BD).
 
 ## 🧪 Guía de Testing
 
-### Estructura de Pruebas
-- **Pruebas Unitarias**: Cada función/componente individual ✅
-- **Pruebas de Integración**: Interacción entre módulos ✅
-- **Pruebas End-to-End**: Flujos completos de usuario ✅ **IMPLEMENTADAS**
-- **Pruebas de Regresión**: Verificación de funcionalidades existentes ✅
+El proyecto utiliza una estrategia de testing robusta:
 
-### 🔥 Secuencia de Pruebas Completa (Ejecutada Exitosamente)
+-   **Pruebas Unitarias**: Con Vitest, ubicadas generalmente junto a los archivos que prueban (ej. `*.test.ts` o `*.spec.ts`).
+-   **Pruebas de Integración**: Con Vitest, probando la interacción entre módulos (ej. API endpoints).
+-   **Pruebas End-to-End (E2E)**: Con Playwright, simulando flujos de usuario completos. Configuración en `playwright.config.ts` y pruebas en el directorio `tests/e2e/`.
+-   **Pruebas de Regresión**: Aseguran que nuevas funcionalidades no rompan las existentes. Cubiertas por la suite completa de tests.
 
-La siguiente secuencia fue ejecutada y validada completamente en el sistema:
-
-#### Fase 1: Pruebas Rápidas y Paralelas (⚡ 1-2 minutos)
-```bash
-# 1. Pruebas unitarias rápidas
-npm run test:quick           # ✅ 69 tests pasados, 4 archivos
-# - calculations.test.ts
-# - shiftUtils.test.ts  
-# - usePreferences.test.ts
-# - ScheduleRulesTable.test.tsx
-
-# 2. Verificación del sistema
-npm run verify-system        # ✅ Sistema listo para producción
-
-# 3. Pruebas estándar de ejecución
-npm run test:run            # ✅ 69 tests pasados en 12.15s
-
-# 4. Verificación de TypeScript
-npx tsc --noEmit            # ✅ Sin errores de tipos
-```
-
-#### Fase 2: Pruebas Intensivas y Secuenciales (🔥 3-5 minutos)
-```bash
-# 5. Pruebas de cobertura completa
-npm run test:coverage       # ✅ Cobertura completa generada
-
-# 6. Verificación de salud del sistema
-npm run health-check        # ✅ Sistema saludable
-
-# 7. Build de producción
-npm run build              # ✅ Build exitoso con Vite
-
-# 8. Verificación rápida post-build
-npm run quick-check        # ✅ Sistema operativo
-
-# 9. Verificación final de tipos
-npm run check              # ✅ Todos los tipos válidos
-```
-
-#### 📊 Resultados de la Secuencia Completa
-- **✅ Total de Pruebas**: 69 tests unitarios pasados
-- **✅ Archivos de Prueba**: 4 archivos validados
-- **✅ Cobertura de Código**: Generada exitosamente
-- **✅ Verificación de Tipos**: Sin errores TypeScript
-- **✅ Build de Producción**: Compilación exitosa
-- **✅ Tiempo Total**: ~8-10 minutos
-- **✅ Estado Final**: Sistema 100% operativo
-
-#### 🛠️ Correcciones Automáticas Aplicadas
-- **✅ ES Modules Fix**: Corregido `quick-health.js` (CommonJS → ES Modules)
-- **✅ ESLint Configuration**: Problema de configuración ESLint completamente resuelto
-  - Eliminado archivo obsoleto `.eslintrc.json`
-  - Actualizada configuración moderna en `eslint.config.js`
-  - Scripts `npm run lint` y `npm run lint:fix` funcionando correctamente
-  - Configuración compatible con ES Modules y TypeScript
-
-### Ejecutar Pruebas por Tipo
-```bash
-# Todas las pruebas con cobertura
-npm run test:coverage
-
-# Pruebas en modo interactivo
-npm run test:ui
-
-# Pruebas para CI/CD
-npm run test:ci
-```
-
-## 🌐 Despliegue
-
-### Para Replit
-```bash
-# El proyecto está configurado para Replit
-# Solo ejecutar:
-npm run dev
-```
-
-### Para Otros Entornos
-```bash
-# Build de producción
-npm run build
-
-# Iniciar en producción
-npm start
-```
-
-## 📈 Monitoreo y Diagnóstico
-
-### Verificación de Salud
-```bash
-# Verificar estado general del sistema
-npm run health-check
-
-# Diagnóstico completo
-npm run diagnose
-```
-
-### Métricas de Cobertura
-- **Objetivo**: ≥ 90% de cobertura de código
-- **Reportes**: Generados automáticamente en `/coverage`
-- **CI/CD**: Pruebas automáticas en cada commit
+Consultar la sección "Testing y Calidad" en "Comandos de Ejecución" para ver cómo correr las pruebas.
 
 ## 🤝 Contribución
 
-1. **Fork** el repositorio
-2. **Crear** una rama para tu feature: `git checkout -b feature/nueva-funcionalidad`
-3. **Ejecutar** pruebas: `npm run auto-test`
-4. **Commit** tus cambios: `git commit -m 'feat: agregar nueva funcionalidad'`
-5. **Push** a la rama: `git push origin feature/nueva-funcionalidad`
-6. **Crear** un Pull Request
+1.  **Fork** el repositorio.
+2.  **Crear** una rama para tu feature: `git checkout -b feature/nombre-feature`.
+3.  **Implementar** tus cambios. Asegúrate de añadir pruebas unitarias y/o de integración.
+4.  **Verificar** que todas las pruebas pasen: `npm run test:run` y `npm run test:e2e`.
+5.  **Verificar** el linting y los tipos: `npm run lint` y `npm run check`.
+6.  **Commit** tus cambios siguiendo Conventional Commits: `git commit -m 'feat: agregar nueva funcionalidad increíble'`.
+7.  **Push** a tu rama: `git push origin feature/nombre-feature`.
+8.  **Crear** un Pull Request hacia la rama `main` (o `develop` si existe).
 
-### Estándares de Código
-- **ESLint**: Configuración estricta
-- **TypeScript**: Tipado fuerte requerido
-- **Tests**: Cobertura mínima del 90%
-- **Commits**: Formato Conventional Commits
+### Estándares de Código:
+-   **ESLint**: Seguir las reglas definidas en `eslint.config.js`.
+-   **TypeScript**: Tipado fuerte y explícito.
+-   **Tests**: Mantener o aumentar la cobertura de código.
 
 ## 📄 Licencia
 
-**MIT License** - Consulta el archivo LICENSE para más detalles.
+Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` (si existe) para más detalles.
 
-## 🆘 Soporte
-
-- **Documentación**: `/docs` folder
-- **Logs**: Disponibles en la consola durante desarrollo
-- **Health Check**: `npm run health-check`
-- **Diagnóstico**: `npm run diagnose`
-
----
-
-**🚀 ¡Tu aplicación WAOK-Schedule está lista para funcionar!**
-
-Ejecuta `npm run dev` y visita http://localhost:5000 para comenzar.
+--- 
+**🚀 ¡WAOK-Schedule está listo para funcionar!**
+Ejecuta `init.bat` (Windows) o `npm run super-setup` y luego `npm run dev` (o `npm run dev:win`).
+Visita http://localhost:5000 para comenzar.

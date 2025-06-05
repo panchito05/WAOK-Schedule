@@ -181,7 +181,7 @@ echo.
 echo 🐳 Para usar Docker:
 echo    docker-compose up -d
 echo.
-echo 📝 Para mas informacion, consulta INICIO-RAPIDO.md
+echo 📝 Para mas informacion, consulta README.md
 echo.
 echo ==========================================
 echo.

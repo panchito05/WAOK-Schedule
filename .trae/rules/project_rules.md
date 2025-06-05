@@ -1,6 +1,4 @@
-Cada vez que trabajaemos con un bloque de codigo nuevo o existente, un modulo una funcionalidad, un componente, un componente de la UI, un componente de la API, etc. debemos seguir los siguientes pasos si aun no esta implementados en el proyecto:
-
-absolutamente siempre que vallas a realizar una prueba unitarias o prueba que interrumpa el funcionamiento del software por mas de 1 o 2 minutos me tienes que preguntar si la puedes realizar esyo te respondere con un si, ok,okay o no para validar si la implementa o no.
+Absolutamente siempre que vallas a realizar una prueba unitarias o prueba que interrumpa el funcionamiento del software por mas de 1 o 2 minutos me tienes que preguntar si la puedes realizar yo te respondere con un si, ok,okay o no para validar si la implementa o no.
  
 Pruebas Unitarias
 Cada vez que se cree o modifique una función, clase o método, se debe generar automáticamente una prueba unitaria que cubra tanto los casos normales como los extremos. Estas pruebas deben ejecutarse de inmediato de forma automatizada en cada commit, asegurando que cada parte individual del código funcione correctamente en aislamiento.
