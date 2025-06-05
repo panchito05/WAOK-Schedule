@@ -18,6 +18,7 @@
     "test:safari": "playwright test --config=playwright.cross-browser.config.ts --project='Desktop Safari'",
     "test:edge": "playwright test --config=playwright.cross-browser.config.ts --project='Desktop Edge'",
     "test:mobile": "playwright test --config=playwright.cross-browser.config.ts --project='Mobile Chrome' --project='Mobile Safari'",
+    "test:k6": "k6 run performance/k6/load-test.js",
     "lint": "eslint .",
     "build": "webpack --mode production"
   },
@@ -44,7 +45,8 @@
     "pa11y": "^6.2.3",
     "lighthouse": "^11.0.0",
     "chrome-launcher": "^1.1.0",
-    "puppeteer": "^21.3.6"
+    "puppeteer": "^21.3.6",
+    "k6": "0.0.0"
   },
   "keywords": [
     "schedule",
