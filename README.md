@@ -41,12 +41,35 @@ WAOK-Schedule es una aplicación web completa para la gestión de horarios, turn
 - **ESLint** - Linter para código JavaScript/TypeScript
 - **Coverage Reports** - Reportes de cobertura de código
 
-## 🚀 Comandos de Ejecución
+## 🚀 Inicio Rápido - Un Solo Comando
 
-### 🚀 Inicio Rápido (Recomendado para Windows)
+### ⚡ INICIALIZACIÓN DEFINITIVA (Recomendado para Windows)
 ```bash
-# Instalación completa y inicio del servidor
-npm run quick-start
+# NUEVO: Script de inicialización ultra-rápida que resuelve TODOS los problemas
+init.bat
+
+# Con opciones avanzadas:
+init.bat --force        # Reinstalación completa
+init.bat --no-server    # Solo setup, sin iniciar servidor
+init.bat --help         # Ver todas las opciones disponibles
+```
+
+### 🔧 Scripts de Inicialización Disponibles
+
+| Comando | Descripción | Uso Recomendado |
+|---------|-------------|----------------|
+| `init.bat` | **Inicialización definitiva Windows** | **Primer uso - Resuelve todo** |
+| `npm run super-setup` | Setup inteligente con auto-diagnóstico | **Multiplataforma** |
+| `npm run quick-start` | Instalación + servidor | **Desarrollo diario** |
+| `npm run dev:win` | Solo servidor (Windows) | **Después del setup** |
+| `npm run dev` | Servidor multiplataforma | **Linux/Mac** |
+
+### 📦 Comandos Tradicionales
+```bash
+# Si prefieres el método tradicional
+npm install
+npm run build
+npm run start
 
 # O alternativamente:
 npm install
