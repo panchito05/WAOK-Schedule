@@ -111,7 +111,7 @@ log.header('Verificando Documentación');
 
 const archivosDoc = [
   'README.md',
-  'INICIO-RAPIDO-DEFINITIVO.md',
+  'INICIO-RAPIDO.md',
   '.env.example'
 ];
 
@@ -160,4 +160,4 @@ if (problemas === 0) {
 }
 
 log.info('\n🤖 Verificación completada por ARCHITECT-AI');
-log.info('📚 Consulta INICIO-RAPIDO-DEFINITIVO.md para más detalles');
+log.info('📚 Consulta INICIO-RAPIDO.md para más detalles');
