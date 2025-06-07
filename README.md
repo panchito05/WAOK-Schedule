@@ -41,9 +41,9 @@ WAOK-Schedule es una aplicación web completa para la gestión de horarios, turn
 - **ESLint** - Linter para código JavaScript/TypeScript
 - **Coverage Reports** - Reportes de cobertura de código
 
-## 🚀 Comandos de Ejecución
+## 🚀 Inicio Rápido - Un Solo Comando
 
-### 🎯 Inicialización Definitiva (Recomendado para Windows)
+
 
 **UN SOLO COMANDO PARA SOLUCIONAR TODO:**
 ```bash
